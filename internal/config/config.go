@@ -6,8 +6,8 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
+	"github.com/zekroTJA/lol-runes/internal/database"
 	"github.com/zekroTJA/lol-runes/internal/webserver"
-	"github.com/zekrotja/lol-runes/internal/database"
 )
 
 type Main struct {
@@ -35,9 +35,9 @@ func cretaeDefault(loc string) error {
 		MongoDB: &database.MongoConfig{
 			Host:     "localhost",
 			Port:     "27017",
-			Username: "kirby",
-			AuthDB:   "kirby",
-			DataDB:   "kirby",
+			Username: "lol-runes",
+			AuthDB:   "lol-runes",
+			DataDB:   "lol-runes",
 		},
 		WebServer: &webserver.Config{
 			Addr: ":443",

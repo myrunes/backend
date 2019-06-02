@@ -5,8 +5,8 @@ import (
 	"time"
 
 	routing "github.com/qiangxue/fasthttp-routing"
-	"github.com/zekroTJA/slms/pkg/ratelimit"
-	"github.com/zekroTJA/slms/pkg/timedmap"
+	"github.com/zekroTJA/ratelimit"
+	"github.com/zekroTJA/timedmap"
 )
 
 const (

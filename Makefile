@@ -76,7 +76,7 @@ lint:
 PHONY += run
 run:
 	$(GO) run -v \
-		$(CURDIR)/cmd/server -c $(CONFIG) -l 5 -v
+		$(CURDIR)/cmd/server -c $(CONFIG)
 
 PHONY += runfe
 runfe:

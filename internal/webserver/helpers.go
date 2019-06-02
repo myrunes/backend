@@ -3,10 +3,20 @@ package webserver
 import (
 	"encoding/json"
 	"fmt"
+	"net/http"
+
+	"github.com/zekroTJA/lol-runes/internal/static"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
+
+var emptyResponseBody = []byte("{}")
+
+var defStatusBoddies = map[int][]byte{
+	http.StatusOK:      []byte("{\n  \"code\": 200,\n  \"message\": \"ok\"\n}"),
+	http.StatusCreated: []byte("{\n  \"code\": 201,\n  \"message\": \"created\"\n}"),
+}
 
 // jsonError writes the error message of err and the
 // passed status to response context and aborts the
@@ -32,9 +42,18 @@ func jsonError(ctx *routing.Context, err error, status int) error {
 // output of the error with status 500.
 // This function always returns a nil error.
 func jsonResponse(ctx *routing.Context, v interface{}, status int) error {
-	data, err := json.MarshalIndent(v, "", "  ")
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	var err error
+	data := emptyResponseBody
+
+	if v == nil {
+		if d, ok := defStatusBoddies[status]; ok {
+			data = d
+		}
+	} else {
+		data, err = json.MarshalIndent(v, "", "  ")
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
 	}
 
 	ctx.Response.Header.SetContentType("application/json")
@@ -56,4 +75,15 @@ func parseJSONBody(ctx *routing.Context, v interface{}) error {
 		jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 	return err
+}
+
+func (ws *WebServer) addCORSHeaders(ctx *routing.Context) error {
+	if static.Release != "TRUE" {
+		ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:8081")
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", "authorization, content-type, set-cookie, cookie")
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, DELETE")
+		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
+	}
+
+	return nil
 }
