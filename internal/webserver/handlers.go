@@ -66,3 +66,122 @@ func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	user.PassHash = nil
 	return jsonResponse(ctx, user, fasthttp.StatusOK)
 }
+
+func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
+	var err error
+	page := objects.NewEmptyPage()
+
+	if err = parseJSONBody(ctx, page); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if err = page.Validate(); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	user := ctx.Get("user").(*objects.User)
+	page.FinalizeCreate(user.UID)
+
+	if err = ws.db.CreatePage(page); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, page, fasthttp.StatusCreated)
+}
+
+func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	pages, err := ws.db.GetPages(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, &listResponse{N: len(pages), Data: pages}, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerGetPage(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	_uid := ctx.Param("uid")
+	uid, err := snowflake.ParseString(_uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	page, err := ws.db.GetPage(uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if page == nil || page.Owner != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	return jsonResponse(ctx, page, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	_uid := ctx.Param("uid")
+	uid, err := snowflake.ParseString(_uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	page, err := ws.db.GetPage(uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if page == nil || page.Owner != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	if err = parseJSONBody(ctx, page); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	newPage, err := ws.db.EditPage(page)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, newPage, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	_uid := ctx.Param("uid")
+	uid, err := snowflake.ParseString(_uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	page, err := ws.db.GetPage(uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if page == nil || page.Owner != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	if err = ws.db.DeletePage(page.UID); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
+	return jsonResponse(ctx, &listResponse{N: len(objects.Champs), Data: objects.Champs}, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
+	data := map[string]interface{}{
+		"primary":   objects.RunesPrimary,
+		"secondary": objects.RunesSecondary,
+		"perks":     objects.PerksPool,
+	}
+	return jsonResponse(ctx, data, fasthttp.StatusOK)
+}

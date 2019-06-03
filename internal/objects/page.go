@@ -1,9 +1,20 @@
 package objects
 
 import (
+	"errors"
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+)
+
+var pageIDCluster, _ = snowflake.NewNode(200)
+
+var (
+	errInvalidTree  = errors.New("invalid tree")
+	errInvalidRune  = errors.New("invalid rune")
+	errInvalidPerk  = errors.New("invalid perk")
+	errInvalidChamp = errors.New("invalid champion")
+	errInvalidTitle = errors.New("invalid title")
 )
 
 var Champs = []string{
@@ -28,7 +39,7 @@ var Champs = []string{
 	"kayle", "soraka", "yorick",
 }
 
-var RunesPrinary = map[string][][]string{
+var RunesPrimary = map[string][][]string{
 	"domination": [][]string{
 		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
@@ -97,7 +108,8 @@ var PerksPool = [][]string{
 
 type Page struct {
 	UID       snowflake.ID   `json:"uid"`
-	Title     string         `json:"Title"`
+	Owner     snowflake.ID   `json:"owner"`
+	Title     string         `json:"title"`
 	Created   time.Time      `json:"created"`
 	Edited    time.Time      `json:"edited"`
 	Champions []string       `json:"champions"`
@@ -118,4 +130,97 @@ type SecondaryTree struct {
 
 type Perks struct {
 	Rows [3]string `json:"rows"`
+}
+
+func NewEmptyPage() *Page {
+	return &Page{
+		Champions: make([]string, 0),
+		Primary: &PrimaryTree{
+			Rows: [4]string{},
+		},
+		Secondary: &SecondaryTree{
+			Rows: [3]string{},
+		},
+		Perks: &Perks{
+			Rows: [3]string{},
+		},
+	}
+}
+
+func (p *Page) Validate() error {
+	if p.Title == "" {
+		return errInvalidTitle
+	}
+
+	primaryTree, ok := RunesPrimary[p.Primary.Tree]
+	if !ok {
+		return errInvalidTree
+	}
+
+	secondaryTree, ok := RunesSecondary[p.Secondary.Tree]
+	if !ok {
+		return errInvalidTree
+	}
+
+	if p.Secondary.Tree == p.Primary.Tree {
+		return errInvalidTree
+	}
+
+	for i, row := range p.Primary.Rows {
+		var exists bool
+		for _, r := range primaryTree[i] {
+			if r == row {
+				exists = true
+			}
+		}
+		if !exists {
+			return errInvalidRune
+		}
+	}
+
+	for i, row := range p.Secondary.Rows {
+		var exists bool
+		for _, r := range secondaryTree[i] {
+			if r == row {
+				exists = true
+			}
+		}
+		if !exists {
+			return errInvalidRune
+		}
+	}
+
+	for i, row := range p.Perks.Rows {
+		var exists bool
+		for _, p := range PerksPool[i] {
+			if row == p {
+				exists = true
+			}
+		}
+		if !exists {
+			return errInvalidPerk
+		}
+	}
+
+	for _, champ := range p.Champions {
+		var exists bool
+		for _, c := range Champs {
+			if champ == c {
+				exists = true
+			}
+		}
+		if !exists {
+			return errInvalidChamp
+		}
+	}
+
+	return nil
+}
+
+func (p *Page) FinalizeCreate(owner snowflake.ID) {
+	now := time.Now()
+	p.UID = pageIDCluster.Generate()
+	p.Owner = owner
+	p.Created = now
+	p.Edited = now
 }

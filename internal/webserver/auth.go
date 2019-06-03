@@ -13,6 +13,7 @@ import (
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/zekroTJA/lol-runes/internal/database"
+	"github.com/zekroTJA/lol-runes/internal/objects"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -92,13 +93,17 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		expires = expires.Add(sessionExpireDefault)
 	}
 
-	cookie := fmt.Sprintf("__session=%s; Expires=%s; Path=/; HttpOnly",
-		sessionKey, expires.Format(time.RFC3339))
-	ctx.Response.Header.SetBytesK(setCookieHeader, cookie)
-
 	if err = auth.db.CreateSession(sessionKey, user.UID); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
 	}
+
+	if _, err = auth.db.EditUser(&objects.User{UID: user.UID}, true); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
+	}
+
+	cookie := fmt.Sprintf("__session=%s; Expires=%s; Path=/; HttpOnly",
+		sessionKey, expires.Format(time.RFC3339))
+	ctx.Response.Header.SetBytesK(setCookieHeader, cookie)
 
 	return true
 }

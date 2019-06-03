@@ -14,6 +14,7 @@ var (
 	errNotFound         = errors.New("not found")
 	errInvalidArguments = errors.New("invalid arguments")
 	errUNameInUse       = errors.New("user name already in use")
+	errNoAccess         = errors.New("access denied")
 )
 
 // Static File Handlers
@@ -71,10 +72,23 @@ func (ws *WebServer) registerHandlers() {
 	api.Use(ws.addCORSHeaders)
 	api.Post("/login", ws.handlerLogin)
 
+	resources := api.Group("/resources")
+	resources.Get("/champions", ws.handlerGetChamps)
+	resources.Get("/runes", ws.handlerGetRunes)
+
 	users := api.Group("/users")
 	users.
 		Post("/me", ws.handlerCreateUser).
 		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe)
+
+	pages := api.Group("/pages", ws.auth.CheckRequestAuth)
+	pages.
+		Post("", ws.handlerCreatePage).
+		Get(ws.handlerGetPages)
+	pages.
+		Get(`/<uid:\d+>`, ws.handlerGetPage).
+		Post(ws.handlerEditPage).
+		Delete(ws.handlerDeletePage)
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

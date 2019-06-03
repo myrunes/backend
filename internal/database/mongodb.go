@@ -93,6 +93,90 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 	return user, err
 }
 
+func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
+	oldUser, err := m.GetUser(user.UID, "")
+	if err != nil {
+		return false, err
+	}
+
+	if oldUser == nil {
+		return false, nil
+	}
+
+	if login {
+		oldUser.LastLogin = time.Now()
+	}
+
+	if user.DisplayName != "" {
+		oldUser.DisplayName = user.DisplayName
+	}
+
+	if user.PassHash != nil && len(user.PassHash) > 0 {
+		oldUser.PassHash = user.PassHash
+	}
+
+	return true, m.insertOrUpdate(m.collections.users,
+		bson.M{"uid": oldUser.UID}, oldUser)
+}
+
+func (m *MongoDB) CreatePage(page *objects.Page) error {
+	return m.insert(m.collections.pages, page)
+}
+
+func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
+	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), bson.M{"owner": uid})
+	if err != nil {
+		return nil, err
+	}
+
+	pages := make([]*objects.Page, 0)
+	for res.Next(ctxTimeout(2 * time.Second)) {
+		page := new(objects.Page)
+		err = res.Decode(page)
+		if err != nil {
+			return nil, err
+		}
+		pages = append(pages, page)
+	}
+
+	return pages, nil
+}
+
+func (m *MongoDB) GetPage(uid snowflake.ID) (*objects.Page, error) {
+	page := new(objects.Page)
+	ok, err := m.get(m.collections.pages, bson.M{"uid": uid}, page)
+	if err != nil || !ok {
+		return nil, err
+	}
+	return page, nil
+}
+
+func (m *MongoDB) EditPage(page *objects.Page) (*objects.Page, error) {
+	oldPage, err := m.GetPage(page.UID)
+	if err != nil {
+		return nil, err
+	}
+	if oldPage == nil {
+		return nil, nil
+	}
+
+	page.Created = oldPage.Created
+	page.UID = oldPage.UID
+	page.Owner = oldPage.Owner
+	page.Edited = time.Now()
+	err = page.Validate()
+	if err != nil {
+		return nil, err
+	}
+
+	return page, m.insertOrUpdate(m.collections.pages, bson.M{"uid": page.UID}, page)
+}
+
+func (m *MongoDB) DeletePage(uid snowflake.ID) error {
+	_, err := m.collections.pages.DeleteOne(ctxTimeout(5*time.Second), bson.M{"uid": uid})
+	return err
+}
+
 func (m *MongoDB) CreateSession(key string, uID snowflake.ID) error {
 	session := &objects.Session{
 		Key: key,

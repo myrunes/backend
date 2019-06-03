@@ -16,6 +16,13 @@ type Middleware interface {
 
 	CreateUser(user *objects.User) error
 	GetUser(uid snowflake.ID, username string) (*objects.User, error)
+	EditUser(user *objects.User, login bool) (bool, error)
+
+	CreatePage(page *objects.Page) error
+	GetPages(uid snowflake.ID) ([]*objects.Page, error)
+	GetPage(uid snowflake.ID) (*objects.Page, error)
+	EditPage(page *objects.Page) (*objects.Page, error)
+	DeletePage(uid snowflake.ID) error
 
 	CreateSession(key string, uID snowflake.ID) error
 	GetSession(key string) (*objects.User, error)
