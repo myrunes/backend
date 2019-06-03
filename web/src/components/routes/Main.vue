@@ -1,8 +1,15 @@
 <template>
-  <div class="outer-container">
-    <div class="searchbar mx-auto position-relative">
-      <input type="text" class="tb tb-champ" autocomplete="off"/>
-      <span class="tb tb-champ"></span>
+  <div>
+    <div class="outer-container">
+      <div class="searchbar mx-auto position-relative">
+        <input type="text" class="tb tb-champ" autocomplete="off" @input="searchAndDisplay"/>
+        <span class="tb tb-champ"></span>
+      </div>
+    </div>
+    <div class="container mt-5">
+      <a v-for="c in displayedChamps" :key="c">
+        <img :src="`/assets/champ-avis/${c}.png`"/>
+      </a>
     </div>
   </div>
 </template>
@@ -28,7 +35,16 @@ export default {
   },
 
   methods: {
-    
+    searchAndDisplay(e) {
+      console.log(e);
+      if (!e.target || e.target.value === undefined) return;
+      let val = e.target.value.toLowerCase();
+      if (val === '') {
+        this.displayedChamps = [];
+      } else {
+        this.displayedChamps = this.champs.filter((c) => c.includes(val));
+      }
+    }
   },
 
   created: function() {
