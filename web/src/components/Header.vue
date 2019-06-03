@@ -1,11 +1,15 @@
 <template>
   <div class="header d-flex">
     <div class="d-flex">
-      <h1 class="mr-4">LOL RUNES</h1>
+      <router-link to="/">
+        <button class="btn-slide btn-logo">
+          <h1 class="mr-4">LOL RUNES</h1>
+        </button>
+      </router-link>
       <button class="btn-slide">MY PAGES</button>
       <button class="btn-slide">SETTINGS</button>
     </div>
-    <button class="btn-slide" @click="logout">LOGOUT</button>
+    <button class="btn-slide btn-logout" @click="logout">LOGOUT</button>
   </div>
 </template>
 
@@ -44,6 +48,18 @@ export default {
   height: 50px;
   background-color: #37474F;
   justify-content: space-between;
+}
+
+.btn-logo {
+  background-color: transparent;
+}
+
+.btn-logo::before {
+  background-color: #03A9F4;
+}
+
+.btn-logout::before {
+  background-color: #FF5722;
 }
 
 h1 {

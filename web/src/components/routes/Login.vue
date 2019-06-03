@@ -14,17 +14,21 @@
           class="tb mx-auto"
           @change="checkUsername"
           v-model="username"
+          placeholder="USERNAME"
+          autocomplete="off"
         >
-          <span class="tb mx-auto"></span>
-        </div>
-        <div class="d-flex mt-5 position-relative">
-          <input 
-            v-model="password" 
-            id="tbPassword" 
-            type="password" 
-            class="tb mx-auto"
-          >
-          <span class="tb mx-auto"></span>
+        <span class="tb mx-auto"></span>
+      </div>
+      <div class="d-flex mt-5 position-relative">
+        <input 
+          v-model="password" 
+          id="tbPassword" 
+          type="password" 
+          class="tb mx-auto"
+          placeholder="PASSWORD"
+          autocomplete="off"
+        >
+        <span class="tb mx-auto"></span>
        </div>
        <div class="d-flex mt-5">
           <button 

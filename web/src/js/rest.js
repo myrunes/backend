@@ -3,7 +3,9 @@
 import request from 'request';
 
 const HOST =
-  process.env.NODE_ENV === 'production' ? '' : 'http://localhost:8080';
+  process.env.NODE_ENV === 'production'
+    ? window.location.origin
+    : 'http://localhost:8080';
 
 function getMe() {
   return _req({
@@ -51,6 +53,13 @@ function logout() {
   });
 }
 
+function getChamps() {
+  return _req({
+    url: `${HOST}/api/resources/champions`,
+    method: 'GET',
+  });
+}
+
 function _req(options) {
   return new Promise((resolve, rejects) => {
     options.withCredentials = true;
@@ -59,12 +68,14 @@ function _req(options) {
         rejects(err);
         return;
       }
+
+      if (body && typeof body === 'string') body = JSON.parse(body);
+
       if (res.statusCode >= 400) {
-        body = JSON.parse(body);
         rejects(body);
         return;
       }
-      resolve(res, body);
+      resolve({ res, body });
     });
   });
 }
@@ -75,4 +86,5 @@ export default {
   register,
   login,
   logout,
+  getChamps,
 };
