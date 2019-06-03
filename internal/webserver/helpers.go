@@ -14,8 +14,10 @@ import (
 var emptyResponseBody = []byte("{}")
 
 var defStatusBoddies = map[int][]byte{
-	http.StatusOK:      []byte("{\n  \"code\": 200,\n  \"message\": \"ok\"\n}"),
-	http.StatusCreated: []byte("{\n  \"code\": 201,\n  \"message\": \"created\"\n}"),
+	http.StatusOK:           []byte("{\n  \"code\": 200,\n  \"message\": \"ok\"\n}"),
+	http.StatusCreated:      []byte("{\n  \"code\": 201,\n  \"message\": \"created\"\n}"),
+	http.StatusNotFound:     []byte("{\n  \"code\": 404,\n  \"message\": \"not found\"\n}"),
+	http.StatusUnauthorized: []byte("{\n  \"code\": 401,\n  \"message\": \"unauthorized\"\n}"),
 }
 
 // jsonError writes the error message of err and the
@@ -81,7 +83,7 @@ func (ws *WebServer) addCORSHeaders(ctx *routing.Context) error {
 	if static.Release != "TRUE" {
 		ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:8081")
 		ctx.Response.Header.Set("Access-Control-Allow-Headers", "authorization, content-type, set-cookie, cookie")
-		ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, DELETE")
+		ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
 		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 	}
 

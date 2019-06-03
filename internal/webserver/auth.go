@@ -81,31 +81,37 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 
+	auth.CreateSession(ctx, user.UID, login.Remember)
+
+	return true
+}
+
+func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) error {
 	sessionKey, err := auth.CreateSessionKey()
 	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	expires := time.Now()
-	if login.Remember {
+	if remember {
 		expires = expires.Add(sessionExpireRemember)
 	} else {
 		expires = expires.Add(sessionExpireDefault)
 	}
 
-	if err = auth.db.CreateSession(sessionKey, user.UID); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
+	if err = auth.db.CreateSession(sessionKey, uid); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	if _, err = auth.db.EditUser(&objects.User{UID: user.UID}, true); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
+	if _, err = auth.db.EditUser(&objects.User{UID: uid}, true); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	cookie := fmt.Sprintf("__session=%s; Expires=%s; Path=/; HttpOnly",
 		sessionKey, expires.Format(time.RFC3339))
-	ctx.Response.Header.SetBytesK(setCookieHeader, cookie)
+	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
 
-	return true
+	return nil
 }
 
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
@@ -125,4 +131,18 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	ctx.Set("user", user)
 
 	return nil
+}
+
+func (auth *Authorization) LogOut(ctx *routing.Context) error {
+	key := ctx.Request.Header.Cookie("__session")
+	if key == nil || len(key) == 0 {
+		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	auth.db.DeleteSession(string(key))
+
+	cookie := "__session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly"
+	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

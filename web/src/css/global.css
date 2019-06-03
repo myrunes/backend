@@ -1,0 +1,137 @@
+@import url('https://fonts.googleapis.com/css?family=Roboto:300,400,500&display=swap');
+@import url('https://fonts.googleapis.com/css?family=Montserrat:200,300,400&display=swap');
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  color: white;
+  background-color: #263238 !important;
+  font-family: 'Roboto', sans-serif;
+  margin: 0px;
+  padding: 0px;
+}
+
+button:focus {
+  outline : 0;
+  -moz-outline : 0;
+}
+
+h1, h2, h3 {
+  font-family: 'Montserrat', sans-serif;
+  font-weight: 200;
+}
+
+h1, h2, h3, a, p, span {
+  color: white !important;
+}
+
+.tb {
+  width: 300px;
+  color: white;
+  font-size: inherit;
+  font-family: inherit;
+  background-color: transparent;
+  border: 1px solid transparent;
+  border-bottom-color: hsla(185, 100%, 62%, 0.2);
+  text-align: center;
+}
+
+tb:focus {
+  outline: none;
+}
+
+.tb::placeholder {
+  color: hsla(0, 0%, 100%, 0.6);
+}
+
+span.tb {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 1px;
+  background-color: #03A9F4;
+  transform-origin: bottom right;
+  transform: scaleX(0);
+  transition: transform 0.5s ease;
+}
+
+.tb:focus ~ span {
+  transform-origin: bottom left;
+  transform: scaleX(1);
+}
+
+.btn-bubble {
+  z-index: 1;
+  position: relative;
+  font-size: inherit;
+  font-family: inherit;
+  color: white;
+  padding: 0.5em 1em;
+  outline: none;
+  border: none;
+  background-color: #1d252b;
+  overflow: hidden;
+  transition: color 0.4s ease-in-out;
+}
+
+.btn-bubble::before {
+  content: '';
+  z-index: -1;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 1em;
+  height: 1em;
+  border-radius: 50%;
+  background-color: #03A9F4;
+  transform-origin: center;
+  transform: translate(-50%, -50%) scale(0);
+  transition: transform 0.35s ease-in-out;
+}
+
+.btn-bubble:hover {
+  cursor: pointer;
+  color: #161616;
+}
+
+.btn-bubble:hover::before {
+  transform: translate(-50%, -50%) scale(19);
+}
+
+.btn-slide {
+  z-index: 1;
+  position: relative;
+  font-size: inherit;
+  font-family: inherit;
+  color: white;
+  padding: 0.5em 1em;
+  outline: none;
+  border: none;
+  background-color: #455A64;
+}
+
+.btn-slide::before {
+  content: '';
+  z-index: -1;
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background-color: #fc2f70;
+  transform-origin: center left;
+  transform: scaleX(0);
+  transition: transform 0.25s ease-in-out;
+}
+
+.btn-slide:hover {
+  cursor: pointer;
+}
+
+.btn-slide:hover::before {
+  transform-origin: center right;
+  transform: scaleX(1);
+}

@@ -50,6 +50,8 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 
 	newUser.PassHash = nil
 
+	ws.auth.CreateSession(ctx, newUser.UID, data.Remember)
+
 	return jsonResponse(ctx, newUser, fasthttp.StatusCreated)
 }
 
@@ -184,4 +186,20 @@ func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 		"perks":     objects.PerksPool,
 	}
 	return jsonResponse(ctx, data, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
+	uname := ctx.Param("uname")
+
+	user, err := ws.db.GetUser(snowflake.ID(-1), strings.ToLower(uname))
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	status := fasthttp.StatusOK
+	if user == nil {
+		status = fasthttp.StatusNotFound
+	}
+
+	return jsonResponse(ctx, nil, status)
 }

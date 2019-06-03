@@ -209,6 +209,11 @@ func (m *MongoDB) GetSession(key string) (*objects.User, error) {
 	return user, nil
 }
 
+func (m *MongoDB) DeleteSession(key string) error {
+	_, err := m.collections.sessions.DeleteOne(ctxTimeout(5*time.Second), bson.M{"key": key})
+	return err
+}
+
 // --- HELPERS ------------------------------------------------------------------
 
 func (m *MongoDB) insert(collection *mongo.Collection, v interface{}) error {

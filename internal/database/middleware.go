@@ -26,4 +26,5 @@ type Middleware interface {
 
 	CreateSession(key string, uID snowflake.ID) error
 	GetSession(key string) (*objects.User, error)
+	DeleteSession(key string) error
 }

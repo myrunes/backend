@@ -66,11 +66,11 @@ func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
 }
 
 func (ws *WebServer) registerHandlers() {
-	ws.router.Use(ws.handlerFiles)
+	ws.router.Use(ws.handlerFiles, ws.addCORSHeaders)
 
 	api := ws.router.Group("/api")
-	api.Use(ws.addCORSHeaders)
 	api.Post("/login", ws.handlerLogin)
+	api.Post("/logout", ws.auth.LogOut)
 
 	resources := api.Group("/resources")
 	resources.Get("/champions", ws.handlerGetChamps)
@@ -80,6 +80,8 @@ func (ws *WebServer) registerHandlers() {
 	users.
 		Post("/me", ws.handlerCreateUser).
 		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe)
+	users.
+		Get("/<uname>", ws.handlerCheckUsername)
 
 	pages := api.Group("/pages", ws.auth.CheckRequestAuth)
 	pages.
