@@ -1,6 +1,6 @@
 <template>
   <div>
-    <Banner v-if="banner.visible" :type="banner.type">{{ banner.content }}</Banner>
+    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">{{ banner.content }}</Banner>
 
     <div>
       <div class="position-relative mb-3">
@@ -34,6 +34,7 @@
           !(page.primary.tree === tree || 
           page.secondary.tree === tree)
         }"
+        :name="changes.trees"
         @click="treeClick(tree)"
       >
         <img :src="`/assets/rune-avis/${tree}.png`"/>
@@ -168,6 +169,7 @@ export default {
       },
 
       changes: {
+        trees: 0,
         primary: 0,
         secondary: 0,
         perks: 0,
@@ -221,6 +223,8 @@ export default {
     },
 
     treeClick(tree) {
+      this.changes.trees++;
+
       if (this.page.secondary.tree) {
         if (tree === this.page.secondary.tree) {
           this.page.secondary.tree = null;
@@ -261,13 +265,24 @@ export default {
     },
 
     save() {
-      Rest.updatePage(this.uid, this.page).then(() => {
+      var method;
+      if (this.uid === 'new') {
+        method = Rest.createPage(this.page);
+      } else {
+        method = Rest.updatePage(this.uid, this.page);
+      }
+
+      method.then((res) => {
         this.banner = {
           visible: true,
           type: 'success',
           content: 'Page saved!',
         }
         window.scrollTo(0, 0);
+        if (this.uid === 'new') {
+          this.uid = res.body.uid;
+          this.$router.replace({ name: 'RunePage', params: { uid: this.uid } });
+        }
         setTimeout(() => this.banner.visible = false, 10000);
       }).catch((err) => {
         this.banner = {
@@ -295,11 +310,13 @@ export default {
       if (!res.body) return;
       this.runes = res.body;
 
-      Rest.getPage(this.uid).then((res) => {
-        if (!res.body) return;
-          this.page = res.body;
-          this.$refs.tbChamps.value = this.page.champions.join(', ');
-      }).catch(console.error);
+      if (this.uid !== 'new') {
+        Rest.getPage(this.uid).then((res) => {
+          if (!res.body) return;
+            this.page = res.body;
+            this.$refs.tbChamps.value = this.page.champions.join(', ');
+        }).catch(console.error);
+      }
     }).catch(console.error);
   }
 }

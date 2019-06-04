@@ -89,6 +89,14 @@ function updatePage(uid, page) {
   });
 }
 
+function createPage(page) {
+  return _req({
+    url: `${HOST}/api/pages`,
+    method: 'POST',
+    json: page,
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -122,4 +130,5 @@ export default {
   getPages,
   getPage,
   updatePage,
+  createPage,
 };

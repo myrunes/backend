@@ -17,7 +17,12 @@
         :perks="p.perks.rows.join(' ')"
       />
     </div>
-    <button class="btn-slide btn-new">+</button>
+    <button 
+      class="btn-slide btn-new"
+      @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
+    >
+      +
+    </button>
   </div>
 </template>
 
