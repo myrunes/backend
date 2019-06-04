@@ -60,6 +60,20 @@ function getChamps() {
   });
 }
 
+function getRunes() {
+  return _req({
+    url: `${HOST}/api/resources/runes`,
+    method: 'GET',
+  });
+}
+
+function getPages() {
+  return _req({
+    url: `${HOST}/api/pages`,
+    method: 'GET',
+  });
+}
+
 function _req(options) {
   return new Promise((resolve, rejects) => {
     options.withCredentials = true;
@@ -87,4 +101,6 @@ export default {
   login,
   logout,
   getChamps,
+  getRunes,
+  getPages,
 };

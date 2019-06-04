@@ -1,7 +1,7 @@
 <template>
   <div id="app">
     <Header v-if="loggedIn" />
-    <router-view></router-view>
+    <router-view :class="{ m : loggedIn }"></router-view>
   </div>
 </template>
 
@@ -60,5 +60,9 @@ export default {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+.m {
+  margin: 70px 20px;
 }
 </style>

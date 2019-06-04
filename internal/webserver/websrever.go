@@ -83,7 +83,9 @@ func (ws *WebServer) registerHandlers() {
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
 
-	pages := api.Group("/pages", ws.auth.CheckRequestAuth)
+	pages := api.Group("/pages", 
+		ws.addCORSHeaders,
+		ws.auth.CheckRequestAuth,)
 	pages.
 		Post("", ws.handlerCreatePage).
 		Get(ws.handlerGetPages)

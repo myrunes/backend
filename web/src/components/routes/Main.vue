@@ -6,9 +6,12 @@
         <span class="tb tb-champ"></span>
       </div>
     </div>
-    <div class="container mt-5">
-      <a v-for="c in displayedChamps" :key="c">
-        <img :src="`/assets/champ-avis/${c}.png`"/>
+    <div class="container mt-5 champs-container">
+      <a v-for="c in displayedChamps" 
+        :key="c"
+        @click="openChamp(c)"
+      >
+        <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100"/>
       </a>
     </div>
   </div>
@@ -36,7 +39,6 @@ export default {
 
   methods: {
     searchAndDisplay(e) {
-      console.log(e);
       if (!e.target || e.target.value === undefined) return;
       let val = e.target.value.toLowerCase();
       if (val === '') {
@@ -44,6 +46,10 @@ export default {
       } else {
         this.displayedChamps = this.champs.filter((c) => c.includes(val));
       }
+    },
+
+    openChamp(champ) {
+      this.$router.push({ name: 'Champ', params: { champ } });
     }
   },
 
@@ -77,6 +83,14 @@ export default {
 
 span.tb-champ {
   width: 50vw;
+}
+
+.champs-container {
+  text-align: center;
+}
+
+a:hover {
+  cursor: pointer;
 }
 
 </style>
