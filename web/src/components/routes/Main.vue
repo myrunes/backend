@@ -89,6 +89,15 @@ span.tb-champ {
   text-align: center;
 }
 
+.champs-container > a > img {
+  border: solid 2px rgba(3, 168, 244, 0);
+}
+
+.champs-container > a:hover > img {
+  border: solid 2px #03A9F4;
+  transition: all .25s ease-in-out;
+}
+
 a:hover {
   cursor: pointer;
 }

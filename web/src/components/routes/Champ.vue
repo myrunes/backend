@@ -67,17 +67,4 @@ export default {
   margin-right: 15px;
 }
 
-.btn-new {
-  position: fixed;
-  bottom: 30px;
-  right: 30px;
-
-  box-shadow: 0px 0px 23px 0px rgba(0, 0, 0, 0.233);
-  font-family: 'Montserrat', sans-serif;
-  font-size: 50px;
-  font-weight: 100;
-  padding: 20px;
-  line-height: 30px;
-}
-
 </style>

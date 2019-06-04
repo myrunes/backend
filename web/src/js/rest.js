@@ -74,6 +74,23 @@ function getPages() {
   });
 }
 
+function getPage(uid) {
+  return _req({
+    url: `${HOST}/api/pages/${uid}`,
+    method: 'GET',
+  });
+}
+
+function updatePage(uid, page) {
+  return _req({
+    url: `${HOST}/api/pages/${uid}`,
+    method: 'POST',
+    json: page,
+  });
+}
+
+// ----------------------------
+
 function _req(options) {
   return new Promise((resolve, rejects) => {
     options.withCredentials = true;
@@ -103,4 +120,6 @@ export default {
   getChamps,
   getRunes,
   getPages,
+  getPage,
+  updatePage,
 };

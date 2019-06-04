@@ -3,7 +3,7 @@
     <div class="d-flex">
       <router-link to="/">
         <button class="btn-slide btn-logo">
-          <h1 class="mr-4">LOL RUNES</h1>
+          <h1 class="mr-4">RUNES.WTF</h1>
         </button>
       </router-link>
       <button class="btn-slide">MY PAGES</button>

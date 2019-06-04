@@ -4,6 +4,7 @@ import Router from 'vue-router';
 import Login from '../components/routes/Login';
 import Main from '../components/routes/Main';
 import Champ from '../components/routes/Champ';
+import Edit from '../components/routes/Edit';
 
 export default new Router({
   mode: 'history',
@@ -23,6 +24,11 @@ export default new Router({
       path: '/champ/:champ',
       name: 'Champ',
       component: Champ,
+    },
+    {
+      path: '/page/:uid',
+      name: 'RunePage',
+      component: Edit,
     },
   ],
 });

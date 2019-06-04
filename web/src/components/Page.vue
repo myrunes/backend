@@ -1,8 +1,17 @@
 <template>
-  <div class="page">
+  <div class="page" @click="toPage(uid)">
     <div>
-      <h3 class="mb-3">{{ title }}</h3>
-      <div class="runes">
+      <div class="headline">
+        <h3 class="mb-3 mr-3">{{ title }}</h3>
+        <div class="champs mt-2">
+          <img v-for="c in champs.split(' ')"
+            :key="c"
+            :src="`/assets/champ-avis/${c}.png`"
+            width="20" height="20"
+          />
+        </div>
+      </div>
+      <div class="runes" :class="`tree-${primary}`">
         <img :src="`/assets/rune-avis/${primary}.png`" 
           class="mr-3" width="50" height="50"
         />
@@ -12,7 +21,7 @@
           width="50" height="50"
         />
       </div>
-      <div class="runes">
+      <div class="runes" :class="`tree-${secondary}`">
         <img :src="`/assets/rune-avis/${secondary}.png`" 
           class="mr-3" width="50" height="50"
         />
@@ -22,20 +31,13 @@
           width="50" height="50"
         />
       </div>
-      <div class="runes">
+      <div class="runes perks">
         <img v-for="r in perks.split(' ')"
           :key="r"
           :src="`/assets/rune-avis/perks/${r}.png`"
           width="30" height="30"
           class="perk"
           :class="`perk-${r}`"
-        />
-      </div>
-      <div class="champs">
-        <img v-for="c in champs.split(' ')"
-          :key="c"
-          :src="`/assets/champ-avis/${c}.png`"
-          width="15" height="15"
         />
       </div>
     </div>
@@ -57,6 +59,12 @@ export default {
     srows: String,
     perks: String,
   },
+
+  methods: {
+    toPage(uid) {
+      this.$router.push({ name: 'RunePage', params: { uid } });
+    }
+  }
 }
 
 </script>
@@ -102,7 +110,9 @@ export default {
 
 .runes {
   display: flex;
-  margin: 0px 0px 20px 0px;
+  margin: 0px 0px 10px 0px;
+  padding: 10px;
+  border-radius: 5px;
 }
 
 .runes > img {
@@ -112,6 +122,14 @@ export default {
 .perk {
   padding: 5px;
   border-radius: 50%;
+}
+
+.perks {
+  background-color: rgba(97, 97, 97, 0.25);
+}
+
+.headline {
+  display: flex;
 }
 
 </style>
