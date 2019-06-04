@@ -97,6 +97,13 @@ function createPage(page) {
   });
 }
 
+function deletePage(uid) {
+  return _req({
+    url: `${HOST}/api/pages/${uid}`,
+    method: 'DELETE',
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -131,4 +138,5 @@ export default {
   getPage,
   updatePage,
   createPage,
+  deletePage,
 };

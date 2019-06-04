@@ -1,5 +1,5 @@
 <template>
-  <div class="page" @click="toPage(uid)">
+  <div class="page" @click="toPage(uid, $event)">
     <div>
       <div class="headline">
         <h3 class="mb-3 mr-3">{{ title }}</h3>
@@ -41,10 +41,19 @@
         />
       </div>
     </div>
+    <div>
+      <button 
+        class="btn-slide btn-delete"
+        @click="deletePage"
+      >
+        {{ suredel ? 'SURE?' : 'DELETE' }}
+      </button>
+    </div>
   </div>
 </template>
 
 <script>
+import Rest from '../js/rest';
 
 export default {
   name: 'Page',
@@ -60,9 +69,29 @@ export default {
     perks: String,
   },
 
+  data: function() {
+    return {
+      suredel: false,
+    }
+  },
+
   methods: {
-    toPage(uid) {
+    toPage(uid, e) {
+      if (e.target.localName === 'button') return;
       this.$router.push({ name: 'RunePage', params: { uid } });
+    },
+
+    deletePage() {
+      if (this.suredel) {
+        Rest.deletePage(this.uid).then(() => {
+          this.$emit('delete');
+        }).catch(console.error);
+      } else {
+        this.suredel = true;
+        setTimeout(() => {
+          this.suredel = false;
+        }, 2500)
+      }
     }
   }
 }
@@ -125,6 +154,10 @@ export default {
 
 .headline {
   display: flex;
+}
+
+.btn-delete::before {
+  background-color: rgb(229,57,53);
 }
 
 </style>

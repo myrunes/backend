@@ -15,6 +15,7 @@
         :prows="p.primary.rows.join(' ')"
         :srows="p.secondary.rows.join(' ')"
         :perks="p.perks.rows.join(' ')"
+        @delete="deleted"
       />
     </div>
     <button 
@@ -45,16 +46,22 @@ export default {
   },
 
   methods: {
+    reload() {
+      Rest.getPages().then((res) => {
+        if (!res.body) return;
+        this.pages = res.body.data
+          .filter((p) => p.champions.includes(this.champ));
+      }).catch(console.error);
+    },
 
+    deleted() {
+      this.reload();
+    }
   },
 
   created: function() {
     this.champ = this.$route.params.champ;
-    Rest.getPages().then((res) => {
-      if (!res.body) return;
-      this.pages = res.body.data
-        .filter((p) => p.champions.includes(this.champ));
-    }).catch(console.error);
+    this.reload();
   }
 }
 
