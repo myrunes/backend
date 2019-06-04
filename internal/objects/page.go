@@ -10,11 +10,12 @@ import (
 var pageIDCluster, _ = snowflake.NewNode(200)
 
 var (
-	errInvalidTree  = errors.New("invalid tree")
-	errInvalidRune  = errors.New("invalid rune")
-	errInvalidPerk  = errors.New("invalid perk")
-	errInvalidChamp = errors.New("invalid champion")
-	errInvalidTitle = errors.New("invalid title")
+	errInvalidTree    = errors.New("invalid tree")
+	errInvalidPriRune = errors.New("invalid primary rune")
+	errInvalidSecRune = errors.New("invalid secondary rune")
+	errInvalidPerk    = errors.New("invalid perk")
+	errInvalidChamp   = errors.New("invalid champion")
+	errInvalidTitle   = errors.New("invalid title")
 )
 
 var Champs = []string{
@@ -125,7 +126,7 @@ type PrimaryTree struct {
 
 type SecondaryTree struct {
 	Tree string    `json:"tree"`
-	Rows [3]string `json:"rows"`
+	Rows [2]string `json:"rows"`
 }
 
 type Perks struct {
@@ -139,7 +140,7 @@ func NewEmptyPage() *Page {
 			Rows: [4]string{},
 		},
 		Secondary: &SecondaryTree{
-			Rows: [3]string{},
+			Rows: [2]string{},
 		},
 		Perks: &Perks{
 			Rows: [3]string{},
@@ -174,20 +175,27 @@ func (p *Page) Validate() error {
 			}
 		}
 		if !exists {
-			return errInvalidRune
+			return errInvalidPriRune
 		}
 	}
 
-	for i, row := range p.Secondary.Rows {
-		var exists bool
-		for _, r := range secondaryTree[i] {
-			if r == row {
-				exists = true
+	sec := 0
+	for _, row := range secondaryTree {
+		for _, ru := range row {
+			var ex bool
+			for _, r := range p.Secondary.Rows {
+				if r == ru {
+					ex = true
+				}
+			}
+			if ex {
+				sec++
+				break
 			}
 		}
-		if !exists {
-			return errInvalidRune
-		}
+	}
+	if sec != 2 {
+		return errInvalidSecRune
 	}
 
 	for i, row := range p.Perks.Rows {

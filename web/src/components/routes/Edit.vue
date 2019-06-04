@@ -73,7 +73,7 @@
         >
           <a v-for="rune in row" :key="`rune-${rune}`" 
             class="mr-2 bordered"
-            :class="{disabled: page.secondary.rows[rowIndex] !== rune}"
+            :class="{disabled: !page.secondary.rows.includes(rune)}"
             @click="secondaryClick(rowIndex, rune)"
           >
             <img 
@@ -178,6 +178,15 @@ export default {
   },
 
   methods: {
+    getSecRow(rune) {
+      let t = this.runes.secondary[this.page.secondary.tree];
+      for (let i in t) {
+        if (t[i].find((r) => r === rune))
+          return i;
+      }
+      return -1;
+    },
+
     titleChange(e) {
       if (e.target.value.length < 1) {
         this.banner = {
@@ -201,7 +210,7 @@ export default {
         return;
       }
 
-      let champs = val.split(',').map((v) => v.trim());
+      let champs = val.split(',').map((v) => v.trim().toLowerCase());
       let invalid = [];
       for (let c of champs) {
         if (!this.champs.includes(c)) {
@@ -255,7 +264,18 @@ export default {
     },
 
     secondaryClick(rowIndex, rune) {
-      this.page.secondary.rows[rowIndex] = rune;
+      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0]))
+        return;
+      
+      if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
+        this.page.secondary.rows[1] = this.page.secondary.rows[0];
+        this.page.secondary.rows[0] = rune;
+      } else if (this.page.secondary.rows[0]) {
+        this.page.secondary.rows[1] = rune;
+      } else {
+        this.page.secondary.rows[0] = rune;
+      }
+
       this.changes.secondary++;
     },
 
@@ -278,11 +298,11 @@ export default {
           type: 'success',
           content: 'Page saved!',
         }
-        window.scrollTo(0, 0);
         if (this.uid === 'new') {
           this.uid = res.body.uid;
           this.$router.replace({ name: 'RunePage', params: { uid: this.uid } });
         }
+        window.scrollTo(0, 0);
         setTimeout(() => this.banner.visible = false, 10000);
       }).catch((err) => {
         this.banner = {
