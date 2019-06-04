@@ -3,13 +3,13 @@
     <div class="d-flex">
       <router-link to="/">
         <button class="btn-slide btn-logo">
-          <h1 class="mr-4">RUNES.WTF</h1>
+          <h1 class="mr-4"><b>MY</b>RUNES</h1>
         </button>
       </router-link>
       <router-link to="/pages">
         <button class="btn-slide h-100">MY PAGES</button>
       </router-link>
-      <button class="btn-slide">SETTINGS</button>
+      <button class="btn-slide">MY SETTINGS</button>
     </div>
     <button class="btn-slide btn-logout" @click="logout">LOGOUT</button>
   </div>
@@ -70,6 +70,10 @@ h1 {
   margin-bottom: auto;
   margin-top: auto;
   margin-left: 20px;
+}
+
+b {
+  font-weight: 400;
 }
 
 </style>
