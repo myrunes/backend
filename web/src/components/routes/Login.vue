@@ -29,15 +29,23 @@
           autocomplete="off"
         >
         <span class="tb mx-auto"></span>
-       </div>
-       <div class="d-flex mt-5">
-          <button 
-            class="btn-bubble mx-auto"
-            @click="login"
-          >
-            {{ register ? 'REGISTER' : 'LOGIN' }}
-          </button>
-       </div>
+      </div>
+      <div class="d-flex mt-5">
+        <Slider 
+          class="mx-auto"
+          v-model="remember"
+        >
+          Stay logged in (30 days)
+        </Slider>
+      </div>
+      <div class="d-flex mt-5">
+        <button 
+          class="btn-bubble mx-auto"
+          @click="login"
+        >
+          {{ register ? 'REGISTER' : 'LOGIN' }}
+        </button>
+      </div>
     </div>
   </div>
 </template>
@@ -45,8 +53,8 @@
 <script>
 import Rest from '../../js/rest';
 import Banner from '../Banner';
+import Slider from '../Slider';
 import EventBus from '../../js/eventbus';
-
 
 export default {
   name: 'Login',
@@ -56,6 +64,7 @@ export default {
 
   components: {
     Banner,
+    Slider,
   },
 
   data: function() {
