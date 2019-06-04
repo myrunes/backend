@@ -1,6 +1,7 @@
 package config
 
 import (
+	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
@@ -49,7 +50,8 @@ func cretaeDefault(loc string) error {
 
 	data, err := yaml.Marshal(def)
 
-	basePath := path.Base(loc)
+	basePath := path.Dir(loc)
+	fmt.Println(basePath)
 	if _, err = os.Stat(basePath); os.IsNotExist(err) {
 		err = os.MkdirAll(basePath, 0750)
 		if err != nil {
