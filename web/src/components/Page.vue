@@ -119,11 +119,6 @@ export default {
   margin-right: 10px;
 }
 
-.perk {
-  padding: 5px;
-  border-radius: 50%;
-}
-
 .perks {
   background-color: rgba(97, 97, 97, 0.25);
 }

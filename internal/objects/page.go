@@ -202,6 +202,7 @@ func (p *Page) Validate() error {
 		}
 	}
 
+	champMap := map[string]interface{}{}
 	for _, champ := range p.Champions {
 		var exists bool
 		for _, c := range Champs {
@@ -212,7 +213,18 @@ func (p *Page) Validate() error {
 		if !exists {
 			return errInvalidChamp
 		}
+
+		champMap[champ] = nil
 	}
+
+	champs := make([]string, len(champMap))
+	i := 0
+	for k := range champMap {
+		champs[i] = k
+		i++
+	}
+
+	p.Champions = champs
 
 	return nil
 }

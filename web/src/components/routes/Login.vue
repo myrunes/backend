@@ -182,6 +182,7 @@ export default {
 <style scoped>
 
 .outer-container {
+  z-index: 100;
   width: 100vw;
   height: 100vh;
   display: flex;
