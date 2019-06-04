@@ -6,7 +6,9 @@
           <h1 class="mr-4">RUNES.WTF</h1>
         </button>
       </router-link>
-      <button class="btn-slide">MY PAGES</button>
+      <router-link to="/pages">
+        <button class="btn-slide h-100">MY PAGES</button>
+      </router-link>
       <button class="btn-slide">SETTINGS</button>
     </div>
     <button class="btn-slide btn-logout" @click="logout">LOGOUT</button>

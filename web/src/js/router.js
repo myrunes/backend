@@ -5,6 +5,7 @@ import Login from '../components/routes/Login';
 import Main from '../components/routes/Main';
 import Champ from '../components/routes/Champ';
 import Edit from '../components/routes/Edit';
+import Pages from '../components/routes/Pages';
 
 export default new Router({
   mode: 'history',
@@ -29,6 +30,11 @@ export default new Router({
       path: '/page/:uid',
       name: 'RunePage',
       component: Edit,
+    },
+    {
+      path: '/pages',
+      name: 'RunePages',
+      component: Pages,
     },
   ],
 });
