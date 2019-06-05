@@ -57,6 +57,7 @@ export default {
   }
 
   .cooke-info {
+    z-index: 101;
     display: flex;
     position: fixed;
     bottom: 0px;
