@@ -27,6 +27,14 @@ h1, h2, h3, a, p, span {
   color: white !important;
 }
 
+a:hover {
+  cursor: pointer;
+}
+
+hr {
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
 .tb {
   width: 300px;
   color: white;
@@ -147,6 +155,14 @@ span.tb {
   font-weight: 100;
   padding: 20px;
   line-height: 30px;
+}
+
+.btn-cancel::before {
+  background-color: rgb(229,57,53);
+}
+
+.btn-save::before {
+  background-color: rgb(124,179,66);
 }
 
 .shadow {

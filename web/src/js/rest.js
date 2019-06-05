@@ -112,6 +112,14 @@ function updateUser(update) {
   });
 }
 
+function deleteUser(currpassword) {
+  return _req({
+    url: `${HOST}/api/users/me`,
+    method: 'DELETE',
+    json: { currpassword },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -148,4 +156,5 @@ export default {
   createPage,
   deletePage,
   updateUser,
+  deleteUser,
 };

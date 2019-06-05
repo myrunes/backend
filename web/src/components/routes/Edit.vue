@@ -382,12 +382,4 @@ a:hover {
   font-size: 18px;
 }
 
-.btn-cancel::before {
-  background-color: rgb(229,57,53);
-}
-
-.btn-save::before {
-  background-color: rgb(124,179,66);
-}
-
 </style>

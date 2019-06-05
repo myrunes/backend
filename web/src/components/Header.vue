@@ -2,14 +2,16 @@
   <div class="header d-flex">
     <div class="d-flex">
       <router-link to="/">
-        <button class="btn-slide btn-logo">
+        <button class="btn-slide btn-logo h-100">
           <h1 class="mr-4"><b>MY</b>RUNES</h1>
         </button>
       </router-link>
       <router-link to="/pages">
         <button class="btn-slide h-100">MY PAGES</button>
       </router-link>
-      <button class="btn-slide">MY SETTINGS</button>
+      <router-link to="/settings">
+        <button class="btn-slide h-100">MY SETTINGS</button>
+      </router-link>
     </div>
     <button class="btn-slide btn-logout" @click="logout">LOGOUT</button>
   </div>

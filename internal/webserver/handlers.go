@@ -56,6 +56,10 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
+	if err = newUser.Validate(false); err != nil {
+		return jsonResponse(ctx, err, fasthttp.StatusBadRequest)
+	}
+
 	if err = ws.db.CreateUser(newUser); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -91,13 +95,17 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
-		return jsonResponse(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
 	newUser := &objects.User{
 		UID:         user.UID,
 		Username:    reqUser.Username,
 		DisplayName: reqUser.DisplayName,
+	}
+
+	if err = newUser.Validate(true); err != nil {
+		return jsonResponse(ctx, err, fasthttp.StatusBadRequest)
 	}
 
 	if reqUser.NewPassword != "" {
@@ -127,7 +135,7 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	}
 
 	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
-		return jsonResponse(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
 	if err = ws.db.DeleteUser(user.UID); err != nil {

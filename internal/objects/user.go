@@ -1,6 +1,8 @@
 package objects
 
 import (
+	"errors"
+	"regexp"
 	"strings"
 	"time"
 
@@ -10,6 +12,12 @@ import (
 )
 
 var userIDCLuster, _ = snowflake.NewNode(100)
+
+var allowedUNameChars = regexp.MustCompile(`[\w_\-]+`)
+
+var (
+	ErrInvalidUsername = errors.New("invalid username")
+)
 
 type User struct {
 	UID         snowflake.ID `json:"uid"`
@@ -37,4 +45,14 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 	}
 
 	return user, nil
+}
+
+func (u *User) Validate(acceptEmptyUsername bool) error {
+	if (!acceptEmptyUsername && len(u.Username) < 3) ||
+		len(allowedUNameChars.FindAllString(u.Username, -1)) > 1 {
+
+		return ErrInvalidUsername
+	}
+
+	return nil
 }
