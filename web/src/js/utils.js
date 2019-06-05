@@ -15,6 +15,23 @@ function parseTime(date) {
   return { y, m, d, h, min, s };
 }
 
+function getCookies() {
+  var c = {};
+  document.cookie
+    .split(';')
+    .map((v) => v.trim().split('='))
+    .forEach((v) => (c[v[0]] = v[1]));
+  return c;
+}
+
+function getCookieValue(name) {
+  return getCookies()[name];
+}
+
+// ----------------------------------
+
 export default {
   parseTime,
+  getCookies,
+  getCookieValue,
 };

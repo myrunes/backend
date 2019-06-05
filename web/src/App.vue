@@ -1,7 +1,9 @@
 <template>
   <div id="app">
+    <CookieInfo cookielink="https://zekro.de"/>
     <Header v-if="loggedIn" />
     <router-view :class="{ m : loggedIn }"></router-view>
+    <Footer />
   </div>
 </template>
 
@@ -15,12 +17,16 @@ import Router from './js/router';
 import EventBus from './js/eventbus';
 
 import Header from './components/Header';
+import Footer from './components/Footer';
+import CookieInfo from './components/CookieInfo';
 
 export default {
   name: 'app',
 
   components: {
     Header,
+    CookieInfo,
+    Footer,
   },
 
   router: Router,
