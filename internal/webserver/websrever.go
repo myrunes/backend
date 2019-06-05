@@ -3,7 +3,7 @@ package webserver
 import (
 	"errors"
 
-	"github.com/zekroTJA/lol-runes/internal/database"
+	"github.com/zekroTJA/myrunes/internal/database"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"

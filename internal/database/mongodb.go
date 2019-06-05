@@ -8,7 +8,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/zekroTJA/lol-runes/internal/objects"
+	"github.com/zekroTJA/myrunes/internal/objects"
 
 	"github.com/bwmarrin/snowflake"
 	"go.mongodb.org/mongo-driver/mongo"

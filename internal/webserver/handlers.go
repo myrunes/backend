@@ -6,8 +6,8 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
-	"github.com/zekroTJA/lol-runes/internal/database"
-	"github.com/zekroTJA/lol-runes/internal/objects"
+	"github.com/zekroTJA/myrunes/internal/database"
+	"github.com/zekroTJA/myrunes/internal/objects"
 )
 
 func (ws *WebServer) handlerFiles(ctx *routing.Context) error {

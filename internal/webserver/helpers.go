@@ -5,7 +5,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/zekroTJA/lol-runes/internal/static"
+	"github.com/zekroTJA/myrunes/internal/static"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"

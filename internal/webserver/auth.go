@@ -12,8 +12,8 @@ import (
 	"github.com/valyala/fasthttp"
 
 	routing "github.com/qiangxue/fasthttp-routing"
-	"github.com/zekroTJA/lol-runes/internal/database"
-	"github.com/zekroTJA/lol-runes/internal/objects"
+	"github.com/zekroTJA/myrunes/internal/database"
+	"github.com/zekroTJA/myrunes/internal/objects"
 	"golang.org/x/crypto/bcrypt"
 )
 

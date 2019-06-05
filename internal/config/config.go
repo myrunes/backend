@@ -7,8 +7,8 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
-	"github.com/zekroTJA/lol-runes/internal/database"
-	"github.com/zekroTJA/lol-runes/internal/webserver"
+	"github.com/zekroTJA/myrunes/internal/database"
+	"github.com/zekroTJA/myrunes/internal/webserver"
 )
 
 type Main struct {

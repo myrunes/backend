@@ -6,7 +6,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zekroTJA/lol-runes/internal/auth"
+	"github.com/zekroTJA/myrunes/internal/auth"
 
 	"github.com/bwmarrin/snowflake"
 )

@@ -6,10 +6,10 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/zekroTJA/lol-runes/internal/config"
-	"github.com/zekroTJA/lol-runes/internal/database"
-	"github.com/zekroTJA/lol-runes/internal/logger"
-	"github.com/zekroTJA/lol-runes/internal/webserver"
+	"github.com/zekroTJA/myrunes/internal/config"
+	"github.com/zekroTJA/myrunes/internal/database"
+	"github.com/zekroTJA/myrunes/internal/logger"
+	"github.com/zekroTJA/myrunes/internal/webserver"
 )
 
 var (

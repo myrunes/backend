@@ -4,7 +4,7 @@ import (
 	"errors"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/zekroTJA/lol-runes/internal/objects"
+	"github.com/zekroTJA/myrunes/internal/objects"
 )
 
 var (
