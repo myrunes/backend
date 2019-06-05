@@ -24,7 +24,7 @@ function checkUsername(uname) {
 
 function register(username, password, remember) {
   return _req({
-    url: `${HOST}/api/users/me`,
+    url: `${HOST}/api/users`,
     method: 'POST',
     json: {
       username,
@@ -104,6 +104,14 @@ function deletePage(uid) {
   });
 }
 
+function updateUser(update) {
+  return _req({
+    url: `${HOST}/api/users/me`,
+    method: 'POST',
+    json: update,
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -139,4 +147,5 @@ export default {
   updatePage,
   createPage,
   deletePage,
+  updateUser,
 };

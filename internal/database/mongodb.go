@@ -111,12 +111,28 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 		oldUser.DisplayName = user.DisplayName
 	}
 
+	if user.Username != "" {
+		u, err := m.GetUser(snowflake.ID(-1), user.Username)
+		if err != nil {
+			return false, err
+		}
+		if u != nil && u.UID != oldUser.UID {
+			return false, ErrUsernameTaken
+		}
+		oldUser.Username = user.Username
+	}
+
 	if user.PassHash != nil && len(user.PassHash) > 0 {
 		oldUser.PassHash = user.PassHash
 	}
 
 	return true, m.insertOrUpdate(m.collections.users,
 		bson.M{"uid": oldUser.UID}, oldUser)
+}
+
+func (m *MongoDB) DeleteUser(uid snowflake.ID) error {
+	_, err := m.collections.users.DeleteOne(ctxTimeout(5*time.Second), bson.M{"uid": uid})
+	return err
 }
 
 func (m *MongoDB) CreatePage(page *objects.Page) error {

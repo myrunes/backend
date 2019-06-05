@@ -1,8 +1,14 @@
 package database
 
 import (
+	"errors"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/lol-runes/internal/objects"
+)
+
+var (
+	ErrUsernameTaken = errors.New("username taken")
 )
 
 // Middleware describes the structure of a
@@ -17,6 +23,7 @@ type Middleware interface {
 	CreateUser(user *objects.User) error
 	GetUser(uid snowflake.ID, username string) (*objects.User, error)
 	EditUser(user *objects.User, login bool) (bool, error)
+	DeleteUser(uid snowflake.ID) error
 
 	CreatePage(page *objects.Page) error
 	GetPages(uid snowflake.ID) ([]*objects.Page, error)

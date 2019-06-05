@@ -6,6 +6,7 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
+	"github.com/zekroTJA/lol-runes/internal/database"
 	"github.com/zekroTJA/lol-runes/internal/objects"
 )
 
@@ -78,6 +79,62 @@ func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	user.PassHash = nil
 	return jsonResponse(ctx, user, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	reqUser := new(userRequest)
+	var err error
+
+	if err = parseJSONBody(ctx, reqUser); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
+		return jsonResponse(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	newUser := &objects.User{
+		UID:         user.UID,
+		Username:    reqUser.Username,
+		DisplayName: reqUser.DisplayName,
+	}
+
+	if reqUser.NewPassword != "" {
+		newUser.PassHash, err = ws.auth.CreateHash([]byte(reqUser.NewPassword))
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+	}
+
+	if _, err = ws.db.EditUser(newUser, false); err != nil {
+		if err == database.ErrUsernameTaken {
+			return jsonError(ctx, err, fasthttp.StatusBadRequest)
+		}
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	reqUser := new(userRequest)
+	var err error
+
+	if err = parseJSONBody(ctx, reqUser); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
+		return jsonResponse(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	if err = ws.db.DeleteUser(user.UID); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {

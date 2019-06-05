@@ -78,14 +78,17 @@ func (ws *WebServer) registerHandlers() {
 
 	users := api.Group("/users")
 	users.
-		Post("/me", ws.handlerCreateUser).
-		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe)
+		Post("", ws.handlerCreateUser)
+	users.
+		Post("/me", ws.auth.CheckRequestAuth, ws.handlerPostMe).
+		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe).
+		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteMe)
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
 
-	pages := api.Group("/pages", 
+	pages := api.Group("/pages",
 		ws.addCORSHeaders,
-		ws.auth.CheckRequestAuth,)
+		ws.auth.CheckRequestAuth)
 	pages.
 		Post("", ws.handlerCreatePage).
 		Get(ws.handlerGetPages)
