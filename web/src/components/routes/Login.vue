@@ -5,7 +5,11 @@
         class="mx-auto mb-5"
         width="300px"
         v-if="banner.visible" 
-        :type="banner.type">{{ banner.content }}
+        :type="banner.type"
+        :closable="banner.closable"
+        @closing="bannerClosing('reginfo')"
+      >
+        {{ banner.content }}
       </Banner>
       <div class="d-flex position-relative">
         <input 
@@ -138,6 +142,7 @@ export default {
         Rest.register(this.username, this.password, this.remember).then(() => {
           EventBus.$emit('login');
           this.$router.push('/');
+          window.localStorage.setItem('reginfo-dismissed', '1');
         }).catch((err) => {
           if (err && err.code === 409) {
             this.banner = {
@@ -174,6 +179,24 @@ export default {
         });
       }
       
+    },
+
+    bannerClosing(reason) {
+      this.banner.visible = false;
+      if (reason === 'reginfo') {
+        window.localStorage.setItem('reginfo-dismissed', '1');
+      }
+    }
+  },
+
+  created: function() {
+    if (window.localStorage.getItem('reginfo-dismissed') !== '1') {
+      this.banner = {
+        closable: true,
+        visible: true,
+        type: 'info',
+        content: 'Not having an account? Simply register by typing in an unused username and the password you want to use.'
+      }
     }
   }
 
