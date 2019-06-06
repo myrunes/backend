@@ -19,14 +19,7 @@ Of course, if you don't trust us, you can download the source code and build the
 
 # To Do & Future Goals
 
-Here you can see a list of stuff which needs to be done and ideas we have to be implemented later *(order by potential priority)*.
-
-- [ ] favorite champions on the front page
-- [ ] export and import rune pages
-- [ ] sort champions by lane / position
-- [ ] share pages by public link
-- [ ] 'forgot password' option by using a mail server
-- [ ] public profiles and pages list
+To see a list of current goals, ideas and bugs, please take a look to the MYRUNES [**Trello Board**](http://todo.myrunes.com).
 
 ---
 
