@@ -27,6 +27,7 @@
           class="tb mx-auto"
           placeholder="PASSWORD"
           autocomplete="off"
+          @keypress="(e) => { if (e.keyCode == 13) login(e) }"
         >
         <span class="tb mx-auto"></span>
       </div>

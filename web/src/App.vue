@@ -54,7 +54,7 @@ export default {
       Rest.getMe().then((res) => {
         this.loggedIn = true;
       }).catch((err) => {
-        this.$router.push('/login');
+        this.$router.replace('/login');
       })
     }
   }
