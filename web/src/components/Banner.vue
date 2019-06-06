@@ -4,6 +4,11 @@
     :class="classObj"
     :style="{ width: width || '100%' }"
   >
+    <div 
+      class="close" 
+      v-if="closable"
+      @click="onclose"
+    ></div>
     <slot></slot>
   </div>
 </template>
@@ -15,6 +20,13 @@ export default {
   props: {
     type: String,
     width: String,
+    closable: Boolean,
+  },
+
+  methods: {
+    onclose() {
+      this.$emit('closing');
+    }
   },
 
   computed: {
@@ -56,5 +68,12 @@ export default {
   background-color: #FFEB3B33;
 }
 
+.close {
+  width: 1em;
+  height: 1em;
+  background-image: url("/assets/close.svg");
+  background-size: 100%;
+  cursor: pointer;
+}
 
 </style>
