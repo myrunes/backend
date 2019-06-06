@@ -27,6 +27,7 @@ Here you can see a list of stuff which needs to be done and ideas we have to be 
 - [ ] share pages by public link
 - [ ] 'forgot password' option by using a mail server
 - [ ] public profiles and pages list
+- [x] better login session management
 
 ---
 
