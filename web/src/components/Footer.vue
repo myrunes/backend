@@ -3,7 +3,7 @@
     <p>
       © 2019 MYRUNES
       &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="/imprint.html">IMPRINT</a>
+      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt">IMPRINT</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md">COOKIE USAGE</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
