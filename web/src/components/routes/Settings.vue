@@ -1,34 +1,62 @@
 <template>
   <div>
     <Banner v-if="banner.visible" :type="banner.type" class="mb-3">{{ banner.content }}</Banner>
+
     <div class="bg mb-3">
       <h3>ACCOUNT DETAILS</h3>
       <table>
-        <tr>
-          <td class="pr-5">Created</td>
-          <td>{{ formatTime(user.created) }}</td>
-        </tr>
-        <tr>
-          <td class="pr-5">Last Login</td>
-          <td>{{ formatTime(user.lastlogin) }}</td>
-        </tr>
-        <tr>
-          <td class="pr-5">Pages</td>
-          <td>{{ pages }}</td>
-        </tr>
-        <tr>
-          <td class="pr-5">Created</td>
-          <td class="hider">{{ user.uid }}</td>
-        </tr>
+        <tbody>
+          <tr>
+            <td class="pr-5">Created</td>
+            <td>{{ formatTime(user.created) }}</td>
+          </tr>
+          <tr>
+            <td class="pr-5">Last Login</td>
+            <td>{{ formatTime(user.lastlogin) }}</td>
+          </tr>
+          <tr>
+            <td class="pr-5">Pages</td>
+            <td>{{ pages }}</td>
+          </tr>
+          <tr>
+            <td class="pr-5">UID</td>
+            <td class="hider">{{ user.uid }}</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <h3 class="mt-3">LOGIN SESSIONS</h3>
+      <table>
+        <tbody>
+          <tr>
+            <th>ID</th>
+            <th>Key</th>
+            <th>Last Access</th>
+            <th>Expires</th>
+            <th>Last Access Address</th>
+          </tr>
+          <tr v-for="s in sessions" :key="`session-${s.sessionid}`">
+            <td><p class="hider">{{ s.sessionid }}</p></td>
+            <td>{{ s.key }}</td>
+            <td>{{ formatTime(s.lastaccess) }}</td>
+            <td>{{ formatTime(s.expires) }}</td>
+            <td><p class="hider">{{ s.lastaccessip }}</p></td>
+            <td><div 
+              class="btn-del" @click="delSession(s.sessionid)"
+              v-b-tooltip.hover title="Deleting a session will automatically deny access to the device using this session."
+            ></div></td>
+          </tr>
+        </tbody>
       </table>
     </div>
+
     <div class="bg">
       <h3 class="mb-3">UPDATE ACCOUNT</h3>
 
       <div class="position-relative mb-4">
         <h5>Username</h5>
         <p class="explainer">
-          The unique identifyer you need to use to log in.<br/>
+          The unique identifier you need to use to log in.<br/>
           The username must be lowercase, longer than 3 characters and must only contain letters, numbers, scores and underscores.
         </p>
         <input type="text" class="tb text-left" v-model="user.username" @input="unameInput"/>
@@ -92,6 +120,7 @@ export default {
   data: function() {
     return {
       user: {},
+      sessions: [],
       pages: 0,
       newpassword: '',
       currpassword: '',
@@ -174,6 +203,14 @@ export default {
         window.scrollTo(0, 0);
         console.error(err);
       });
+    },
+
+    delSession(sessionid) {
+      Rest.deleteSession(sessionid).then(() => {
+        let i = this.sessions.findIndex((s) => s.sessionid == sessionid);
+        if (i < 0) return;
+        this.sessions.splice(i, 1);
+      }).catch(console.error);
     }
   },
 
@@ -182,12 +219,17 @@ export default {
       if (!res.body) return;
       this.user = res.body;
       console.log(this.user);
-    }).catch(console.error);
 
-    Rest.getPages().then((res) => {
-      if (!res.body) return;
-      this.pages = res.body.n;
-    }).catch(console.error)
+      Rest.getPages().then((res) => {
+        if (!res.body) return;
+        this.pages = res.body.n;
+
+        Rest.getSessions().then((res) => {
+          if (!res.body.data) return;
+          this.sessions = res.body.data;
+        }).catch(console.error);
+      }).catch(console.error);
+    }).catch(console.error);
   },
 }
 
@@ -197,12 +239,12 @@ export default {
 <style scoped>
 
 .hider {
-  color: rgb(33,33,33);
+  color: rgb(33,33,33) !important;
   background-color: rgb(33,33,33);
 }
 
 .hider:hover {
-  color: white;
+  color: white !important;
   background-color: transparent;
 }
 
@@ -226,6 +268,10 @@ h5 {
   font-family: 'Montserrat', sans-serif;
 }
 
+td, th {
+  padding-right: 20px;
+}
+
 .explainer {
   font-style: italic;
   font-size: 14px;
@@ -245,4 +291,11 @@ h5 {
   background-color: rgb(213,0,0);
 }
 
+.btn-del {
+  height: 1em;
+  width: 1em;
+  background-image: url('/assets/trash.svg');
+  background-size: 100%;
+  cursor: pointer;
+}
 </style>

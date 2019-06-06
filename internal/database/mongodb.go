@@ -140,9 +140,7 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 }
 
 func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
-	filter := bson.M{"owner": uid}
-
-	count, err := m.count(m.collections.pages, filter)
+	count, err := m.count(m.collections.pages, bson.M{"owner": uid})
 	if err != nil {
 		return nil, err
 	}
@@ -153,7 +151,7 @@ func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
 		return pages, nil
 	}
 
-	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), filter)
+	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), bson.M{"owner": uid})
 	if err != nil {
 		return nil, err
 	}
@@ -239,15 +237,13 @@ func (m *MongoDB) GetSession(key string, addr string) (*objects.User, error) {
 
 	session.LastAccess = time.Now()
 	session.LastAccessIP = addr
-	err = m.insertOrUpdate(m.collections.sessions, bson.M{"key": key}, session)
+	err = m.insertOrUpdate(m.collections.sessions, bson.M{"sessionid": session.SessionID}, session)
 
 	return user, err
 }
 
 func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
-	filter := bson.M{"uid": uID}
-
-	count, err := m.count(m.collections.sessions, filter)
+	count, err := m.count(m.collections.sessions, bson.M{"uid": uID})
 	if err != nil {
 		return nil, err
 	}
@@ -258,13 +254,17 @@ func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
 		return sessions, nil
 	}
 
-	res, err := m.collections.sessions.Find(ctxTimeout(5*time.Second), filter)
+	res, err := m.collections.sessions.Find(ctxTimeout(5*time.Second), bson.M{"uid": uID})
 	if err != nil {
 		return nil, err
 	}
 
 	i := 0
 	for res.Next(ctxTimeout(5 * time.Second)) {
+		if int64(i) >= count {
+			break
+		}
+
 		s := new(objects.Session)
 		if err = res.Decode(s); err != nil {
 			return nil, err
@@ -273,7 +273,7 @@ func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
 			sessions[i] = s
 			i++
 		} else {
-			m.DeleteSession("", s.SessionID)
+			// m.DeleteSession("", s.SessionID)
 		}
 	}
 

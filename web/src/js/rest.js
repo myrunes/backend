@@ -120,6 +120,20 @@ function deleteUser(currpassword) {
   });
 }
 
+function getSessions() {
+  return _req({
+    url: `${HOST}/api/sessions`,
+    method: 'GET',
+  });
+}
+
+function deleteSession(sessionid) {
+  return _req({
+    url: `${HOST}/api/sessions/${sessionid}`,
+    method: 'DELETE',
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -157,4 +171,6 @@ export default {
   deletePage,
   updateUser,
   deleteUser,
+  getSessions,
+  deleteSession,
 };
