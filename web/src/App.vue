@@ -1,6 +1,6 @@
 <template>
   <div id="app">
-    <CookieInfo cookielink="https://zekro.de"/>
+    <CookieInfo />
     <Header v-if="loggedIn" />
     <router-view :class="{ m : loggedIn }"></router-view>
     <Footer />

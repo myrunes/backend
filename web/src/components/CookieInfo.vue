@@ -3,7 +3,7 @@
     <div class="mx-auto d-flex">
       <p class="my-auto mr-4">
         By using our site, you acknowledge and accept the use of cookies on this page.<br/>
-        More information about how we are using cookies you can read about <a :href="cookielink">here</a>.
+        More information about how we are using cookies you can read about <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md">here</a>.
       </p>
       <button class="btn-bubble my-auto" @click="hide">OK</button>
     </div>
@@ -17,7 +17,6 @@ export default {
   name: 'CookieInfo',
 
   props: {
-    cookielink: String,
   },
 
   data: function() {

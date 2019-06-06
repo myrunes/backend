@@ -5,7 +5,7 @@
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="/imprint.html">IMPRINT</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="/">COOKIE USAGE</a>
+      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md">COOKIE USAGE</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/zekroTJA/myrunes">GITHUB REPOSITORY</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
