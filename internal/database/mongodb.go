@@ -140,19 +140,33 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 }
 
 func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
-	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), bson.M{"owner": uid})
+	filter := bson.M{"owner": uid}
+
+	count, err := m.count(m.collections.pages, filter)
 	if err != nil {
 		return nil, err
 	}
 
-	pages := make([]*objects.Page, 0)
+	pages := make([]*objects.Page, count)
+
+	if count == 0 {
+		return pages, nil
+	}
+
+	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	i := 0
 	for res.Next(ctxTimeout(2 * time.Second)) {
 		page := new(objects.Page)
 		err = res.Decode(page)
 		if err != nil {
 			return nil, err
 		}
-		pages = append(pages, page)
+		pages[i] = page
+		i++
 	}
 
 	return pages, nil
@@ -193,13 +207,14 @@ func (m *MongoDB) DeletePage(uid snowflake.ID) error {
 	return err
 }
 
-func (m *MongoDB) CreateSession(key string, uID snowflake.ID) error {
+func (m *MongoDB) CreateSession(key string, uID snowflake.ID, expires time.Time) error {
 	session := &objects.Session{
-		Key: key,
-		UID: uID,
+		Key:     key,
+		UID:     uID,
+		Expires: expires,
 	}
 
-	return m.insertOrUpdate(m.collections.sessions, bson.M{"uid": uID}, session)
+	return m.insert(m.collections.sessions, session)
 }
 
 func (m *MongoDB) GetSession(key string) (*objects.User, error) {
@@ -210,6 +225,10 @@ func (m *MongoDB) GetSession(key string) (*objects.User, error) {
 	}
 	if !ok {
 		return nil, nil
+	}
+
+	if time.Now().After(session.Expires) {
+		return nil, m.DeleteSession(session.Key)
 	}
 
 	user := new(objects.User)
@@ -223,6 +242,38 @@ func (m *MongoDB) GetSession(key string) (*objects.User, error) {
 	}
 
 	return user, nil
+}
+
+func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
+	filter := bson.M{"uid": uID}
+
+	count, err := m.count(m.collections.sessions, filter)
+	if err != nil {
+		return nil, err
+	}
+
+	sessions := make([]*objects.Session, count)
+
+	if count == 0 {
+		return sessions, nil
+	}
+
+	res, err := m.collections.sessions.Find(ctxTimeout(5*time.Second), filter)
+	if err != nil {
+		return nil, err
+	}
+
+	i := 0
+	for res.Next(ctxTimeout(5 * time.Second)) {
+		s := new(objects.Session)
+		if err = res.Decode(s); err != nil {
+			return nil, err
+		}
+		sessions[i] = s
+		i++
+	}
+
+	return sessions, nil
 }
 
 func (m *MongoDB) DeleteSession(key string) error {
@@ -269,6 +320,10 @@ func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interf
 	}
 
 	return true, nil
+}
+
+func (M *MongoDB) count(collection *mongo.Collection, filter interface{}) (int64, error) {
+	return collection.CountDocuments(ctxTimeout(5*time.Second), filter)
 }
 
 func ctxTimeout(d time.Duration) context.Context {

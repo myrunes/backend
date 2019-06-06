@@ -2,6 +2,7 @@ package database
 
 import (
 	"errors"
+	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/myrunes/internal/objects"
@@ -31,7 +32,8 @@ type Middleware interface {
 	EditPage(page *objects.Page) (*objects.Page, error)
 	DeletePage(uid snowflake.ID) error
 
-	CreateSession(key string, uID snowflake.ID) error
+	CreateSession(key string, uID snowflake.ID, expires time.Time) error
 	GetSession(key string) (*objects.User, error)
+	GetSessions(uID snowflake.ID) ([]*objects.Session, error)
 	DeleteSession(key string) error
 }
