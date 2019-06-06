@@ -32,8 +32,8 @@ type Middleware interface {
 	EditPage(page *objects.Page) (*objects.Page, error)
 	DeletePage(uid snowflake.ID) error
 
-	CreateSession(key string, uID snowflake.ID, expires time.Time) error
-	GetSession(key string) (*objects.User, error)
+	CreateSession(key string, uID snowflake.ID, expires time.Time, addr string) error
+	GetSession(key string, addr string) (*objects.User, error)
 	GetSessions(uID snowflake.ID) ([]*objects.Session, error)
-	DeleteSession(key string) error
+	DeleteSession(key string, sessionID snowflake.ID) error
 }

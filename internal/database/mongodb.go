@@ -207,17 +207,13 @@ func (m *MongoDB) DeletePage(uid snowflake.ID) error {
 	return err
 }
 
-func (m *MongoDB) CreateSession(key string, uID snowflake.ID, expires time.Time) error {
-	session := &objects.Session{
-		Key:     key,
-		UID:     uID,
-		Expires: expires,
-	}
+func (m *MongoDB) CreateSession(key string, uID snowflake.ID, expires time.Time, addr string) error {
+	session := objects.NewSession(key, uID, expires, addr)
 
 	return m.insert(m.collections.sessions, session)
 }
 
-func (m *MongoDB) GetSession(key string) (*objects.User, error) {
+func (m *MongoDB) GetSession(key string, addr string) (*objects.User, error) {
 	session := new(objects.Session)
 	ok, err := m.get(m.collections.sessions, bson.M{"key": key}, session)
 	if err != nil {
@@ -228,7 +224,7 @@ func (m *MongoDB) GetSession(key string) (*objects.User, error) {
 	}
 
 	if time.Now().After(session.Expires) {
-		return nil, m.DeleteSession(session.Key)
+		return nil, m.DeleteSession("", session.SessionID)
 	}
 
 	user := new(objects.User)
@@ -241,7 +237,11 @@ func (m *MongoDB) GetSession(key string) (*objects.User, error) {
 		return nil, nil
 	}
 
-	return user, nil
+	session.LastAccess = time.Now()
+	session.LastAccessIP = addr
+	err = m.insertOrUpdate(m.collections.sessions, bson.M{"key": key}, session)
+
+	return user, err
 }
 
 func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
@@ -269,15 +269,23 @@ func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
 		if err = res.Decode(s); err != nil {
 			return nil, err
 		}
-		sessions[i] = s
-		i++
+		if time.Now().Before(s.Expires) {
+			sessions[i] = s
+			i++
+		} else {
+			m.DeleteSession("", s.SessionID)
+		}
 	}
 
-	return sessions, nil
+	return sessions[:i], nil
 }
 
-func (m *MongoDB) DeleteSession(key string) error {
-	_, err := m.collections.sessions.DeleteOne(ctxTimeout(5*time.Second), bson.M{"key": key})
+func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
+	_, err := m.collections.sessions.DeleteOne(ctxTimeout(5*time.Second),
+		bson.M{"$or": bson.A{
+			bson.M{"key": key},
+			bson.M{"sessionid": sessionID},
+		}})
 	return err
 }
 

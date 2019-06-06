@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"fmt"
 	"strings"
 
 	"github.com/bwmarrin/snowflake"
@@ -278,4 +279,33 @@ func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
 	}
 
 	return jsonResponse(ctx, nil, status)
+}
+
+func (m *WebServer) handlerGetSessions(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	sessions, err := m.db.GetSessions(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	for _, s := range sessions {
+		s.Key = fmt.Sprintf("%s...%s", s.Key[:3], s.Key[len(s.Key)-3:])
+	}
+
+	return jsonResponse(ctx, listResponse{N: len(sessions), Data: sessions}, fasthttp.StatusOK)
+}
+
+func (m *WebServer) handlerDeleteSession(ctx *routing.Context) error {
+	_id := ctx.Param("id")
+	id, err := snowflake.ParseString(_id)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if err = m.db.DeleteSession("", id); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

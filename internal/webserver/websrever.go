@@ -69,12 +69,16 @@ func (ws *WebServer) registerHandlers() {
 	ws.router.Use(ws.handlerFiles, ws.addCORSHeaders)
 
 	api := ws.router.Group("/api")
-	api.Post("/login", ws.handlerLogin)
-	api.Post("/logout", ws.auth.LogOut)
+	api.
+		Post("/login", ws.handlerLogin)
+	api.
+		Post("/logout", ws.auth.LogOut)
 
 	resources := api.Group("/resources")
-	resources.Get("/champions", ws.handlerGetChamps)
-	resources.Get("/runes", ws.handlerGetRunes)
+	resources.
+		Get("/champions", ws.handlerGetChamps)
+	resources.
+		Get("/runes", ws.handlerGetRunes)
 
 	users := api.Group("/users")
 	users.
@@ -86,9 +90,7 @@ func (ws *WebServer) registerHandlers() {
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
 
-	pages := api.Group("/pages",
-		ws.addCORSHeaders,
-		ws.auth.CheckRequestAuth)
+	pages := api.Group("/pages", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
 	pages.
 		Post("", ws.handlerCreatePage).
 		Get(ws.handlerGetPages)
@@ -96,6 +98,12 @@ func (ws *WebServer) registerHandlers() {
 		Get(`/<uid:\d+>`, ws.handlerGetPage).
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
+
+	sessions := api.Group("/sessions", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
+	sessions.
+		Get("", ws.handlerGetSessions)
+	sessions.
+		Delete(`/<id:\d+>`, ws.handlerDeleteSession)
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

@@ -99,7 +99,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 		expires = expires.Add(sessionExpireDefault)
 	}
 
-	if err = auth.db.CreateSession(sessionKey, uid); err != nil {
+	if err = auth.db.CreateSession(sessionKey, uid, expires, ctx.RemoteIP().String()); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -120,7 +120,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
-	user, err := auth.db.GetSession(string(key))
+	user, err := auth.db.GetSession(string(key), ctx.RemoteIP().String())
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -139,7 +139,7 @@ func (auth *Authorization) LogOut(ctx *routing.Context) error {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
-	auth.db.DeleteSession(string(key))
+	auth.db.DeleteSession(string(key), 0)
 
 	cookie := "__session=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly"
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
