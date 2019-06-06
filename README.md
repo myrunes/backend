@@ -32,6 +32,8 @@ Here you can see a list of stuff which needs to be done and ideas we have to be 
 
 # Self Hosting
 
+## Requirements
+
 First of all, if you want to self host the MYRUNES system, your envoirement should pass certain requirements:
 
 - [**MongoDB**](https://www.mongodb.com/)  
@@ -42,10 +44,38 @@ First of all, if you want to self host the MYRUNES system, your envoirement shou
 
 Also, you need the following toolchains for building the backend and frontend components:
 
+- **[git](https://git-scm.com/)**
 - **[go compiler toolchain](https://golang.org/)**
 - **[dep package manager](https://github.com/golang/dep)**
 - **[nodejs](https://nodejs.org/en/)** and **[npm](https://www.npmjs.com/)** *(npm will be automatically installed with nodejs)*
 - **[Vue CLI](https://cli.vuejs.org/)**
 
-Also, it is recommendet to install **[GNU make](https://www.gnu.org/software/make/)** to simplyfy the build process. If you are using windows, you can install **[make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)**.
+Also, it is highly recommendet to install **[GNU make](https://www.gnu.org/software/make/)** to simplyfy the build process. If you are using windows, you can install **[make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)**.
+
+## Compiling
+
+1. Set up GOPATH, if not done yet. Read [here](https://golang.org/pkg/go/build/#hdr-Go_Path) how to do this.
+
+2. Clone the repository into your GOPATH:  
+   ```
+   $ git clone https://github.com/zekroTJA/myrunes $GOPATH/src/github.com/zekroTJA/myrunes
+   $ cd $GOPATH/src/github.com/zekroTJA/myrunes
+   ```
+
+3. Build binaries and assets using the `Makefile`:  
+   ```
+   $ make
+   ```
+
+Now, the server binary and the web assets are located in the `./bin` directory. You can move them whereever you want, just always keep the `web` folder in the same location where the server binary is located to ensure that all web assets can be found by the web server.
+
+## Startup
+
+Now, you just need to start the server binary passing the location of your prefered config location. A preset config file will be then automatically created. Now, enter your preferences and restart the server.
+
+```
+$ ./server -c /etc/myrunes/config.yml
+```
+
+---
 
