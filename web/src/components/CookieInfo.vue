@@ -29,12 +29,12 @@ export default {
   methods: {
     hide() {
       this.hidden = true;
-      document.cookie = '__cookies_accepted=true; Path=/';
+      window.localStorage.setItem('cookies-accepted', '1');
     }
   },
 
   created: function() {
-    if (!Utils.getCookieValue('__cookies_accepted')) {
+    if (window.localStorage.getItem('cookies-accepted') !== '1') {
       this.hidden = false;
     }
   }
