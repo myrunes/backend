@@ -99,7 +99,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 		expires = expires.Add(sessionExpireDefault)
 	}
 
-	if err = auth.db.CreateSession(sessionKey, uid, expires, ctx.RemoteIP().String()); err != nil {
+	if err = auth.db.CreateSession(sessionKey, uid, expires, ctx.RemoteAddr().String()); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
