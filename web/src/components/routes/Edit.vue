@@ -338,6 +338,14 @@ export default {
         }).catch(console.error);
       }
     }).catch(console.error);
+  },
+
+  updated: function() {
+    if (this.$route.query && this.$route.query.champ) {
+      let champ = this.$route.query.champ;
+      this.page.champions.push(champ);
+      this.$refs.tbChamps.value = champ;
+    }
   }
 }
 
