@@ -20,7 +20,7 @@
     </div>
     <button 
       class="btn-slide btn-new"
-      @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
+      @click="$router.push({ name: 'RunePage', params: { uid: 'new' }, query: { champ } })"
     >
       +
     </button>

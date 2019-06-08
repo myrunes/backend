@@ -1,6 +1,6 @@
 <div align="center">
-    <!-- <img src="" width="200"/> -->
-    <h1>~ MYRUNES ~</h1>
+    <img src="assets/logo-1000-237.png" width="400"/>
+    <br/>
     <strong>Save your League of Legends rune pages without wasting money.</strong><br><br>
     <img src="https://forthebadge.com/images/badges/made-with-go.svg" height="30" />&nbsp;
     <img src="https://forthebadge.com/images/badges/made-with-vue.svg" height="30" />&nbsp;
@@ -19,15 +19,8 @@ Of course, if you don't trust us, you can download the source code and build the
 
 # To Do & Future Goals
 
-Here you can see a list of stuff which needs to be done and ideas we have to be implemented later *(order by potential priority)*.
 
-- [ ] favorite champions on the front page
-- [ ] export and import rune pages
-- [ ] sort champions by lane / position
-- [ ] share pages by public link
-- [ ] 'forgot password' option by using a mail server
-- [ ] public profiles and pages list
-- [x] better login session management
+To see a list of current goals, ideas and bugs, please take a look to the MYRUNES [**Trello Board**](http://todo.myrunes.com).
 
 ---
 
@@ -78,5 +71,5 @@ Now, you just need to start the server binary passing the location of your prefe
 $ ./server -c /etc/myrunes/config.yml
 ```
 
----
+--- 
 

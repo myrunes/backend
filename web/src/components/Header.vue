@@ -2,8 +2,8 @@
   <div class="header d-flex">
     <div class="d-flex">
       <router-link to="/">
-        <button class="btn-slide btn-logo h-100">
-          <h1 class="mr-4"><b>MY</b>RUNES</h1>
+        <button class="btn-slide btn-logo">
+          <img src="/assets/logo-256-61.png"/>
         </button>
       </router-link>
       <router-link to="/pages">
@@ -56,7 +56,14 @@ export default {
 }
 
 .btn-logo {
-  background-color: transparent;
+  /* background-color: transparent; */
+  padding: 10px;
+  height: 100%;
+  width: 180px;
+}
+
+.btn-logo > img {
+  height: 100%;
 }
 
 .btn-logo::before {

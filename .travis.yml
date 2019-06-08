@@ -1,0 +1,12 @@
+sudo: required
+
+language: go
+
+go:
+  - tip
+
+go_import_path: github.com/zekroTJA/myrunes
+
+script:
+  - time bash ./ci/travis.sh
+
