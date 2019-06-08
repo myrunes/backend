@@ -1,6 +1,6 @@
 <div align="center">
-    <!-- <img src="" width="200"/> -->
-    <h1>~ MYRUNES ~</h1>
+    <img src="./assets/logo-256-61.png" width="400"/>
+    <br/>
     <strong>Save your League of Legends rune pages without wasting money.</strong><br><br>
     <img src="https://forthebadge.com/images/badges/made-with-go.svg" height="30" />&nbsp;
     <img src="https://forthebadge.com/images/badges/made-with-vue.svg" height="30" />&nbsp;
