@@ -41,29 +41,17 @@ var Champs = []string{
 }
 
 var RunesPrimary = map[string][][]string{
-	"domination": [][]string{
-		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
-		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
-		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
-		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
-	},
-	"inspiration": [][]string{
-		[]string{"unsealed-spellbook", "glacial-augment", "kleptomancy"},
-		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-	},
 	"precission": [][]string{
 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
 		[]string{"overheal", "triumph", "presence-of-mind"},
 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
 		[]string{"coup-de-grace", "cut-down", "last-stand"},
 	},
-	"resolve": [][]string{
-		[]string{"grasp-of-the-undying", "aftershock", "guardian"},
-		[]string{"demolish", "font-of-life", "shield-bash"},
-		[]string{"conditioning", "second-wind", "bone-plating"},
-		[]string{"overgrowth", "revitalize", "unflinching"},
+	"domination": [][]string{
+		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
+		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
+		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
+		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
 	},
 	"sorcery": [][]string{
 		[]string{"summon-aery", "arcane-comet", "phase-rush"},
@@ -71,33 +59,45 @@ var RunesPrimary = map[string][][]string{
 		[]string{"transcendence", "celerity", "absolute-focus"},
 		[]string{"scorch", "waterwalking", "gathering-storm"},
 	},
+	"resolve": [][]string{
+		[]string{"grasp-of-the-undying", "aftershock", "guardian"},
+		[]string{"demolish", "font-of-life", "shield-bash"},
+		[]string{"conditioning", "second-wind", "bone-plating"},
+		[]string{"overgrowth", "revitalize", "unflinching"},
+	},
+	"inspiration": [][]string{
+		[]string{"unsealed-spellbook", "glacial-augment", "kleptomancy"},
+		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
+		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
+		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
+	},
 }
 
 var RunesSecondary = map[string][][]string{
+	"precission": [][]string{
+		[]string{"overheal", "triumph", "presence-of-mind"},
+		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
+		[]string{"coup-de-grace", "cut-down", "last-stand"},
+	},
 	"domination": [][]string{
 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
 		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
 		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
 	},
-	"inspiration": [][]string{
-		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-	},
-	"precission": [][]string{
-		[]string{"overheal", "triumph", "presence-of-mind"},
-		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
-		[]string{"coup-de-grace", "cut-down", "last-stand"},
+	"sorcery": [][]string{
+		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
+		[]string{"transcendence", "celerity", "absolute-focus"},
+		[]string{"scorch", "waterwalking", "gathering-storm"},
 	},
 	"resolve": [][]string{
 		[]string{"demolish", "font-of-life", "shield-bash"},
 		[]string{"conditioning", "second-wind", "bone-plating"},
 		[]string{"overgrowth", "revitalize", "unflinching"},
 	},
-	"sorcery": [][]string{
-		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
-		[]string{"transcendence", "celerity", "absolute-focus"},
-		[]string{"scorch", "waterwalking", "gathering-storm"},
+	"inspiration": [][]string{
+		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
+		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
+		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
 	},
 }
 
