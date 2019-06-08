@@ -1,6 +1,7 @@
 <template>
   <div class="outer-container">
     <div class="container my-auto">
+      <div class="logo mx-auto"></div>
       <Banner 
         class="mx-auto mb-5"
         width="300px"
@@ -214,6 +215,16 @@ export default {
 
 button {
   width: 300px;
+}
+
+.logo {
+  width: 256px;
+  height: 61px;
+  background-image: url('/assets/logo-256-61.png');
+  background-repeat: no-repeat;
+  background-size: 100%;
+  background-position: center;
+  margin-bottom: 50px;
 }
 
 </style>
