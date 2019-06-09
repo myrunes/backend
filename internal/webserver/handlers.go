@@ -258,6 +258,7 @@ func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 	data := map[string]interface{}{
+		"trees":     objects.RuneTrees,
 		"primary":   objects.RunesPrimary,
 		"secondary": objects.RunesSecondary,
 		"perks":     objects.PerksPool,

@@ -27,7 +27,7 @@
     
     <!-- TREE PICKER -->
     <div class="my-4 mx-2">
-      <a v-for="tree in Object.keys(runes.primary)" 
+      <a v-for="tree in runes.trees" 
         :key="`tree-${tree}`"
         class="mr-2 bordered"
         :class="{disabled: 
@@ -143,6 +143,7 @@ export default {
 
       champs: [],
       runes: {
+        trees: [],
         perks: [],
         primary: {},
         secondary: {},
@@ -238,6 +239,8 @@ export default {
         if (tree === this.page.secondary.tree) {
           this.page.secondary.tree = null;
           this.page.secondary.rows = [];
+        } else if (tree !== this.page.primary.tree) {
+          this.page.secondary.tree = tree;
         }
         return;
       }
@@ -264,8 +267,17 @@ export default {
     },
 
     secondaryClick(rowIndex, rune) {
-      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0]))
+      this.changes.secondary++;
+      
+      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])) {
+        this.page.secondary.rows[0] = rune;
         return;
+      }
+
+      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])) {
+        this.page.secondary.rows[1] = rune;
+        return;
+      }
       
       if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
         this.page.secondary.rows[1] = this.page.secondary.rows[0];
@@ -275,8 +287,6 @@ export default {
       } else {
         this.page.secondary.rows[0] = rune;
       }
-
-      this.changes.secondary++;
     },
 
     perkClick(index, perk) {

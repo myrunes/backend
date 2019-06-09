@@ -40,6 +40,10 @@ var Champs = []string{
 	"kayle", "soraka", "yorick",
 }
 
+var RuneTrees = []string{
+	"precission", "domination", "sorcery", "resolve", "inspiration",
+}
+
 var RunesPrimary = map[string][][]string{
 	"precission": [][]string{
 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
