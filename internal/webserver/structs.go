@@ -11,3 +11,7 @@ type userRequest struct {
 	NewPassword     string `json:"newpassword"`
 	CurrentPassword string `json:"currpassword"`
 }
+
+type alterFavoriteRequest struct {
+	Favorites []string `json:"favorites"`
+}

@@ -13,20 +13,9 @@
         />
         <span class="tb w-100"/>
       </div>
-      <!-- <div class="position-relative">
-        <input 
-          type="text" 
-          ref="tbChamps"
-          class="tb tb-champions"
-          placeholder="CHAMPIONS"
-          @change="champChange"
-        />
-        <span class="tb w-100"/>
-      </div> -->
       <TagsInput 
         ref="tagChamps"
         :tags="champs"
-        :validateFunc="() => { return true; }"
         @change="champsChanged"
       />
     </div>
@@ -208,38 +197,6 @@ export default {
       }
     },
 
-    // champChange(e) {
-    //   let val = this.$refs.tbChamps.value;
-    //   if (val.length < 1) {
-    //     this.banner = {
-    //       visible: true,
-    //       type: 'error',
-    //       content: 'Champion list can not be empty!',
-    //     }
-    //     return;
-    //   }
-
-    //   let champs = val.split(',').map((v) => v.trim().toLowerCase());
-    //   let invalid = [];
-    //   for (let c of champs) {
-    //     if (!this.champs.includes(c)) {
-    //       invalid.push(c);
-    //     }
-    //   }
-
-    //   if (invalid.length > 0) {
-    //     this.banner = {
-    //       visible: true,
-    //       type: 'error',
-    //       content: `Champion list contains invalid entries: ${invalid.join(', ')}`,
-    //     }
-    //     return;
-    //   }
-      
-    //   this.banner.visible = false;
-    //   this.page.champions = champs;
-    // },
-
     champsChanged(champs) {
       this.page.champions = champs;
       console.log(this.page.champions);
@@ -409,7 +366,7 @@ a:hover {
 
 .ctrl-btns {
   position: fixed;
-  bottom: 30px;
+  bottom: 60px;
   right: 30px;
   font-size: 18px;
 }

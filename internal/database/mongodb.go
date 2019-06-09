@@ -111,6 +111,10 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 		oldUser.DisplayName = user.DisplayName
 	}
 
+	if user.Favorites != nil {
+		oldUser.Favorites = user.Favorites
+	}
+
 	if user.Username != "" {
 		u, err := m.GetUser(snowflake.ID(-1), user.Username)
 		if err != nil {

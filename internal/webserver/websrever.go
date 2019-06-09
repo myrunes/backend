@@ -104,6 +104,11 @@ func (ws *WebServer) registerHandlers() {
 		Get("", ws.handlerGetSessions)
 	sessions.
 		Delete(`/<id:\d+>`, ws.handlerDeleteSession)
+
+	favorites := api.Group("/favorites", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
+	favorites.
+		Get("", ws.handlerGetFavorites).
+		Post(ws.handlerPostFavorite)
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

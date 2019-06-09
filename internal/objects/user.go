@@ -26,6 +26,7 @@ type User struct {
 	PassHash    []byte       `json:"passhash,omitempty"`
 	LastLogin   time.Time    `json:"lastlogin"`
 	Created     time.Time    `json:"created"`
+	Favorites   []string     `json:"favorites"`
 }
 
 func NewUser(username, password string, authMiddleware auth.Middleware) (*User, error) {
@@ -42,6 +43,7 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 		UID:         userIDCLuster.Generate(),
 		Username:    strings.ToLower(username),
 		DisplayName: username,
+		Favorites:   []string{},
 	}
 
 	return user, nil

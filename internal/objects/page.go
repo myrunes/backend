@@ -10,11 +10,12 @@ import (
 var pageIDCluster, _ = snowflake.NewNode(200)
 
 var (
+	ErrInvalidChamp = errors.New("invalid champion")
+
 	errInvalidTree    = errors.New("invalid tree")
 	errInvalidPriRune = errors.New("invalid primary rune")
 	errInvalidSecRune = errors.New("invalid secondary rune")
 	errInvalidPerk    = errors.New("invalid perk")
-	errInvalidChamp   = errors.New("invalid champion")
 	errInvalidTitle   = errors.New("invalid title")
 )
 
@@ -223,7 +224,7 @@ func (p *Page) Validate() error {
 			}
 		}
 		if !exists {
-			return errInvalidChamp
+			return ErrInvalidChamp
 		}
 
 		champMap[champ] = nil

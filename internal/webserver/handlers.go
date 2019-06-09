@@ -310,3 +310,51 @@ func (m *WebServer) handlerDeleteSession(ctx *routing.Context) error {
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
+
+func (m *WebServer) handlerPostFavorite(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	var err error
+
+	favReq := new(alterFavoriteRequest)
+	if err = parseJSONBody(ctx, favReq); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if favReq.Favorites == nil {
+		return jsonError(ctx, errBadRequest, fasthttp.StatusBadRequest)
+	}
+
+	champMap := make(map[string]interface{})
+	for _, c := range objects.Champs {
+		champMap[c] = nil
+	}
+
+	for i, f := range favReq.Favorites {
+		favReq.Favorites[i] = strings.ToLower(f)
+		if _, ok := champMap[f]; !ok {
+			return jsonError(ctx, objects.ErrInvalidChamp, fasthttp.StatusBadRequest)
+		}
+	}
+
+	user.Favorites = favReq.Favorites
+
+	if _, err = m.db.EditUser(user, false); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx,
+		listResponse{N: len(user.Favorites), Data: user.Favorites},
+		fasthttp.StatusOK)
+}
+
+func (m *WebServer) handlerGetFavorites(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	if user.Favorites == nil {
+		user.Favorites = []string{}
+	}
+
+	return jsonResponse(ctx,
+		listResponse{N: len(user.Favorites), Data: user.Favorites},
+		fasthttp.StatusOK)
+}
