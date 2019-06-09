@@ -32,8 +32,8 @@
         />
       </div>
       <div class="runes perks">
-        <img v-for="r in perks.split(' ')"
-          :key="r"
+        <img v-for="(r, i) in perks.split(' ')"
+          :key="`perk-${r}-${i}`"
           :src="`/assets/rune-avis/perks/${r}.png`"
           width="30" height="30"
           class="perk"

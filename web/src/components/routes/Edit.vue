@@ -13,7 +13,7 @@
         />
         <span class="tb w-100"/>
       </div>
-      <div class="position-relative">
+      <!-- <div class="position-relative">
         <input 
           type="text" 
           ref="tbChamps"
@@ -22,7 +22,13 @@
           @change="champChange"
         />
         <span class="tb w-100"/>
-      </div>
+      </div> -->
+      <TagsInput 
+        ref="tagChamps"
+        :tags="champs"
+        :validateFunc="() => { return true; }"
+        @change="champsChanged"
+      />
     </div>
     
     <!-- TREE PICKER -->
@@ -129,12 +135,14 @@
 <script>
 import Rest from '../../js/rest';
 import Banner from '../Banner';
+import TagsInput from '../TagsInput';
 
 export default {
   name: 'Edit',
 
   components: {
     Banner,
+    TagsInput,
   },
 
   data: function() {
@@ -200,36 +208,41 @@ export default {
       }
     },
 
-    champChange(e) {
-      let val = this.$refs.tbChamps.value;
-      if (val.length < 1) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: 'Champion list can not be empty!',
-        }
-        return;
-      }
+    // champChange(e) {
+    //   let val = this.$refs.tbChamps.value;
+    //   if (val.length < 1) {
+    //     this.banner = {
+    //       visible: true,
+    //       type: 'error',
+    //       content: 'Champion list can not be empty!',
+    //     }
+    //     return;
+    //   }
 
-      let champs = val.split(',').map((v) => v.trim().toLowerCase());
-      let invalid = [];
-      for (let c of champs) {
-        if (!this.champs.includes(c)) {
-          invalid.push(c);
-        }
-      }
+    //   let champs = val.split(',').map((v) => v.trim().toLowerCase());
+    //   let invalid = [];
+    //   for (let c of champs) {
+    //     if (!this.champs.includes(c)) {
+    //       invalid.push(c);
+    //     }
+    //   }
 
-      if (invalid.length > 0) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: `Champion list contains invalid entries: ${invalid.join(', ')}`,
-        }
-        return;
-      }
+    //   if (invalid.length > 0) {
+    //     this.banner = {
+    //       visible: true,
+    //       type: 'error',
+    //       content: `Champion list contains invalid entries: ${invalid.join(', ')}`,
+    //     }
+    //     return;
+    //   }
       
-      this.banner.visible = false;
+    //   this.banner.visible = false;
+    //   this.page.champions = champs;
+    // },
+
+    champsChanged(champs) {
       this.page.champions = champs;
+      console.log(this.page.champions);
     },
 
     treeClick(tree) {
@@ -344,7 +357,8 @@ export default {
         Rest.getPage(this.uid).then((res) => {
           if (!res.body) return;
             this.page = res.body;
-            this.$refs.tbChamps.value = this.page.champions.join(', ');
+            this.page.champions.forEach((c) => 
+              this.$refs.tagChamps.append(c));
         }).catch(console.error);
       }
     }).catch(console.error);
@@ -354,7 +368,7 @@ export default {
     if (this.$route.query && this.$route.query.champ) {
       let champ = this.$route.query.champ;
       this.page.champions.push(champ);
-      this.$refs.tbChamps.value = champ;
+      this.$refs.tagChamps.append(champ);
     }
   }
 }
