@@ -18,12 +18,17 @@
         @delete="deleted"
       />
     </div>
-    <button 
-      class="btn-slide btn-new"
-      @click="$router.push({ name: 'RunePage', params: { uid: 'new' }, query: { champ } })"
-    >
-      +
-    </button>
+    <div class="ctrl-btns">
+      <button 
+        class="btn-slide btn-new favorite"
+        :class="{ active: this.favorites.includes(this.champ) }"
+        @click="toggleFav"
+      ></button>
+      <button 
+        class="btn-slide btn-new"
+        @click="$router.push({ name: 'RunePage', params: { uid: 'new' }, query: { champ } })"
+      ></button>
+    </div>
   </div>
 </template>
 
@@ -41,6 +46,8 @@ export default {
   data: function() {
     return {
       champ: null,
+      favorite: false,
+      favorites: [],
       pages: [],
     }
   },
@@ -52,10 +59,27 @@ export default {
         this.pages = res.body.data
           .filter((p) => p.champions.includes(this.champ));
       }).catch(console.error);
+
+      Rest.getFavorites().then((res) => {
+        if (!res.body || !res.body.data) return;
+        this.favorites = res.body.data;
+      }).catch(console.error);
     },
 
     deleted() {
       this.reload();
+    },
+
+    toggleFav() {
+      let ind = this.favorites.indexOf(this.champ);
+      if (ind > -1) {
+        this.favorites.splice(ind, 1);
+      } else {
+        this.favorites.push(this.champ);
+      }
+
+      Rest.setFavorites(this.favorites)
+        .catch(console.error);
     }
   },
 
@@ -77,6 +101,14 @@ export default {
 .champ-header > img {
   border-radius: 50%;
   margin-right: 15px;
+}
+
+.favorite::after {
+  background-image: url('/assets/fav.svg');
+}
+
+.active::after {
+  background-image: url('/assets/fav-active.svg');
 }
 
 </style>

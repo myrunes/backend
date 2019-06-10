@@ -7,6 +7,10 @@
       </div>
     </div>
     <div class="container mt-5 champs-container">
+      <h3 
+        class="mx-auto mb-4"
+        v-if="displayFavs"
+      >YOUR FAVORITES</h3>
       <a v-for="c in displayedChamps" 
         :key="c"
         @click="openChamp(c)"
@@ -34,6 +38,8 @@ export default {
     return {
       champs: [],
       displayedChamps: [],
+      favorites: [],
+      displayFavs: false,
     }
   },
 
@@ -42,9 +48,12 @@ export default {
       if (!e.target || e.target.value === undefined) return;
       let val = e.target.value.toLowerCase();
       if (val === '') {
-        this.displayedChamps = [];
+        this.displayedChamps = this.favorites || [];
+        this.displayFavs = this.favorites && this.favorites.length != 0;
       } else {
+        console.log(this.champs.filter((c) => c.includes(val)));
         this.displayedChamps = this.champs.filter((c) => c.includes(val));
+        this.displayFavs = false;
       }
     },
 
@@ -57,6 +66,14 @@ export default {
     Rest.getChamps().then((r) => {
       if (r.body && r.body.data) {
         this.champs = r.body.data;
+      }
+    }).catch(console.error);
+  
+    Rest.getFavorites().then((r) => {
+      if (r.body && r.body.data) {
+        this.favorites = r.body.data;
+        this.displayedChamps = r.body.data;
+        this.displayFavs = this.favorites && this.favorites.length != 0;
       }
     }).catch(console.error);
   }

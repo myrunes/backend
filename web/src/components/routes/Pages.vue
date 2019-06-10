@@ -14,12 +14,12 @@
         @delete="deleted"
       />
     </div>
-    <button 
-      class="btn-slide btn-new"
-      @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-    >
-      +
-    </button>
+    <div class="ctrl-btns">
+      <button 
+        class="btn-slide btn-new"
+        @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
+      >+</button>
+    </div>
   </div>
 </template>
 

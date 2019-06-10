@@ -134,6 +134,21 @@ function deleteSession(sessionid) {
   });
 }
 
+function getFavorites() {
+  return _req({
+    url: `${HOST}/api/favorites`,
+    method: 'GET',
+  });
+}
+
+function setFavorites(favorites) {
+  return _req({
+    url: `${HOST}/api/favorites`,
+    method: 'POST',
+    json: { favorites },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -173,4 +188,6 @@ export default {
   deleteUser,
   getSessions,
   deleteSession,
+  getFavorites,
+  setFavorites,
 };

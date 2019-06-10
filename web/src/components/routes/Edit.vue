@@ -364,11 +364,4 @@ a:hover {
   border-radius: 50%;
 }
 
-.ctrl-btns {
-  position: fixed;
-  bottom: 60px;
-  right: 30px;
-  font-size: 18px;
-}
-
 </style>
