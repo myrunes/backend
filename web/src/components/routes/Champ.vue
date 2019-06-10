@@ -58,11 +58,11 @@ export default {
         if (!res.body) return;
         this.pages = res.body.data
           .filter((p) => p.champions.includes(this.champ));
-      }).catch(console.error);
 
-      Rest.getFavorites().then((res) => {
-        if (!res.body || !res.body.data) return;
-        this.favorites = res.body.data;
+        Rest.getFavorites().then((res) => {
+          if (!res.body || !res.body.data) return;
+          this.favorites = res.body.data;
+        }).catch(console.error);
       }).catch(console.error);
     },
 

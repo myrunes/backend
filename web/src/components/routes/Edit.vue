@@ -171,7 +171,9 @@ export default {
         primary: 0,
         secondary: 0,
         perks: 0,
-      }
+      },
+
+      wasUpdated: false,
     }
   },
 
@@ -199,7 +201,6 @@ export default {
 
     champsChanged(champs) {
       this.page.champions = champs;
-      console.log(this.page.champions);
     },
 
     treeClick(tree) {
@@ -303,29 +304,30 @@ export default {
     Rest.getChamps().then((res) => {
       if (!res.body || !res.body.data) return;
       this.champs = res.body.data;
-    }).catch(console.error);
 
-    Rest.getRunes().then((res) => {
+      Rest.getRunes().then((res) => {
 
-      if (!res.body) return;
-      this.runes = res.body;
+        if (!res.body) return;
+        this.runes = res.body;
 
-      if (this.uid !== 'new') {
-        Rest.getPage(this.uid).then((res) => {
-          if (!res.body) return;
-            this.page = res.body;
-            this.page.champions.forEach((c) => 
-              this.$refs.tagChamps.append(c));
-        }).catch(console.error);
-      }
+        if (this.uid !== 'new') {
+          Rest.getPage(this.uid).then((res) => {
+            if (!res.body) return;
+              this.page = res.body;
+              this.page.champions.forEach((c) => 
+                this.$refs.tagChamps.append(c));
+          }).catch(console.error);
+        }
+      }).catch(console.error);
     }).catch(console.error);
   },
 
   updated: function() {
-    if (this.$route.query && this.$route.query.champ) {
+    if (!this.wasUpdated && this.$route.query && this.$route.query.champ) {
       let champ = this.$route.query.champ;
       this.page.champions.push(champ);
       this.$refs.tagChamps.append(champ);
+      this.wasUpdated = true;
     }
   }
 }

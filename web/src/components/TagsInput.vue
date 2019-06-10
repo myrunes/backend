@@ -69,7 +69,8 @@ export default {
       if (!val) {
         this.suggestions = [];
       } else {
-        this.suggestions = this.tags.filter((t) => t.includes(val));
+        this.suggestions = this.tags.filter((t) => 
+          t.includes(val) && !this.elements.find((e) => e.includes(val)));
       }
     },
 
