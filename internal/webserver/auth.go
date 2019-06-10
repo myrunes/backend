@@ -108,7 +108,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 	}
 
 	cookie := fmt.Sprintf("__session=%s; Expires=%s; Path=/; HttpOnly",
-		sessionKey, expires.Format(time.RFC3339))
+		sessionKey, expires.Format(time.RFC1123))
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
 
 	return nil
