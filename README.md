@@ -29,6 +29,15 @@ To see a list of current goals, ideas and bugs, please take a look to the MYRUNE
 
 # Self Hosting
 
+## Docker
+
+You can self-host this application by using the supplied [**docker images**](https://cloud.docker.com/u/zekro/repository/docker/zekro/myrunes).
+
+Just use the following command to pull the latest stable image:  
+```
+$ docker pull zekro/myrunes:latest
+```
+
 ## Requirements
 
 First of all, if you want to self host the MYRUNES system, your envoirement should pass certain requirements:
