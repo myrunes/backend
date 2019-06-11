@@ -36,7 +36,8 @@ type MongoConfig struct {
 type collections struct {
 	users,
 	pages,
-	sessions *mongo.Collection
+	sessions,
+	shares *mongo.Collection
 }
 
 func (m *MongoDB) Connect(params interface{}) (err error) {
@@ -65,6 +66,7 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 		users:    m.db.Collection("users"),
 		pages:    m.db.Collection("pages"),
 		sessions: m.db.Collection("sessions"),
+		shares:   m.db.Collection("shares"),
 	}
 
 	return err
@@ -290,6 +292,49 @@ func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
 			bson.M{"key": key},
 			bson.M{"sessionid": sessionID},
 		}})
+	return err
+}
+
+func (m *MongoDB) SetShare(share *objects.SharePage) error {
+	return m.insertOrUpdate(m.collections.shares, bson.M{
+		"$or": bson.A{
+			bson.M{"uid": share.UID},
+			bson.M{"pageid": share.PageID},
+		},
+	}, share)
+}
+
+func (m *MongoDB) GetShare(ident string, uid, pageID snowflake.ID) (*objects.SharePage, error) {
+	share := new(objects.SharePage)
+
+	ok, err := m.get(m.collections.shares, bson.M{
+		"$or": bson.A{
+			bson.M{"ident": ident},
+			bson.M{"uid": uid},
+			bson.M{"pageid": pageID},
+		},
+	}, share)
+
+	if err != nil {
+		return nil, err
+	}
+
+	if !ok {
+		return nil, nil
+	}
+
+	return share, nil
+}
+
+func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
+	_, err := m.collections.shares.DeleteOne(ctxTimeout(5*time.Second), bson.M{
+		"$or": bson.A{
+			bson.M{"ident": ident},
+			bson.M{"uid": uid},
+			bson.M{"pageid": pageID},
+		},
+	})
+
 	return err
 }
 

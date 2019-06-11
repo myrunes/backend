@@ -4,9 +4,10 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/zekroTJA/myrunes/internal/static"
 )
 
-var sessionIDCluster, _ = snowflake.NewNode(300)
+var sessionIDCluster, _ = snowflake.NewNode(static.ClusterIDSessions)
 
 type Session struct {
 	SessionID    snowflake.ID `json:"sessionid"`

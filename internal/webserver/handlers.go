@@ -3,6 +3,7 @@ package webserver
 import (
 	"fmt"
 	"strings"
+	"time"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/qiangxue/fasthttp-routing"
@@ -282,10 +283,10 @@ func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, status)
 }
 
-func (m *WebServer) handlerGetSessions(ctx *routing.Context) error {
+func (ws *WebServer) handlerGetSessions(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
-	sessions, err := m.db.GetSessions(user.UID)
+	sessions, err := ws.db.GetSessions(user.UID)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -297,21 +298,21 @@ func (m *WebServer) handlerGetSessions(ctx *routing.Context) error {
 	return jsonResponse(ctx, listResponse{N: len(sessions), Data: sessions}, fasthttp.StatusOK)
 }
 
-func (m *WebServer) handlerDeleteSession(ctx *routing.Context) error {
-	_id := ctx.Param("id")
+func (ws *WebServer) handlerDeleteSession(ctx *routing.Context) error {
+	_id := ctx.Param("uid")
 	id, err := snowflake.ParseString(_id)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if err = m.db.DeleteSession("", id); err != nil {
+	if err = ws.db.DeleteSession("", id); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
-func (m *WebServer) handlerPostFavorite(ctx *routing.Context) error {
+func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	var err error
 
@@ -338,7 +339,7 @@ func (m *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 
 	user.Favorites = favReq.Favorites
 
-	if _, err = m.db.EditUser(user, false); err != nil {
+	if _, err = ws.db.EditUser(user, false); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -347,7 +348,7 @@ func (m *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 		fasthttp.StatusOK)
 }
 
-func (m *WebServer) handlerGetFavorites(ctx *routing.Context) error {
+func (ws *WebServer) handlerGetFavorites(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
 	if user.Favorites == nil {
@@ -357,4 +358,132 @@ func (m *WebServer) handlerGetFavorites(ctx *routing.Context) error {
 	return jsonResponse(ctx,
 		listResponse{N: len(user.Favorites), Data: user.Favorites},
 		fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerCreateShare(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	var err error
+
+	params := new(createShareRequest)
+	if err := parseJSONBody(ctx, params); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if page, err := ws.db.GetPage(snowflake.ParseInt64(params.Page)); err != nil {
+		return jsonResponse(ctx, err, fasthttp.StatusInternalServerError)
+	} else if page == nil || page.Owner != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	share, err := objects.NewSharePage(user.UID, snowflake.ParseInt64(params.Page), params.MaxAccesses, params.Expires)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if err = ws.db.SetShare(share); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, share, fasthttp.StatusCreated)
+}
+
+func (ws *WebServer) handlerPostShare(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	_uid := ctx.Param("uid")
+	uid, err := snowflake.ParseString(_uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	share, err := ws.db.GetShare("", uid, -1)
+	if err != nil {
+		return jsonResponse(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if share == nil {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	if share.OwnerID != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	params := new(createShareRequest)
+	if err := parseJSONBody(ctx, params); err != nil {
+		return jsonError(ctx, errBadRequest, fasthttp.StatusBadRequest)
+	}
+
+	if (params.Expires != time.Time{}) {
+		share.Expires = params.Expires
+	}
+
+	if params.MaxAccesses != 0 {
+		share.MaxAccesses = params.MaxAccesses
+	}
+
+	if err = ws.db.SetShare(share); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, share, fasthttp.StatusCreated)
+}
+
+func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
+	ident := ctx.Param("uid")
+	var user *objects.User
+
+	_user := ctx.Get("user")
+	if _user != nil {
+		user = _user.(*objects.User)
+	}
+
+	shareID, err := snowflake.ParseString(ident)
+	if err != nil || user == nil {
+		shareID = -1
+	}
+
+	share, err := ws.db.GetShare(ident, shareID, shareID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if share == nil || (user != nil && share.OwnerID != user.UID) {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	page, err := ws.db.GetPage(share.PageID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if page == nil {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	return jsonResponse(ctx, &shareResponse{
+		Page:  page,
+		Share: share,
+	}, fasthttp.StatusAccepted)
+}
+
+func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	_uid := ctx.Param("uid")
+	uid, err := snowflake.ParseString(_uid)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	share, err := ws.db.GetShare("", uid, -1)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if share == nil || share.OwnerID != user.UID {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	if err = ws.db.DeleteShare("", uid, -1); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

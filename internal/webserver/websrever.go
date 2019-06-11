@@ -103,12 +103,24 @@ func (ws *WebServer) registerHandlers() {
 	sessions.
 		Get("", ws.handlerGetSessions)
 	sessions.
-		Delete(`/<id:\d+>`, ws.handlerDeleteSession)
+		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
 
 	favorites := api.Group("/favorites", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
 	favorites.
 		Get("", ws.handlerGetFavorites).
 		Post(ws.handlerPostFavorite)
+
+	shares := api.Group("/shares", ws.addCORSHeaders)
+	shares.
+		Post("", ws.auth.CheckRequestAuth, ws.handlerCreateShare)
+	shares.
+		Get(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerGetShare)
+	shares.
+		Get("/<ident:.+>", ws.handlerGetShare)
+	shares.
+		Post(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerPostShare).
+		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteShare)
+
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

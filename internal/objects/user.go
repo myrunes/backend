@@ -7,11 +7,12 @@ import (
 	"time"
 
 	"github.com/zekroTJA/myrunes/internal/auth"
+	"github.com/zekroTJA/myrunes/internal/static"
 
 	"github.com/bwmarrin/snowflake"
 )
 
-var userIDCLuster, _ = snowflake.NewNode(100)
+var userIDCLuster, _ = snowflake.NewNode(static.ClusterIDUsers)
 
 var allowedUNameChars = regexp.MustCompile(`[\w_\-]+`)
 

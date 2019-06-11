@@ -1,8 +1,6 @@
 package webserver
 
 import (
-	"crypto/rand"
-	"encoding/base64"
 	"errors"
 	"fmt"
 	"strings"
@@ -14,6 +12,7 @@ import (
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/zekroTJA/myrunes/internal/database"
 	"github.com/zekroTJA/myrunes/internal/objects"
+	"github.com/zekroTJA/myrunes/pkg/random"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -56,11 +55,7 @@ func (auth *Authorization) CheckHash(hash, pass []byte) bool {
 }
 
 func (auth *Authorization) CreateSessionKey() (string, error) {
-	key := make([]byte, sessionKeyLength)
-	if _, err := rand.Read(key); err != nil {
-		return "", err
-	}
-	return base64.StdEncoding.EncodeToString(key), nil
+	return random.GetRandBase64Str(sessionKeyLength)
 }
 
 func (auth *Authorization) Login(ctx *routing.Context) bool {
