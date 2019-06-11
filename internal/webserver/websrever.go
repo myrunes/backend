@@ -114,7 +114,7 @@ func (ws *WebServer) registerHandlers() {
 	shares.
 		Post("", ws.auth.CheckRequestAuth, ws.handlerCreateShare)
 	shares.
-		Get(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerGetShare)
+		Get(`/<ident:\d+>`, ws.auth.CheckRequestAuth, ws.handlerGetShare)
 	shares.
 		Get("/<ident:.+>", ws.handlerGetShare)
 	shares.

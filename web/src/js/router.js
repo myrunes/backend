@@ -7,6 +7,7 @@ import Champ from '../components/routes/Champ';
 import Edit from '../components/routes/Edit';
 import Pages from '../components/routes/Pages';
 import Settings from '../components/routes/Settings';
+import Share from '../components/routes/Share';
 
 export default new Router({
   mode: 'history',
@@ -41,6 +42,11 @@ export default new Router({
       path: '/settings',
       name: 'Settings',
       component: Settings,
+    },
+    {
+      path: '/p/:ident',
+      name: 'Share',
+      component: Share,
     },
   ],
 });

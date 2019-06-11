@@ -369,13 +369,18 @@ func (ws *WebServer) handlerCreateShare(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if page, err := ws.db.GetPage(snowflake.ParseInt64(params.Page)); err != nil {
+	pageID, err := snowflake.ParseString(params.Page)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if page, err := ws.db.GetPage(pageID); err != nil {
 		return jsonResponse(ctx, err, fasthttp.StatusInternalServerError)
 	} else if page == nil || page.Owner != user.UID {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
-	share, err := objects.NewSharePage(user.UID, snowflake.ParseInt64(params.Page), params.MaxAccesses, params.Expires)
+	share, err := objects.NewSharePage(user.UID, pageID, params.MaxAccesses, params.Expires)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -429,12 +434,14 @@ func (ws *WebServer) handlerPostShare(ctx *routing.Context) error {
 }
 
 func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
-	ident := ctx.Param("uid")
+	ident := ctx.Param("ident")
+	byIdent := true
 	var user *objects.User
 
 	_user := ctx.Get("user")
 	if _user != nil {
 		user = _user.(*objects.User)
+		byIdent = false
 	}
 
 	shareID, err := snowflake.ParseString(ident)
@@ -450,6 +457,10 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
+	if byIdent && (share.MaxAccesses == 0 || (share.Expires != time.Time{} && share.Expires.Before(time.Now()))) {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
 	page, err := ws.db.GetPage(share.PageID)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
@@ -458,9 +469,28 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
+	owner, err := ws.db.GetUser(page.Owner, "")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if byIdent {
+		if share.MaxAccesses > 0 {
+			share.MaxAccesses--
+		}
+
+		share.LastAccess = time.Now()
+		share.Accesses++
+
+		if err = ws.db.SetShare(share); err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+	}
+
 	return jsonResponse(ctx, &shareResponse{
 		Page:  page,
 		Share: share,
+		User:  owner,
 	}, fasthttp.StatusAccepted)
 }
 

@@ -356,7 +356,7 @@ func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, obj inter
 		return err
 	}
 
-	if res.ModifiedCount == 0 {
+	if res.MatchedCount == 0 {
 		return m.insert(collection, obj)
 	}
 

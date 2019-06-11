@@ -149,6 +149,37 @@ function setFavorites(favorites) {
   });
 }
 
+function getShare(ident) {
+  return _req({
+    url: `${HOST}/api/shares/${ident}`,
+    method: 'GET',
+  });
+}
+
+function createShare(share) {
+  console.log(share);
+  return _req({
+    url: `${HOST}/api/shares`,
+    method: 'POST',
+    json: share,
+  });
+}
+
+function updateShare(share) {
+  return _req({
+    url: `${HOST}/api/shares/${share.uid}`,
+    method: 'POST',
+    json: share,
+  });
+}
+
+function deleteShare(share) {
+  return _req({
+    url: `${HOST}/api/shares/${share.uid}`,
+    method: 'DELETE',
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -190,4 +221,8 @@ export default {
   deleteSession,
   getFavorites,
   setFavorites,
+  getShare,
+  createShare,
+  updateShare,
+  deleteShare,
 };

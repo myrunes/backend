@@ -148,10 +148,6 @@ export default {
   margin-right: 10px;
 }
 
-.perks {
-  background-color: rgba(97, 97, 97, 0.25);
-}
-
 .headline {
   display: flex;
 }
