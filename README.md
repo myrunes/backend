@@ -7,7 +7,7 @@
     <img src="https://forthebadge.com/images/badges/fuck-it-ship-it.svg" height="30" />&nbsp;
     <a href="https://zekro.de/discord"><img src="https://img.shields.io/discord/307084334198816769.svg?logo=discord&style=for-the-badge" height="30"></a>
     <br/><br/>
-    <img alt="Docker Automated build" src="https://img.shields.io/docker/automated/zekro/myrunes.svg?color=cyan&logo=docker&style=for-the-badge">&nbsp;
+    <img alt="Docker Cloud Automated build" src="https://img.shields.io/docker/cloud/automated/zekro/myrunes.svg?color=cyan&logo=docker&logoColor=cyan&style=for-the-badge">&nbsp;
     <img alt="Travis (.org)" src="https://img.shields.io/travis/zekrotja/myrunes.svg?logo=travis&style=for-the-badge">
 </div>
 
