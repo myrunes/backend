@@ -54,7 +54,9 @@ export default {
       Rest.getMe().then((res) => {
         this.loggedIn = true;
       }).catch((err) => {
-        this.$router.replace('/login');
+        if (this.$route.name !== 'Share') {
+          this.$router.replace('/login');
+        }
       })
     }
   }

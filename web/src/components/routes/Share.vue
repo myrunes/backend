@@ -1,5 +1,7 @@
 <template>
-  <div class="outer-container">
+  <div class="outer-container"
+    :class="{ 'm-3': !loggedin }"
+  >
 
     <div v-if="notfound" class="container-fluid d-flex">
       <h1 class="mx-auto mt-5">This is not a shared page.&nbsp;&nbsp;:(</h1>
@@ -102,12 +104,19 @@ export default {
         }
       },
 
-      user: {}
+      user: {},
+
+      loggedin: false,
     }
   },
 
   methods: {
     savePage() {
+      if (!this.loggedin) {
+        this.$router.push({ path: '/login', query: { createpage: this.ident } } );
+        return;
+      }
+
       let page = JSON.parse(JSON.stringify(this.page));
       page.title += ` (cloned from ${this.user.displayname})`;
 
@@ -115,7 +124,7 @@ export default {
         if (res.body) {
           this.$router.push({ name: 'RunePage', params: { uid: res.body.uid} });
         }
-      }).ctach(console.error);
+      }).catch(console.error);
     }
   },
 
@@ -134,6 +143,10 @@ export default {
         console.error(err);
       }
     });
+
+    Rest.getMe()
+      .then(() => this.loggedin = true)
+      .catch(() => {});
   }
 
 }
