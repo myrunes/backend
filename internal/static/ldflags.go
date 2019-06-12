@@ -1,5 +1,6 @@
 package static
 
 var (
-	Release = "FALSE"
+	Release    = "FALSE"
+	AppVersion = "DEBUG_BUILD"
 )

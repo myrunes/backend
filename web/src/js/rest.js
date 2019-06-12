@@ -194,6 +194,7 @@ function _req(options) {
       if (body && typeof body === 'string') body = JSON.parse(body);
 
       if (res.statusCode >= 400) {
+        body._headers = res.headers;
         rejects(body);
         return;
       }

@@ -1,7 +1,7 @@
 <template>
   <footer>
     <p>
-      © 2019 MYRUNES
+      © 2019 MYRUNES [{{ version }}]
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt">IMPRINT</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
@@ -20,6 +20,7 @@ export default {
   name: 'Footer',
 
   props: {
+    version: String
   },
 
   methods: {
@@ -31,7 +32,7 @@ export default {
 
 p, a {
   margin: 0px;
-  font-size: 14px;
+  font-size: 12px;
   color: rgb(202, 202, 202) !important;
 }
 

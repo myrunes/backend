@@ -21,7 +21,7 @@ vendor/*
 
 node_modules
 package-lock.json
-dist/*
+dist
 bin/*
 
 .DS_Store
