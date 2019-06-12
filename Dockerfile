@@ -9,7 +9,8 @@ ENV PATH="$GOPATH/bin:${PATH}"
 
 # install node.js
 RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - &&\
-    apt-get install -y nodejs
+    apt-get install -y nodejs &&\
+    apt-get install -y git
 
 # install vue CLI
 RUN npm i -g @vue/cli
@@ -18,6 +19,7 @@ RUN npm i -g @vue/cli
 WORKDIR $GOPATH/src/github.com/zekroTJA/myrunes
 
 # add nessecary repository files
+ADD ./.git ./.git
 ADD ./cmd ./cmd
 ADD ./internal ./internal
 ADD ./pkg ./pkg
@@ -40,7 +42,8 @@ RUN mkdir ./bin
 
 RUN go build \
         -v -o ./bin/myrunes -ldflags "\
-            -X github.com/zekroTJA/myrunes/internal/static.Release=TRUE" \
+            -X github.com/zekroTJA/myrunes/internal/static.Release=TRUE \
+            -X github.com/zekroTJA/myrunes/internal/static.AppVersion=$(git describe --tags)" \
         ./cmd/server/*.go
 
 #### BUILD FRONT END ####
