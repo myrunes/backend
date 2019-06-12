@@ -54,8 +54,16 @@
           :class="`perk-${r}`"
         />
       </div>
-    </div>
 
+      <div class="ctrl-btns">
+        <button
+          class="btn-slide mr-3 shadow"
+          @click="savePage"
+        >
+          SAVE
+        </button>
+      </div>
+    </div>
   </div>
 </template>
 
@@ -99,7 +107,16 @@ export default {
   },
 
   methods: {
-    
+    savePage() {
+      let page = JSON.parse(JSON.stringify(this.page));
+      page.title += ` (cloned from ${this.user.displayname})`;
+
+      Rest.createPage(page).then((res) => {
+        if (res.body) {
+          this.$router.push({ name: 'RunePage', params: { uid: res.body.uid} });
+        }
+      }).ctach(console.error);
+    }
   },
 
   created: function() {
