@@ -47,7 +47,7 @@ footer {
   padding: 5px 12px;
   background-color: #37474F;
   text-align: center;
-  /* height: 60px; Set the fixed height of the footer here */
+  z-index: 99;
 }
 
 </style>
