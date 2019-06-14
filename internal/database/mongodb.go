@@ -302,6 +302,17 @@ func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
 	return err
 }
 
+func (m *MongoDB) CleanupExpiredSessions() error {
+	_, err := m.collections.sessions.DeleteMany(ctxTimeout(5*time.Second),
+		bson.M{
+			"expires": bson.M{
+				"$lte": time.Now(),
+			},
+		})
+
+	return err
+}
+
 func (m *MongoDB) SetShare(share *objects.SharePage) error {
 	return m.insertOrUpdate(m.collections.shares, bson.M{
 		"$or": bson.A{

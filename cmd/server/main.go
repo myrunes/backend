@@ -5,11 +5,13 @@ import (
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"github.com/zekroTJA/myrunes/internal/config"
 	"github.com/zekroTJA/myrunes/internal/database"
 	"github.com/zekroTJA/myrunes/internal/logger"
 	"github.com/zekroTJA/myrunes/internal/webserver"
+	"github.com/zekroTJA/myrunes/pkg/lifecycletimer"
 )
 
 var (
@@ -49,6 +51,16 @@ func main() {
 		}
 	}()
 	logger.Info("WEBSERVER :: started")
+
+	lct := lifecycletimer.New(5 * time.Minute).
+		Handle(func() {
+			if err := db.CleanupExpiredSessions(); err != nil {
+				logger.Error("DATABASE :: failed cleaning up sessions: %s", err.Error())
+			}
+		}).
+		Start()
+	defer lct.Stop()
+	logger.Info("LIFECYCLETIMER :: started")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
