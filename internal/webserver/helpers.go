@@ -79,10 +79,12 @@ func parseJSONBody(ctx *routing.Context, v interface{}) error {
 	return err
 }
 
-func (ws *WebServer) addCORSHeaders(ctx *routing.Context) error {
+func (ws *WebServer) addHeaders(ctx *routing.Context) error {
+	ctx.Response.Header.SetServer("MYRUNES v." + static.AppVersion)
+
 	if static.Release != "TRUE" {
 		ctx.Response.Header.Set("Access-Control-Allow-Origin", "http://localhost:8081")
-		ctx.Response.Header.Set("Access-Control-Allow-Headers", "authorization, content-type, set-cookie, cookie")
+		ctx.Response.Header.Set("Access-Control-Allow-Headers", "authorization, content-type, set-cookie, cookie, server")
 		ctx.Response.Header.Set("Access-Control-Allow-Methods", "POST, GET, DELETE, OPTIONS")
 		ctx.Response.Header.Set("Access-Control-Allow-Credentials", "true")
 	}

@@ -36,4 +36,8 @@ type Middleware interface {
 	GetSession(key string, addr string) (*objects.User, error)
 	GetSessions(uID snowflake.ID) ([]*objects.Session, error)
 	DeleteSession(key string, sessionID snowflake.ID) error
+
+	SetShare(share *objects.SharePage) error
+	GetShare(ident string, uid, pageID snowflake.ID) (*objects.SharePage, error)
+	DeleteShare(ident string, uid, pageID snowflake.ID) error
 }

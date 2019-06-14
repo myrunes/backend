@@ -5,9 +5,10 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
+	"github.com/zekroTJA/myrunes/internal/static"
 )
 
-var pageIDCluster, _ = snowflake.NewNode(200)
+var pageIDCluster, _ = snowflake.NewNode(static.ClusterIDPages)
 
 var (
 	ErrInvalidChamp = errors.New("invalid champion")

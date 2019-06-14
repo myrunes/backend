@@ -3,7 +3,7 @@
     <CookieInfo />
     <Header v-if="loggedIn" />
     <router-view :class="{ m : loggedIn }"></router-view>
-    <Footer />
+    <Footer :version="version"/>
   </div>
 </template>
 
@@ -34,6 +34,7 @@ export default {
   data: function() {
     return {
       loggedIn: false,
+      version: '',
     }
   },
 
@@ -53,9 +54,20 @@ export default {
     checkLogin() {
       Rest.getMe().then((res) => {
         this.loggedIn = true;
+        this.setVersion(res.res.headers);
       }).catch((err) => {
-        this.$router.replace('/login');
+        if (this.$route.name !== 'Share') {
+          this.$router.replace('/login');
+          this.setVersion(err._headers);
+        }
       })
+    },
+
+    setVersion(headers) {
+      if (headers && headers.server) {
+        this.version = headers.server
+          .split(' ').slice(1).join(' ');
+      }
     }
   }
 }

@@ -20,7 +20,8 @@ private.*
 vendor/*
 
 node_modules
-dist/*
+package-lock.json
+dist
 bin/*
 
 .DS_Store

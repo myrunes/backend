@@ -66,7 +66,7 @@ func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
 }
 
 func (ws *WebServer) registerHandlers() {
-	ws.router.Use(ws.handlerFiles, ws.addCORSHeaders)
+	ws.router.Use(ws.handlerFiles, ws.addHeaders)
 
 	api := ws.router.Group("/api")
 	api.
@@ -90,7 +90,7 @@ func (ws *WebServer) registerHandlers() {
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
 
-	pages := api.Group("/pages", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
+	pages := api.Group("/pages", ws.addHeaders, ws.auth.CheckRequestAuth)
 	pages.
 		Post("", ws.handlerCreatePage).
 		Get(ws.handlerGetPages)
@@ -99,16 +99,28 @@ func (ws *WebServer) registerHandlers() {
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
 
-	sessions := api.Group("/sessions", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
+	sessions := api.Group("/sessions", ws.addHeaders, ws.auth.CheckRequestAuth)
 	sessions.
 		Get("", ws.handlerGetSessions)
 	sessions.
-		Delete(`/<id:\d+>`, ws.handlerDeleteSession)
+		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
 
-	favorites := api.Group("/favorites", ws.addCORSHeaders, ws.auth.CheckRequestAuth)
+	favorites := api.Group("/favorites", ws.addHeaders, ws.auth.CheckRequestAuth)
 	favorites.
 		Get("", ws.handlerGetFavorites).
 		Post(ws.handlerPostFavorite)
+
+	shares := api.Group("/shares", ws.addHeaders)
+	shares.
+		Post("", ws.auth.CheckRequestAuth, ws.handlerCreateShare)
+	shares.
+		Get(`/<ident:\d+>`, ws.auth.CheckRequestAuth, ws.handlerGetShare)
+	shares.
+		Get("/<ident:.+>", ws.handlerGetShare)
+	shares.
+		Post(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerPostShare).
+		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteShare)
+
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

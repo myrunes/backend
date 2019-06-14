@@ -63,7 +63,7 @@ $(BIN):
 			-X $(PACKAGE)/$(LDPAKAGE).AppVersion=$(TAG) \
 			-X $(PACKAGE)/$(LDPAKAGE).AppCommit=$(COMMIT) \
 			-X $(PACKAGE)/$(LDPAKAGE).Release=TRUE" \
-		$(CURDIR)/cmd/server
+		$(CURDIR)/cmd/server/*.go
 
 PHONY += test
 test:
@@ -76,12 +76,7 @@ lint:
 PHONY += run
 run:
 	$(GO) run -v \
-		$(CURDIR)/cmd/server -c $(CONFIG)
-
-PHONY += runfe
-runfe:
-	cd $(CURDIR)/web && \
-		$(NPM) run serve
+		$(CURDIR)/cmd/server/*.go -c $(CONFIG)
 
 PHONY += cleanup
 cleanup:

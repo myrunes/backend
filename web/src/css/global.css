@@ -18,7 +18,7 @@ button:focus {
   -moz-outline : 0;
 }
 
-h1, h2, h3 {
+h1, h2, h3, h4, h5 {
   font-family: 'Montserrat', sans-serif;
   font-weight: 200;
 }
@@ -45,6 +45,15 @@ img {
 }
 
 /*****************************************************/
+
+.modal-header *, 
+.modal-body * {
+  color: black !important;
+}
+
+.round {
+  border-radius: 50%;
+}
 
 .tb {
   width: 300px;
@@ -205,6 +214,10 @@ span.tb {
 .perk {
   padding: 5px;
   border-radius: 50%;
+}
+
+.perks {
+  background-color: rgba(97, 97, 97, 0.25);
 }
 
 .perk-axe {

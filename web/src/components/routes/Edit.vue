@@ -1,6 +1,62 @@
 <template>
   <div>
-    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">{{ banner.content }}</Banner>
+    <b-modal 
+      id="modalShare" 
+      title="Share Page"
+      @ok="shareOk"
+    >
+      <p v-if="!share.uid">
+        This page has not been shared yet. Create a share link below.
+      </p>
+      <div v-else>
+        <p class="m-0">Share link:</p>
+        <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
+        <p>Visited <b>{{ share.accesses }}</b> times.</p>
+      </div>
+
+      <h5 class="mt-4">Max Uses</h5>
+      <i>Number of times the link can be accessed. Set to -1 to set this infinite.</i>
+      <b-form-input 
+        type="number"
+        min="-1"
+        value="0"
+        v-model="share.maxaccesses"
+      ></b-form-input>
+
+      <h5 class="mt-4">Expires</h5>
+      <i>Time at which the link will expire. Leave empty to set to never expire.</i>
+      <b-row>
+        <b-col>
+          <b-form-input 
+            type="date"
+            ref="shareDate"
+            v-model="share._expires.date"
+          ></b-form-input>
+        </b-col>
+        <b-col>
+          <b-form-input 
+            type="time"
+            ref="shareTime"
+            v-model="share._expires.time"
+          ></b-form-input>
+        </b-col>
+      </b-row>
+
+      <b-button 
+        variant="danger" 
+        class="w-100 mt-3 text-white"
+        @click="resetShare"
+        v-if="share.uid"
+      >RESET SHARE</b-button>
+
+    </b-modal>
+
+    <Banner v-if="banner.visible" 
+      :type="banner.type" 
+      class="mb-3"
+      :closable="banner.closable"
+      @closing="banner.visible = false"
+    >{{ banner.content }}</Banner>
 
     <div>
       <div class="position-relative mb-3">
@@ -106,6 +162,13 @@
 
     <div class="ctrl-btns">
       <button 
+        v-if="created"
+        class="btn-slide mr-3 shadow"
+        @click="shareOpen"
+      >
+        SHARE
+      </button>
+      <button 
         class="btn-slide mr-3 btn-cancel shadow"
         @click="$router.back()"
       >
@@ -138,6 +201,8 @@ export default {
     return {
       uid: null,
 
+      created: false,
+
       champs: [],
       runes: {
         trees: [],
@@ -158,6 +223,11 @@ export default {
         perks: {
           rows: [],
         }
+      },
+
+      share: {
+        maxaccesses: -1,
+        _expires: {},
       },
 
       banner: {
@@ -283,6 +353,7 @@ export default {
           this.uid = res.body.uid;
           this.$router.replace({ name: 'RunePage', params: { uid: this.uid } });
         }
+        this.created = true;
         window.scrollTo(0, 0);
         setTimeout(() => this.banner.visible = false, 10000);
       }).catch((err) => {
@@ -295,6 +366,90 @@ export default {
         window.scrollTo(0, 0);
         console.error(err);
       })
+    },
+
+    shareOpen() {
+      Rest.getShare(this.uid).then((res) => {
+        this.share = res.body.share;
+        this.share._expires = {};
+        this.$bvModal.show('modalShare');
+      }).catch((err) => {
+        if (err.code !== 404) {
+          console.error(err);
+        } else {
+          this.share = {
+            maxaccesses: -1,
+            _expires: {},
+          };
+          this.$bvModal.show('modalShare');
+        }
+      });
+    },
+
+    shareOk() {
+      this.share.maxaccesses = 
+        !this.share.maxaccesses ? 0 : parseInt(this.share.maxaccesses);
+
+      let exp = new Date(this.share._expires.date + ' ' + this.share._expires.time);;
+      this.share.expires = 
+        exp.toString() === 'Invalid Date' ? null : exp;
+
+      if (this.share.uid) {
+        Rest.updateShare(this.share).then(() => {
+          this.banner = {
+            visible: true,
+            type: 'success',
+            content: `Share successfully updated.`,
+            closable: true,
+          }
+        }).catch((err) => {
+          this.banner = {
+            visible: true,
+            type: 'error',
+            content: `An error occured during saving share status: ${err.message ? err.message : err}`,
+            closable: true,
+          }
+        });
+      } else {
+        this.share.page = this.uid;
+        Rest.createShare(this.share).then((res) => {
+          if (res.body) {
+            this.banner = {
+              visible: true,
+              type: 'success',
+              content: `Share successfully created. Sharelink is: ${this.getWindowLocation()}/p/${res.body.ident}`,
+              closable: true,
+            }
+          }
+        }).catch((err) => {
+          this.banner = {
+            visible: true,
+            type: 'error',
+            content: `An error occured during saving share status: ${err.message ? err.message : err}`,
+            closable: true,
+          }
+        });
+      }
+    },
+
+    resetShare() {
+      Rest.deleteShare(this.share).then(() => {
+        this.banner = {
+          visible: true,
+          type: 'success',
+          content: `Now, this page is private again and share link will not work anymore.`,
+          closable: true,
+        }
+      }).catch(console.error);
+      this.$bvModal.hide('modalShare');
+      this.share = {
+        maxaccesses: -1,
+        _expires: {},
+      };
+    },
+
+    getWindowLocation() {
+      return window.location.origin;
     }
   },
 
@@ -313,9 +468,10 @@ export default {
         if (this.uid !== 'new') {
           Rest.getPage(this.uid).then((res) => {
             if (!res.body) return;
-              this.page = res.body;
-              this.page.champions.forEach((c) => 
-                this.$refs.tagChamps.append(c));
+            this.created = true;
+            this.page = res.body;
+            this.page.champions.forEach((c) => 
+              this.$refs.tagChamps.append(c));
           }).catch(console.error);
         }
       }).catch(console.error);
@@ -364,6 +520,13 @@ a:hover {
 .bordered > img {
   border: solid #03A9F4 3px;
   border-radius: 50%;
+}
+
+.bg-ident {
+  background-color: rgba(0, 0, 0, 0.1);
+  width: fit-content;
+  padding: 5px 10px;
+  border-radius: 5px;
 }
 
 </style>

@@ -141,8 +141,7 @@ export default {
 
       if (this.register) {
         Rest.register(this.username, this.password, this.remember).then(() => {
-          EventBus.$emit('login');
-          this.$router.push('/');
+          this.loginRedirect();
           window.localStorage.setItem('reginfo-dismissed', '1');
         }).catch((err) => {
           if (err && err.code === 409) {
@@ -161,8 +160,7 @@ export default {
         });
       } else {
         Rest.login(this.username, this.password, this.remember).then(() => {
-          EventBus.$emit('login');
-          this.$router.push('/');
+          this.loginRedirect();
         }).catch((err) => {
           if (err && err.code === 401) {
             this.banner = {
@@ -186,6 +184,37 @@ export default {
       this.banner.visible = false;
       if (reason === 'reginfo') {
         window.localStorage.setItem('reginfo-dismissed', '1');
+      }
+    },
+
+    loginRedirect() {
+      EventBus.$emit('login');
+      let pid = this.$route.query.createpage;
+      if (pid) {
+        Rest.getShare(pid).then((res) => {
+          if (res.body && res.body.page && res.body.user) {
+            res.body.page.title += ` (by ${res.body.user.displayname})`;
+            Rest.createPage(res.body.page).then((res) => {
+              if (res.body) {
+                this.$router.push({ name: 'RunePage', params: { uid: res.body.uid} });
+              }
+            }).catch((err) => {
+              this.banner = {
+                visible: true,
+                type: 'error',
+                content: `Failed creating clone of shared page: ${err.message ? err.message : err}`
+              }
+            });
+          }
+        }).catch((err) => {
+          this.banner = {
+            visible: true,
+            type: 'error',
+            content: `Failed getting shared page: ${err.message ? err.message : err}`
+          }
+        });
+      } else {
+        this.$router.push('/');
       }
     }
   },
