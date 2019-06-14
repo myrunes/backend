@@ -138,6 +138,13 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 
 func (m *MongoDB) DeleteUser(uid snowflake.ID) error {
 	_, err := m.collections.users.DeleteOne(ctxTimeout(5*time.Second), bson.M{"uid": uid})
+	if err != nil {
+		return err
+	}
+
+	_, err = m.collections.pages.DeleteMany(ctxTimeout(5*time.Second),
+		bson.M{"owner": uid})
+
 	return err
 }
 
