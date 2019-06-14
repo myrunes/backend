@@ -13,11 +13,23 @@
         {{ banner.content }}
       </Banner>
       <div class="d-flex position-relative">
+        <b-tooltip 
+          target="tbUsername"
+          ref="unameToolTipShow"
+          triggers=""
+          boundary="tbUsername"
+          :show.sync="unameToolTipShow"
+        >
+          Username can only contain lower case letters, numbers, minuses (<code>-</code>)
+          and underscores (<code>_</code>). You can later change your username or set a specific
+          display name.
+        </b-tooltip>
         <input 
           id="tbUsername" 
           type="text" 
           class="tb mx-auto"
           @change="checkUsername"
+          @input="usernameInput"
           v-model="username"
           placeholder="USERNAME"
           autocomplete="off"
@@ -86,12 +98,15 @@ export default {
       username: '',
       password: '',
       remember: false,
+      unameToolTipShow: false,
     }
   },
 
   methods: {
     checkUsername(e) {
-      let val = e.target.value;
+      this.unameToolTipShow = false;
+
+      let val = this.username;
       if (val.length === 0) {
         this.banner.visible = false;
         return;
@@ -116,6 +131,16 @@ export default {
           }
         }
       });
+    },
+
+    usernameInput() {
+      if (this.username.match(/([^\w_\-])|([A-Z])/g)) {
+        this.unameToolTipShow = true;
+      }
+
+      this.username = this.username
+        .toLowerCase()
+        .replace(/[^\w_\-]/g, '');
     },
 
     login() {
