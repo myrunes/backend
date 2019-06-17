@@ -35,7 +35,26 @@ You can self-host this application by using the supplied [**docker images**](htt
 
 Just use the following command to pull the latest stable image:  
 ```
-$ docker pull zekro/myrunes:latest
+# docker pull zekro/myrunes:latest
+```
+On startup, you need to bind the exposed web server port `8080` and the volume `/etc/myrunes` to your host system:
+
+```
+# docker run \
+  -p 443:8080 \
+  -v /etc/myrunes:/etc/myrunes \
+  zekro/myrunes:latest
+```
+
+or with docker-compose:
+
+```yml
+myrunes:
+  image: "zekro/myrunes:latest"
+  ports:
+    - "443:8080"
+  volumes:
+    - "/etc/myrunes:/etc/myrunes"
 ```
 
 ## Requirements
