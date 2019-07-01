@@ -32,7 +32,7 @@ var Champs = []string{
 	"lucian", "lulu", "lux", "malphite", "malzahar", "maokai", "master-yi",
 	"miss-fortune", "mordekaiser", "morgana", "nami", "nasus", "nautilus", "neeko",
 	"nidalee", "nocturne", "nunu", "olaf", "orianna", "ornn", "pantheon", "poppy",
-	"pyke", "quinn", "rakan", "rammus", "reksai", "renekton", "rengar", "riven",
+	"pyke", "qiyana", "quinn", "rakan", "rammus", "reksai", "renekton", "rengar", "riven",
 	"rumble", "ryze", "sejuani", "shaco", "shen", "shyvana", "singed", "sion", "sivir",
 	"skarner", "sona", "swain", "sylas", "syndra", "tahm-kench", "taliyah", "talon",
 	"taric", "teemo", "thresh", "tristana", "trundle", "tryndamere", "twisted-fate",
