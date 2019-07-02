@@ -10,6 +10,7 @@ import (
 	"github.com/valyala/fasthttp"
 	"github.com/zekroTJA/myrunes/internal/database"
 	"github.com/zekroTJA/myrunes/internal/objects"
+	"github.com/zekroTJA/myrunes/internal/static"
 )
 
 func (ws *WebServer) handlerFiles(ctx *routing.Context) error {
@@ -474,18 +475,37 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	if byIdent {
-		if share.MaxAccesses > 0 {
-			share.MaxAccesses--
+	reqAddr := getIPAddr(ctx)
+	validReqAddr := !strings.HasPrefix(reqAddr, "192.168") &&
+		!strings.HasPrefix(reqAddr, "10.23") &&
+		!(static.Release == "TRUE" && reqAddr == "127.0.0.1") &&
+		string(ctx.Request.Header.PeekBytes(headerUserAgent)) != static.DiscordUserAgentPingHeaderVal
+
+	if byIdent && validReqAddr {
+		var contains bool
+		for _, ip := range share.AccessIPs {
+			if ip == reqAddr {
+				contains = true
+			}
 		}
 
-		share.LastAccess = time.Now()
-		share.Accesses++
+		if !contains {
+			share.AccessIPs = append(share.AccessIPs, reqAddr)
 
-		if err = ws.db.SetShare(share); err != nil {
-			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+			if share.MaxAccesses > 0 {
+				share.MaxAccesses--
+			}
+
+			share.LastAccess = time.Now()
+			share.Accesses++
+
+			if err = ws.db.SetShare(share); err != nil {
+				return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+			}
 		}
 	}
+
+	share.AccessIPs = nil
 
 	return jsonResponse(ctx, &shareResponse{
 		Page:  page,

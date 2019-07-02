@@ -21,6 +21,7 @@ type SharePage struct {
 	Expires     time.Time    `json:"expires"`
 	Accesses    int          `json:"accesses"`
 	LastAccess  time.Time    `json:"lastaccess"`
+	AccessIPs   []string     `json:"accessips,omitempty"`
 }
 
 func NewSharePage(ownerID, pageID snowflake.ID, maxAccesses int, expires time.Time) (*SharePage, error) {
@@ -44,6 +45,7 @@ func NewSharePage(ownerID, pageID snowflake.ID, maxAccesses int, expires time.Ti
 		OwnerID:     ownerID,
 		PageID:      pageID,
 		UID:         shareIDCLuster.Generate(),
+		AccessIPs:   make([]string, 0),
 	}
 
 	share.Ident, err = random.GetRandBase64Str(5)

@@ -5,8 +5,6 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/zekroTJA/myrunes/internal/logger"
-
 	"github.com/zekroTJA/myrunes/internal/static"
 
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -15,7 +13,10 @@ import (
 
 var emptyResponseBody = []byte("{}")
 
-var headerXForwardedFor = []byte("X-Forwarded-For")
+var (
+	headerXForwardedFor = []byte("X-Forwarded-For")
+	headerUserAgent     = []byte("User-Agent")
+)
 
 var defStatusBoddies = map[int][]byte{
 	http.StatusOK:           []byte("{\n  \"code\": 200,\n  \"message\": \"ok\"\n}"),
@@ -98,7 +99,6 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 
 func getIPAddr(ctx *routing.Context) string {
 	forwardedfor := ctx.Request.Header.PeekBytes(headerXForwardedFor)
-	logger.Debug("x-forwarded-for: %s", string(forwardedfor))
 	if forwardedfor != nil && len(forwardedfor) > 0 {
 		return string(forwardedfor)
 	}
