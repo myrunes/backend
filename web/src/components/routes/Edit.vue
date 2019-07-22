@@ -1,22 +1,26 @@
+<!-- @format -->
+
 <template>
   <div>
-    <b-modal 
-      id="modalShare" 
-      title="Share Page"
-      @ok="shareOk"
-    >
+    <b-modal id="modalShare" title="Share Page" @ok="shareOk">
       <p v-if="!share.uid">
         This page has not been shared yet. Create a share link below.
       </p>
       <div v-else>
         <p class="m-0">Share link:</p>
         <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
-        <p>Visited <b>{{ share.accesses }}</b> times.</p>
+        <p>
+          Visited
+          <b>{{ share.accesses }}</b> times.
+        </p>
       </div>
 
       <h5 class="mt-4">Max Uses</h5>
-      <i>Number of times the link can be accessed. Set to -1 to set this infinite.</i>
-      <b-form-input 
+      <i
+        >Number of times the link can be accessed. Set to -1 to set this
+        infinite.</i
+      >
+      <b-form-input
         type="number"
         min="-1"
         value="0"
@@ -24,17 +28,20 @@
       ></b-form-input>
 
       <h5 class="mt-4">Expires</h5>
-      <i>Time at which the link will expire. Leave empty to set to never expire.</i>
+      <i
+        >Time at which the link will expire. Leave empty to set to never
+        expire.</i
+      >
       <b-row>
         <b-col>
-          <b-form-input 
+          <b-form-input
             type="date"
             ref="shareDate"
             v-model="share._expires.date"
           ></b-form-input>
         </b-col>
         <b-col>
-          <b-form-input 
+          <b-form-input
             type="time"
             ref="shareTime"
             v-model="share._expires.time"
@@ -42,53 +49,53 @@
         </b-col>
       </b-row>
 
-      <b-button 
-        variant="danger" 
+      <b-button
+        variant="danger"
         class="w-100 mt-3 text-white"
         @click="resetShare"
         v-if="share.uid"
-      >RESET SHARE</b-button>
-
+        >RESET SHARE</b-button
+      >
     </b-modal>
 
-    <Banner v-if="banner.visible" 
-      :type="banner.type" 
+    <Banner
+      v-if="banner.visible"
+      :type="banner.type"
       class="mb-3"
       :closable="banner.closable"
       @closing="banner.visible = false"
-    >{{ banner.content }}</Banner>
+      >{{ banner.content }}</Banner
+    >
 
     <div>
       <div class="position-relative mb-3">
-        <input 
-          type="text" 
-          class="tb tb-title" 
+        <input
+          type="text"
+          class="tb tb-title"
           v-model="page.title"
           placeholder="TITLE"
           @change="titleChange"
         />
-        <span class="tb w-100"/>
+        <span class="tb w-100" />
       </div>
-      <TagsInput 
-        ref="tagChamps"
-        :tags="champs"
-        @change="champsChanged"
-      />
+      <TagsInput ref="tagChamps" :tags="champs" @change="champsChanged" />
     </div>
-    
+
     <!-- TREE PICKER -->
     <div class="my-4 mx-2">
-      <a v-for="tree in runes.trees" 
+      <a
+        v-for="tree in runes.trees"
         :key="`tree-${tree}`"
         class="mr-2 bordered"
-        :class="{disabled: 
-          !(page.primary.tree === tree || 
-          page.secondary.tree === tree)
+        :class="{
+          disabled: !(
+            page.primary.tree === tree || page.secondary.tree === tree
+          ),
         }"
         :name="changes.trees"
         @click="treeClick(tree)"
       >
-        <img :src="`/assets/rune-avis/${tree}.png`"/>
+        <img :src="`/assets/rune-avis/${tree}.png`" />
       </a>
     </div>
 
@@ -97,19 +104,23 @@
       <!-- PRIMARY TREE -->
       <div class="col bg mr-4">
         <h3>PRIMARY TREE</h3>
-        <div v-for="(row, rowIndex) in runes.primary[page.primary.tree]" 
+        <div
+          v-for="(row, rowIndex) in runes.primary[page.primary.tree]"
           :key="`row-${rowIndex}`"
           :name="changes.primary"
           class="mb-3"
         >
-          <a v-for="rune in row" :key="`rune-${rune}`" 
+          <a
+            v-for="rune in row"
+            :key="`rune-${rune}`"
             class="mr-2 bordered"
-            :class="{disabled: page.primary.rows[rowIndex] !== rune}"
+            :class="{ disabled: page.primary.rows[rowIndex] !== rune }"
             @click="primaryClick(rowIndex, rune)"
           >
-            <img 
+            <img
               :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`"
-              width="60" height="60"
+              width="60"
+              height="60"
             />
           </a>
         </div>
@@ -117,19 +128,23 @@
       <!-- SECONDARY TREE -->
       <div class="col bg">
         <h3>SECONDARY TREE</h3>
-        <div v-for="(row, rowIndex) in runes.secondary[page.secondary.tree]" 
+        <div
+          v-for="(row, rowIndex) in runes.secondary[page.secondary.tree]"
           :key="`row-${rowIndex}`"
           :name="changes.secondary"
           class="mb-3"
         >
-          <a v-for="rune in row" :key="`rune-${rune}`" 
+          <a
+            v-for="rune in row"
+            :key="`rune-${rune}`"
             class="mr-2 bordered"
-            :class="{disabled: !page.secondary.rows.includes(rune)}"
+            :class="{ disabled: !page.secondary.rows.includes(rune) }"
             @click="secondaryClick(rowIndex, rune)"
           >
-            <img 
+            <img
               :src="`/assets/rune-avis/${page.secondary.tree}/${rune}.png`"
-              width="60" height="60"
+              width="60"
+              height="60"
             />
           </a>
         </div>
@@ -139,20 +154,23 @@
     <!-- PERKS -->
     <div class="bg ml-1">
       <h3>PERKS</h3>
-      <div v-for="(row, index) in runes.perks" 
+      <div
+        v-for="(row, index) in runes.perks"
         :key="`perk-row-${index}`"
         class="mb-3"
         :name="changes.perks"
       >
-        <a v-for="perk in row" 
+        <a
+          v-for="perk in row"
           :key="`perk-${perk}`"
           class="mr-3 bordered"
-          :class="{disabled: page.perks.rows[index] !== perk}"
+          :class="{ disabled: page.perks.rows[index] !== perk }"
           @click="perkClick(index, perk)"
         >
-          <img 
+          <img
             :src="`/assets/rune-avis/perks/${perk}.png`"
-            width="40" height="40"
+            width="40"
+            height="40"
             class="perk big-perk"
             :class="`perk-${perk}`"
           />
@@ -161,30 +179,20 @@
     </div>
 
     <div class="ctrl-btns">
-      <button 
-        v-if="created"
-        class="btn-slide mr-3 shadow"
-        @click="shareOpen"
-      >
+      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">
         SHARE
       </button>
-      <button 
-        class="btn-slide mr-3 btn-cancel shadow"
-        @click="$router.back()"
-      >
+      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">
         CANCEL
       </button>
-      <button 
-        class="btn-slide btn-save shadow"
-        @click="save"
-      >
-        SAVE
-      </button>
+      <button class="btn-slide btn-save shadow" @click="save">SAVE</button>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 import Rest from '../../js/rest';
 import Banner from '../Banner';
 import TagsInput from '../TagsInput';
@@ -222,7 +230,7 @@ export default {
         },
         perks: {
           rows: [],
-        }
+        },
       },
 
       share: {
@@ -244,15 +252,14 @@ export default {
       },
 
       wasUpdated: false,
-    }
+    };
   },
 
   methods: {
     getSecRow(rune) {
       let t = this.runes.secondary[this.page.secondary.tree];
       for (let i in t) {
-        if (t[i].find((r) => r === rune))
-          return i;
+        if (t[i].find((r) => r === rune)) return i;
       }
       return -1;
     },
@@ -263,7 +270,7 @@ export default {
           visible: true,
           type: 'error',
           content: 'Title can not be empty!',
-        }
+        };
       } else {
         this.banner.visible = false;
       }
@@ -309,17 +316,21 @@ export default {
 
     secondaryClick(rowIndex, rune) {
       this.changes.secondary++;
-      
-      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])) {
+
+      if (
+        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])
+      ) {
         this.page.secondary.rows[0] = rune;
         return;
       }
 
-      if (this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])) {
+      if (
+        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])
+      ) {
         this.page.secondary.rows[1] = rune;
         return;
       }
-      
+
       if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
         this.page.secondary.rows[1] = this.page.secondary.rows[0];
         this.page.secondary.rows[0] = rune;
@@ -343,104 +354,125 @@ export default {
         method = Rest.updatePage(this.uid, this.page);
       }
 
-      method.then((res) => {
-        this.banner = {
-          visible: true,
-          type: 'success',
-          content: 'Page saved!',
-        }
-        if (this.uid === 'new') {
-          this.uid = res.body.uid;
-          this.$router.replace({ name: 'RunePage', params: { uid: this.uid } });
-        }
-        this.created = true;
-        window.scrollTo(0, 0);
-        setTimeout(() => this.banner.visible = false, 10000);
-      }).catch((err) => {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: `Error: ${err.message ? err.message : err}`,
-        }
-        setTimeout(() => this.banner.visible = false, 10000);
-        window.scrollTo(0, 0);
-        console.error(err);
-      })
-    },
-
-    shareOpen() {
-      Rest.getShare(this.uid).then((res) => {
-        this.share = res.body.share;
-        this.share._expires = {};
-        this.$bvModal.show('modalShare');
-      }).catch((err) => {
-        if (err.code !== 404) {
-          console.error(err);
-        } else {
-          this.share = {
-            maxaccesses: -1,
-            _expires: {},
-          };
-          this.$bvModal.show('modalShare');
-        }
-      });
-    },
-
-    shareOk() {
-      this.share.maxaccesses = 
-        !this.share.maxaccesses ? 0 : parseInt(this.share.maxaccesses);
-
-      let exp = new Date(this.share._expires.date + ' ' + this.share._expires.time);;
-      this.share.expires = 
-        exp.toString() === 'Invalid Date' ? null : exp;
-
-      if (this.share.uid) {
-        Rest.updateShare(this.share).then(() => {
+      method
+        .then((res) => {
           this.banner = {
             visible: true,
             type: 'success',
-            content: `Share successfully updated.`,
-            closable: true,
+            content: 'Page saved!',
+          };
+          if (this.uid === 'new') {
+            this.uid = res.body.uid;
+            this.$router.replace({
+              name: 'RunePage',
+              params: { uid: this.uid },
+            });
           }
-        }).catch((err) => {
+          this.created = true;
+          window.scrollTo(0, 0);
+          setTimeout(() => (this.banner.visible = false), 10000);
+        })
+        .catch((err) => {
           this.banner = {
             visible: true,
             type: 'error',
-            content: `An error occured during saving share status: ${err.message ? err.message : err}`,
-            closable: true,
+            content: `Error: ${err.message ? err.message : err}`,
+          };
+          setTimeout(() => (this.banner.visible = false), 10000);
+          window.scrollTo(0, 0);
+          console.error(err);
+        });
+    },
+
+    shareOpen() {
+      Rest.getShare(this.uid)
+        .then((res) => {
+          this.share = res.body.share;
+          this.share._expires = {};
+          this.$bvModal.show('modalShare');
+        })
+        .catch((err) => {
+          if (err.code !== 404) {
+            console.error(err);
+          } else {
+            this.share = {
+              maxaccesses: -1,
+              _expires: {},
+            };
+            this.$bvModal.show('modalShare');
           }
         });
-      } else {
-        this.share.page = this.uid;
-        Rest.createShare(this.share).then((res) => {
-          if (res.body) {
+    },
+
+    shareOk() {
+      this.share.maxaccesses = !this.share.maxaccesses
+        ? 0
+        : parseInt(this.share.maxaccesses);
+
+      let exp = new Date(
+        this.share._expires.date + ' ' + this.share._expires.time
+      );
+      this.share.expires = exp.toString() === 'Invalid Date' ? null : exp;
+
+      if (this.share.uid) {
+        Rest.updateShare(this.share)
+          .then(() => {
             this.banner = {
               visible: true,
               type: 'success',
-              content: `Share successfully created. Sharelink is: ${this.getWindowLocation()}/p/${res.body.ident}`,
+              content: `Share successfully updated.`,
               closable: true,
+            };
+          })
+          .catch((err) => {
+            this.banner = {
+              visible: true,
+              type: 'error',
+              content: `An error occured during saving share status: ${
+                err.message ? err.message : err
+              }`,
+              closable: true,
+            };
+          });
+      } else {
+        this.share.page = this.uid;
+        Rest.createShare(this.share)
+          .then((res) => {
+            if (res.body) {
+              this.banner = {
+                visible: true,
+                type: 'success',
+                content: `Share successfully created. Sharelink is: ${this.getWindowLocation()}/p/${
+                  res.body.ident
+                }`,
+                closable: true,
+              };
             }
-          }
-        }).catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content: `An error occured during saving share status: ${err.message ? err.message : err}`,
-            closable: true,
-          }
-        });
+          })
+          .catch((err) => {
+            this.banner = {
+              visible: true,
+              type: 'error',
+              content: `An error occured during saving share status: ${
+                err.message ? err.message : err
+              }`,
+              closable: true,
+            };
+          });
       }
     },
 
     resetShare() {
-      Rest.deleteShare(this.share).then(() => {
-        this.banner = {
-          visible: true,
-          type: 'success',
-          content: `Now, this page is private again and share link will not work anymore.`,
-          closable: true,
-        }
-      }).catch(console.error);
+      Rest.deleteShare(this.share)
+        .then(() => {
+          this.banner = {
+            visible: true,
+            type: 'success',
+            content: `Now, this page is private again and share link will not work anymore.`,
+            closable: true,
+          };
+        })
+        .catch(console.error);
       this.$bvModal.hide('modalShare');
       this.share = {
         maxaccesses: -1,
@@ -450,32 +482,38 @@ export default {
 
     getWindowLocation() {
       return window.location.origin;
-    }
+    },
   },
 
   created: function() {
     this.uid = this.$route.params.uid;
-    
-    Rest.getChamps().then((res) => {
-      if (!res.body || !res.body.data) return;
-      this.champs = res.body.data;
 
-      Rest.getRunes().then((res) => {
+    Rest.getChamps()
+      .then((res) => {
+        if (!res.body || !res.body.data) return;
+        this.champs = res.body.data;
 
-        if (!res.body) return;
-        this.runes = res.body;
-
-        if (this.uid !== 'new') {
-          Rest.getPage(this.uid).then((res) => {
+        Rest.getRunes()
+          .then((res) => {
             if (!res.body) return;
-            this.created = true;
-            this.page = res.body;
-            this.page.champions.forEach((c) => 
-              this.$refs.tagChamps.append(c));
-          }).catch(console.error);
-        }
-      }).catch(console.error);
-    }).catch(console.error);
+            this.runes = res.body;
+
+            if (this.uid !== 'new') {
+              Rest.getPage(this.uid)
+                .then((res) => {
+                  if (!res.body) return;
+                  this.created = true;
+                  this.page = res.body;
+                  this.page.champions.forEach((c) =>
+                    this.$refs.tagChamps.append(c)
+                  );
+                })
+                .catch(console.error);
+            }
+          })
+          .catch(console.error);
+      })
+      .catch(console.error);
   },
 
   updated: function() {
@@ -485,13 +523,12 @@ export default {
       this.$refs.tagChamps.append(champ);
       this.wasUpdated = true;
     }
-  }
-}
-
+  },
+};
 </script>
 
-
 <style scoped>
+/** @format */
 
 a:hover {
   cursor: pointer;
@@ -510,7 +547,7 @@ a:hover {
 }
 
 .disabled {
-  opacity: .6;
+  opacity: 0.6;
 }
 
 .disabled > img {
@@ -518,7 +555,7 @@ a:hover {
 }
 
 .bordered > img {
-  border: solid #03A9F4 3px;
+  border: solid #03a9f4 3px;
   border-radius: 50%;
 }
 
@@ -528,5 +565,4 @@ a:hover {
   padding: 5px 10px;
   border-radius: 5px;
 }
-
 </style>

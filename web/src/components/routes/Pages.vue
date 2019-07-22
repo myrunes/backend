@@ -1,8 +1,11 @@
+<!-- @format -->
+
 <template>
   <div>
     <div>
-      <Page v-for="p in pages" 
-        :key="p.uid" 
+      <Page
+        v-for="p in pages"
+        :key="p.uid"
         :uid="p.uid"
         :title="p.title"
         :champs="p.champions.join(' ')"
@@ -15,15 +18,19 @@
       />
     </div>
     <div class="ctrl-btns">
-      <button 
+      <button
         class="btn-slide btn-new"
         @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >+</button>
+      >
+        +
+      </button>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 import Rest from '../../js/rest';
 import Page from '../Page';
 
@@ -37,31 +44,32 @@ export default {
   data: function() {
     return {
       pages: [],
-    }
+    };
   },
 
   methods: {
     reload() {
-      Rest.getPages().then((res) => {
-        if (!res.body) return;
-        this.pages = res.body.data;
-      }).catch(console.error);
+      Rest.getPages()
+        .then((res) => {
+          if (!res.body) return;
+          this.pages = res.body.data;
+        })
+        .catch(console.error);
     },
 
     deleted() {
       this.reload();
-    }
+    },
   },
 
   created: function() {
     this.reload();
-  }
-}
-
+  },
+};
 </script>
 
-
 <style scoped>
+/** @format */
 
 .champ-header {
   display: flex;
@@ -71,5 +79,4 @@ export default {
   border-radius: 50%;
   margin-right: 15px;
 }
-
 </style>

@@ -1,19 +1,20 @@
+<!-- @format -->
+
 <template>
   <footer>
     <p>
-      © 2019 MYRUNES [{{ version }}]
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a
-        href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt"
-      >IMPRINT</a>
+      © 2019 MYRUNES [{{ version }}] &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt"
+        >IMPRINT</a
+      >
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a
         href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
-      >COOKIE USAGE</a>
+        >COOKIE USAGE</a
+      >
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/zekroTJA/myrunes">GITHUB REPOSITORY</a>
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      CONTACT: contact[at]zekro.de
+      &nbsp;&nbsp;|&nbsp;&nbsp; CONTACT: contact[at]zekro.de
     </p>
   </footer>
 </template>

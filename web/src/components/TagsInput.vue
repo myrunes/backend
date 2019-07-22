@@ -1,23 +1,18 @@
+<!-- @format -->
+
 <template>
   <div>
     <div class="d-flex flex-wrap">
-      <div v-for="e in elements" :key="`element-${e}`"
-        class="element mb-2"
-      >
+      <div v-for="e in elements" :key="`element-${e}`" class="element mb-2">
         <p>{{ e }}</p>
-        <a 
-          class="xbtn"
-          @click="removeElement(e, true)"
-        >X</a>
+        <a class="xbtn" @click="removeElement(e, true)">X</a>
       </div>
-      <input 
-        type="text" class="tags-tb mb-2"
-        ref="tbInput"
-        @input="tbInput"
-      />
+      <input type="text" class="tags-tb mb-2" ref="tbInput" @input="tbInput" />
     </div>
     <div class="d-flex flex-wrap mt-3">
-      <a v-for="s in suggestions" :key="`element-${s}`"
+      <a
+        v-for="s in suggestions"
+        :key="`element-${s}`"
         class="suggestion mb-2"
         @click="append(s, true)"
       >
@@ -28,7 +23,6 @@
 </template>
 
 <script>
-
 export default {
   name: 'TagsInput',
 
@@ -37,16 +31,16 @@ export default {
       type: Array,
       default: () => {
         return [];
-      }
-    }
+      },
+    },
   },
 
   data: function() {
     return {
       elements: [],
       suggestions: [],
-    }
-  },  
+    };
+  },
 
   methods: {
     append(e, emit) {
@@ -69,8 +63,9 @@ export default {
       if (!val) {
         this.suggestions = [];
       } else {
-        this.suggestions = this.tags.filter((t) => 
-          t.includes(val) && !this.elements.find((e) => e.includes(val)));
+        this.suggestions = this.tags.filter(
+          (t) => t.includes(val) && !this.elements.find((e) => e.includes(val))
+        );
       }
     },
 
@@ -82,15 +77,12 @@ export default {
     emitRemove(e) {
       this.$emit('remove', e);
       this.$emit('change', this.elements);
-    }
-  }
-}
-
+    },
+  },
+};
 </script>
 
-
 <style scoped>
-
 p {
   margin: 0px;
 }
@@ -98,14 +90,14 @@ p {
 .element {
   display: flex;
   margin-right: 10px;
-  background-color: #37474F;
+  background-color: #37474f;
   padding: 5px 10px;
   border-radius: 5px;
 }
 
 .suggestion {
   margin-right: 10px;
-  background-color: #0277BD;
+  background-color: #0277bd;
   padding: 5px 10px;
   border-radius: 5px;
 }
@@ -121,12 +113,11 @@ p {
 }
 
 .tags-tb {
-  border: solid 2px #0277BD;
-  background-color: #37474F;
+  border: solid 2px #0277bd;
+  background-color: #37474f;
   color: white;
   border-radius: 5px;
   padding: 0px 5px;
   width: 150px;
 }
-
 </style>

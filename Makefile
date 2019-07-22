@@ -1,17 +1,19 @@
 ### NAMES AND LOCS ############################
-APPNAME  = lol-runes
-PACKAGE  = github.com/zekroTJA/myrunes
-LDPAKAGE = internal/static
-CONFIG   = $(CURDIR)/config/private.config.yml
-BINPATH  = $(CURDIR)/bin
+APPNAME      = lol-runes
+PACKAGE      = github.com/zekroTJA/myrunes
+LDPAKAGE     = internal/static
+CONFIG       = $(CURDIR)/config/private.config.yml
+BINPATH      = $(CURDIR)/bin
+PRETTIER_CFG = "$(CURDIR)/.prettierrc.yml"
 ###############################################
 
 ### EXECUTABLES ###############################
-GO     = go
-DEP    = dep
-GOLINT = golint
-GREP   = grep
-NPM    = npm
+GO     	 = go
+DEP    	 = dep
+GOLINT 	 = golint
+GREP   	 = grep
+NPM    	 = npm
+PRETTIER = prettier
 ###############################################
 
 # ---------------------------------------------
@@ -92,6 +94,16 @@ PHONY += runfe
 runfe:
 	cd ./web && \
 		$(NPM) run serve
+
+PHONY += prettify
+prettify:
+	$(PRETTIER) \
+	    --config $(PRETTIER_CFG) \
+	    --write \
+	    	$(CURDIR)/web/src/**/*.js \
+	    	$(CURDIR)/web/src/**/**/*.js \
+	    	$(CURDIR)/web/src/**/*.vue \
+	    	$(CURDIR)/web/src/**/**/*.vue
 
 PHONY += help
 help:

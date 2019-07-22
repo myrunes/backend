@@ -1,12 +1,15 @@
+<!-- @format -->
+
 <template>
   <div>
     <div class="champ-header mb-4" v-if="champ">
-      <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42"/>
+      <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champ.toUpperCase() }}</h2>
     </div>
     <div>
-      <Page v-for="p in pages" 
-        :key="p.uid" 
+      <Page
+        v-for="p in pages"
+        :key="p.uid"
         :uid="p.uid"
         :title="p.title"
         :champs="p.champions.join(' ')"
@@ -19,20 +22,28 @@
       />
     </div>
     <div class="ctrl-btns">
-      <button 
+      <button
         class="btn-slide btn-new favorite"
         :class="{ active: this.favorites.includes(this.champ) }"
         @click="toggleFav"
       ></button>
-      <button 
+      <button
         class="btn-slide btn-new"
-        @click="$router.push({ name: 'RunePage', params: { uid: 'new' }, query: { champ } })"
+        @click="
+          $router.push({
+            name: 'RunePage',
+            params: { uid: 'new' },
+            query: { champ },
+          })
+        "
       ></button>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 import Rest from '../../js/rest';
 import Page from '../Page';
 
@@ -49,21 +60,26 @@ export default {
       favorite: false,
       favorites: [],
       pages: [],
-    }
+    };
   },
 
   methods: {
     reload() {
-      Rest.getPages().then((res) => {
-        if (!res.body) return;
-        this.pages = res.body.data
-          .filter((p) => p.champions.includes(this.champ));
+      Rest.getPages()
+        .then((res) => {
+          if (!res.body) return;
+          this.pages = res.body.data.filter((p) =>
+            p.champions.includes(this.champ)
+          );
 
-        Rest.getFavorites().then((res) => {
-          if (!res.body || !res.body.data) return;
-          this.favorites = res.body.data;
-        }).catch(console.error);
-      }).catch(console.error);
+          Rest.getFavorites()
+            .then((res) => {
+              if (!res.body || !res.body.data) return;
+              this.favorites = res.body.data;
+            })
+            .catch(console.error);
+        })
+        .catch(console.error);
     },
 
     deleted() {
@@ -78,21 +94,19 @@ export default {
         this.favorites.push(this.champ);
       }
 
-      Rest.setFavorites(this.favorites)
-        .catch(console.error);
-    }
+      Rest.setFavorites(this.favorites).catch(console.error);
+    },
   },
 
   created: function() {
     this.champ = this.$route.params.champ;
     this.reload();
-  }
-}
-
+  },
+};
 </script>
 
-
 <style scoped>
+/** @format */
 
 .champ-header {
   display: flex;
@@ -110,5 +124,4 @@ export default {
 .active::after {
   background-image: url('/assets/fav-active.svg');
 }
-
 </style>

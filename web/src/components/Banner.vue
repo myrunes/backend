@@ -1,14 +1,8 @@
+<!-- @format -->
+
 <template>
-  <div 
-    class="banner" 
-    :class="classObj"
-    :style="{ width: width || '100%' }"
-  >
-    <div 
-      class="close" 
-      v-if="closable"
-      @click="onclose"
-    ></div>
+  <div class="banner" :class="classObj" :style="{ width: width || '100%' }">
+    <div class="close" v-if="closable" @click="onclose"></div>
     <slot></slot>
   </div>
 </template>
@@ -26,7 +20,7 @@ export default {
   methods: {
     onclose() {
       this.$emit('closing');
-    }
+    },
   },
 
   computed: {
@@ -35,13 +29,12 @@ export default {
       let o = {};
       o[type] = true;
       return o;
-    }
-  }
-}
+    },
+  },
+};
 </script>
 
 <style scoped>
-
 .banner {
   padding: 10px 15px;
   border-width: 2px;
@@ -49,8 +42,8 @@ export default {
 }
 
 .info {
-  border-color: #00BCD4;
-  background-color: #00BCD433;
+  border-color: #00bcd4;
+  background-color: #00bcd433;
 }
 
 .error {
@@ -59,21 +52,20 @@ export default {
 }
 
 .success {
-  border-color: #8BC34A;
-  background-color: #8BC34A33;
+  border-color: #8bc34a;
+  background-color: #8bc34a33;
 }
 
 .warning {
-  border-color: #FFEB3B;
-  background-color: #FFEB3B33;
+  border-color: #ffeb3b;
+  background-color: #ffeb3b33;
 }
 
 .close {
   width: 1em;
   height: 1em;
-  background-image: url("/assets/close.svg");
+  background-image: url('/assets/close.svg');
   background-size: 100%;
   cursor: pointer;
 }
-
 </style>
