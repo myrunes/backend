@@ -537,3 +537,10 @@ func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
+
+func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
+	return jsonResponse(ctx, map[string]string{
+		"version": static.AppVersion,
+		"release": static.Release,
+	}, fasthttp.StatusOK)
+}

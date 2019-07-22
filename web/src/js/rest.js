@@ -180,6 +180,13 @@ function deleteShare(share) {
   });
 }
 
+function getVersion() {
+  return _req({
+    url: `${HOST}/api/version`,
+    method: 'GET',
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -226,4 +233,5 @@ export default {
   createShare,
   updateShare,
   deleteShare,
+  getVersion,
 };
