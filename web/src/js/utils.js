@@ -28,10 +28,32 @@ function getCookieValue(name) {
   return getCookies()[name];
 }
 
+function setWindowListener(event, cb) {
+  if (typeof event === 'object') {
+    event.forEach((e) => {
+      setWindowListener(e, cb);
+    });
+  } else {
+    window.addEventListener(event, cb);
+  }
+}
+
+function removeWindowListener(event, cb) {
+  if (typeof event === 'object') {
+    event.forEach((e) => {
+      removeWindowListener(e, cb);
+    });
+  } else {
+    window.removeEventListener(event, cb);
+  }
+}
+
 // ----------------------------------
 
 export default {
   parseTime,
   getCookies,
   getCookieValue,
+  setWindowListener,
+  removeWindowListener,
 };

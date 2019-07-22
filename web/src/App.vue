@@ -56,12 +56,10 @@ export default {
       Rest.getMe()
         .then((res) => {
           this.loggedIn = true;
-          this.setVersion(res.res.headers);
         })
         .catch((err) => {
           if (this.$route.name !== 'Share') {
             this.$router.replace('/login');
-            this.setVersion(err._headers);
           }
         });
     },

@@ -157,7 +157,6 @@ function getShare(ident) {
 }
 
 function createShare(share) {
-  console.log(share);
   return _req({
     url: `${HOST}/api/shares`,
     method: 'POST',
