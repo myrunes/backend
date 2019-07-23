@@ -52,7 +52,7 @@ func (rlm *RateLimitManager) GetHandler(limit time.Duration, burst int) routing.
 
 	rlh.handler = func(ctx *routing.Context) error {
 		limiterID := fmt.Sprintf("%d#%s",
-			rlh.id, ctx.RemoteIP().String())
+			rlh.id, getIPAddr(ctx))
 		ok, res := rlm.getLimiter(limiterID, limit, burst).Reserve()
 
 		ctx.Response.Header.Set("X-RateLimit-Limit", fmt.Sprintf("%d", res.Burst))

@@ -13,6 +13,11 @@ import (
 
 var emptyResponseBody = []byte("{}")
 
+var (
+	headerXForwardedFor = []byte("X-Forwarded-For")
+	headerUserAgent     = []byte("User-Agent")
+)
+
 var defStatusBoddies = map[int][]byte{
 	http.StatusOK:           []byte("{\n  \"code\": 200,\n  \"message\": \"ok\"\n}"),
 	http.StatusCreated:      []byte("{\n  \"code\": 201,\n  \"message\": \"created\"\n}"),
@@ -90,4 +95,13 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 	}
 
 	return nil
+}
+
+func getIPAddr(ctx *routing.Context) string {
+	forwardedfor := ctx.Request.Header.PeekBytes(headerXForwardedFor)
+	if forwardedfor != nil && len(forwardedfor) > 0 {
+		return string(forwardedfor)
+	}
+
+	return ctx.RemoteIP().String()
 }

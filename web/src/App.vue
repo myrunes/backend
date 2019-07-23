@@ -3,11 +3,13 @@
     <CookieInfo />
     <Header v-if="loggedIn" />
     <router-view :class="{ m : loggedIn }"></router-view>
-    <Footer :version="version"/>
+    <Footer />
   </div>
 </template>
 
 <script>
+/** @format */
+
 import 'bootstrap/dist/css/bootstrap.css';
 import 'bootstrap-vue/dist/bootstrap-vue.css';
 import './css/global.css';
@@ -34,8 +36,7 @@ export default {
   data: function() {
     return {
       loggedIn: false,
-      version: '',
-    }
+    };
   },
 
   created: function() {
@@ -52,28 +53,23 @@ export default {
 
   methods: {
     checkLogin() {
-      Rest.getMe().then((res) => {
-        this.loggedIn = true;
-        this.setVersion(res.res.headers);
-      }).catch((err) => {
-        if (this.$route.name !== 'Share') {
-          this.$router.replace('/login');
-          this.setVersion(err._headers);
-        }
-      })
+      Rest.getMe()
+        .then((res) => {
+          this.loggedIn = true;
+        })
+        .catch((err) => {
+          if (this.$route.name !== 'Share') {
+            this.$router.replace('/login');
+          }
+        });
     },
-
-    setVersion(headers) {
-      if (headers && headers.server) {
-        this.version = headers.server
-          .split(' ').slice(1).join(' ');
-      }
-    }
-  }
-}
+  },
+};
 </script>
 
 <style>
+/** @format */
+
 #app {
   font-family: 'Avenir', Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased;

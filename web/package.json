@@ -14,7 +14,8 @@
     "request": "^2.88.0",
     "vue": "^2.6.10",
     "vue-resource": "^1.5.1",
-    "vue-router": "^3.0.6"
+    "vue-router": "^3.0.6",
+    "vue-async-computed": "^3.7.0"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.8.0",

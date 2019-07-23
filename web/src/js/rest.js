@@ -157,7 +157,6 @@ function getShare(ident) {
 }
 
 function createShare(share) {
-  console.log(share);
   return _req({
     url: `${HOST}/api/shares`,
     method: 'POST',
@@ -177,6 +176,13 @@ function deleteShare(share) {
   return _req({
     url: `${HOST}/api/shares/${share.uid}`,
     method: 'DELETE',
+  });
+}
+
+function getVersion() {
+  return _req({
+    url: `${HOST}/api/version`,
+    method: 'GET',
   });
 }
 
@@ -226,4 +232,5 @@ export default {
   createShare,
   updateShare,
   deleteShare,
+  getVersion,
 };

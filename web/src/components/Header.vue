@@ -1,9 +1,11 @@
+<!-- @format -->
+
 <template>
   <div class="header d-flex">
     <div class="d-flex">
       <router-link to="/">
         <button class="btn-slide btn-logo">
-          <img src="/assets/logo-256-61.png"/>
+          <img src="/assets/logo-256-61.png" />
         </button>
       </router-link>
       <router-link to="/pages">
@@ -24,22 +26,22 @@ import EventBus from '../js/eventbus';
 export default {
   name: 'Header',
 
-  props: {
-  },
+  props: {},
 
   methods: {
     logout() {
-      Rest.logout().then(() => {
-        EventBus.$emit('logout');
-        this.$router.push('/login');
-      }).catch(console.error);
-    }
-  }  
-}
+      Rest.logout()
+        .then(() => {
+          EventBus.$emit('logout');
+          this.$router.push('/login');
+        })
+        .catch(console.error);
+    },
+  },
+};
 </script>
 
 <style scoped>
-
 .header > button {
   position: relative;
 }
@@ -51,7 +53,7 @@ export default {
   left: 0px;
   right: 0px;
   height: 50px;
-  background-color: #37474F;
+  background-color: #37474f;
   justify-content: space-between;
 }
 
@@ -67,11 +69,11 @@ export default {
 }
 
 .btn-logo::before {
-  background-color: #03A9F4;
+  background-color: #03a9f4;
 }
 
 .btn-logout::before {
-  background-color: #FF5722;
+  background-color: #ff5722;
 }
 
 h1 {
@@ -84,5 +86,4 @@ h1 {
 b {
   font-weight: 400;
 }
-
 </style>

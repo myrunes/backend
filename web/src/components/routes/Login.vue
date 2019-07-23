@@ -1,66 +1,65 @@
+<!-- @format -->
+
 <template>
   <div class="outer-container">
     <div class="container my-auto">
       <div class="logo mx-auto"></div>
-      <Banner 
+      <Banner
         class="mx-auto mb-5"
         width="300px"
-        v-if="banner.visible" 
+        v-if="banner.visible"
         :type="banner.type"
         :closable="banner.closable"
         @closing="bannerClosing('reginfo')"
+        >{{ banner.content }}</Banner
       >
-        {{ banner.content }}
-      </Banner>
       <div class="d-flex position-relative">
-        <b-tooltip 
+        <b-tooltip
           target="tbUsername"
           ref="unameToolTipShow"
-          triggers=""
+          triggers
           boundary="tbUsername"
           :show.sync="unameToolTipShow"
         >
-          Username can only contain lower case letters, numbers, minuses (<code>-</code>)
-          and underscores (<code>_</code>). You can later change your username or set a specific
-          display name.
+          Username can only contain lower case letters, numbers, minuses (
+          <code>-</code>) and underscores ( <code>_</code>). You can later
+          change your username or set a specific display name.
         </b-tooltip>
-        <input 
-          id="tbUsername" 
-          type="text" 
+        <input
+          id="tbUsername"
+          type="text"
           class="tb mx-auto"
           @change="checkUsername"
           @input="usernameInput"
           v-model="username"
           placeholder="USERNAME"
           autocomplete="off"
-        >
+        />
         <span class="tb mx-auto"></span>
       </div>
       <div class="d-flex mt-5 position-relative">
-        <input 
-          v-model="password" 
-          id="tbPassword" 
-          type="password" 
+        <input
+          v-model="password"
+          id="tbPassword"
+          type="password"
           class="tb mx-auto"
           placeholder="PASSWORD"
           autocomplete="off"
-          @keypress="(e) => { if (e.keyCode == 13) login(e) }"
-        >
+          @keypress="
+            (e) => {
+              if (e.keyCode == 13) login(e);
+            }
+          "
+        />
         <span class="tb mx-auto"></span>
       </div>
       <div class="d-flex mt-5">
-        <Slider 
-          class="mx-auto"
-          v-model="remember"
+        <Slider class="mx-auto" v-model="remember"
+          >Stay logged in (30 days)</Slider
         >
-          Stay logged in (30 days)
-        </Slider>
       </div>
       <div class="d-flex mt-5">
-        <button 
-          class="btn-bubble mx-auto"
-          @click="login"
-        >
+        <button class="btn-bubble mx-auto" @click="login">
           {{ register ? 'REGISTER' : 'LOGIN' }}
         </button>
       </div>
@@ -69,6 +68,8 @@
 </template>
 
 <script>
+/** @format */
+
 import Rest from '../../js/rest';
 import Banner from '../Banner';
 import Slider from '../Slider';
@@ -76,9 +77,8 @@ import EventBus from '../../js/eventbus';
 
 export default {
   name: 'Login',
-  
-  props: {
-  },
+
+  props: {},
 
   components: {
     Banner,
@@ -90,7 +90,7 @@ export default {
       banner: {
         visible: false,
         type: 'warning',
-        content: ''
+        content: '',
       },
 
       register: false,
@@ -99,7 +99,7 @@ export default {
       password: '',
       remember: false,
       unameToolTipShow: false,
-    }
+    };
   },
 
   methods: {
@@ -112,25 +112,29 @@ export default {
         return;
       }
 
-      Rest.checkUsername(val).then(() => {
-        this.banner.visible = false;
-        this.register = false;
-      }).catch((err) => {
-        if (err && err.code === 404) {
-          this.banner = {
-            visible: true,
-            type: 'warning',
-            content: `This user name is not existent. If you continue, a new account with the entered credentials will be created.`
+      Rest.checkUsername(val)
+        .then(() => {
+          this.banner.visible = false;
+          this.register = false;
+        })
+        .catch((err) => {
+          if (err && err.code === 404) {
+            this.banner = {
+              visible: true,
+              type: 'warning',
+              content: `This user name is not existent. If you continue, a new account with the entered credentials will be created.`,
+            };
+            this.register = true;
+          } else {
+            this.banner = {
+              visible: true,
+              type: 'error',
+              cintent: `An error occured while fetching user name availability: ${
+                err.message ? err.message : err
+              }`,
+            };
           }
-          this.register = true;
-        } else {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            cintent: `An error occured while fetching user name availability: ${err.message ? err.message : err}`
-          }
-        }
-      });
+        });
     },
 
     usernameInput() {
@@ -138,9 +142,7 @@ export default {
         this.unameToolTipShow = true;
       }
 
-      this.username = this.username
-        .toLowerCase()
-        .replace(/[^\w_\-]/g, '');
+      this.username = this.username.toLowerCase().replace(/[^\w_\-]/g, '');
     },
 
     login() {
@@ -150,8 +152,8 @@ export default {
         this.banner = {
           visible: true,
           type: 'error',
-          content: 'Username must have at least 3 characters.'
-        }
+          content: 'Username must have at least 3 characters.',
+        };
         return;
       }
 
@@ -159,50 +161,57 @@ export default {
         this.banner = {
           visible: true,
           type: 'error',
-          content: 'Password must have at least 8 characters.'
-        }
+          content: 'Password must have at least 8 characters.',
+        };
         return;
       }
 
       if (this.register) {
-        Rest.register(this.username, this.password, this.remember).then(() => {
-          this.loginRedirect();
-          window.localStorage.setItem('reginfo-dismissed', '1');
-        }).catch((err) => {
-          if (err && err.code === 409) {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: 'The passes username is already in use.'
+        Rest.register(this.username, this.password, this.remember)
+          .then(() => {
+            this.loginRedirect();
+            window.localStorage.setItem('reginfo-dismissed', '1');
+          })
+          .catch((err) => {
+            if (err && err.code === 409) {
+              this.banner = {
+                visible: true,
+                type: 'error',
+                content: 'The passes username is already in use.',
+              };
+            } else {
+              this.banner = {
+                visible: true,
+                type: 'error',
+                content: `An error occured during registration: ${
+                  err.message ? err.message : err
+                }`,
+              };
             }
-          } else {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `An error occured during registration: ${err.message ? err.message : err}`
-            }
-          }
-        });
+          });
       } else {
-        Rest.login(this.username, this.password, this.remember).then(() => {
-          this.loginRedirect();
-        }).catch((err) => {
-          if (err && err.code === 401) {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: 'Invalid username-password combination.'
+        Rest.login(this.username, this.password, this.remember)
+          .then(() => {
+            this.loginRedirect();
+          })
+          .catch((err) => {
+            if (err && err.code === 401) {
+              this.banner = {
+                visible: true,
+                type: 'error',
+                content: 'Invalid username-password combination.',
+              };
+            } else {
+              this.banner = {
+                visible: true,
+                type: 'error',
+                content: `An error occured during registration: ${
+                  err.message ? err.message : err
+                }`,
+              };
             }
-          } else {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `An error occured during registration: ${err.message ? err.message : err}`
-            }
-          }
-        });
+          });
       }
-      
     },
 
     bannerClosing(reason) {
@@ -216,32 +225,43 @@ export default {
       EventBus.$emit('login');
       let pid = this.$route.query.createpage;
       if (pid) {
-        Rest.getShare(pid).then((res) => {
-          if (res.body && res.body.page && res.body.user) {
-            res.body.page.title += ` (by ${res.body.user.displayname})`;
-            Rest.createPage(res.body.page).then((res) => {
-              if (res.body) {
-                this.$router.push({ name: 'RunePage', params: { uid: res.body.uid} });
-              }
-            }).catch((err) => {
-              this.banner = {
-                visible: true,
-                type: 'error',
-                content: `Failed creating clone of shared page: ${err.message ? err.message : err}`
-              }
-            });
-          }
-        }).catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content: `Failed getting shared page: ${err.message ? err.message : err}`
-          }
-        });
+        Rest.getShare(pid)
+          .then((res) => {
+            if (res.body && res.body.page && res.body.user) {
+              res.body.page.title += ` (by ${res.body.user.displayname})`;
+              Rest.createPage(res.body.page)
+                .then((res) => {
+                  if (res.body) {
+                    this.$router.push({
+                      name: 'RunePage',
+                      params: { uid: res.body.uid },
+                    });
+                  }
+                })
+                .catch((err) => {
+                  this.banner = {
+                    visible: true,
+                    type: 'error',
+                    content: `Failed creating clone of shared page: ${
+                      err.message ? err.message : err
+                    }`,
+                  };
+                });
+            }
+          })
+          .catch((err) => {
+            this.banner = {
+              visible: true,
+              type: 'error',
+              content: `Failed getting shared page: ${
+                err.message ? err.message : err
+              }`,
+            };
+          });
       } else {
         this.$router.push('/');
       }
-    }
+    },
   },
 
   created: function() {
@@ -250,15 +270,16 @@ export default {
         closable: true,
         visible: true,
         type: 'info',
-        content: 'Not having an account? Simply register by typing in an unused username and the password you want to use.'
-      }
+        content:
+          'Not having an account? Simply register by typing in an unused username and the password you want to use.',
+      };
     }
-  }
-
-}
+  },
+};
 </script>
 
 <style scoped>
+/** @format */
 
 .outer-container {
   z-index: 100;
@@ -280,5 +301,4 @@ button {
   background-position: center;
   margin-bottom: 50px;
 }
-
 </style>

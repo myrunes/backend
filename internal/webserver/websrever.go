@@ -74,6 +74,8 @@ func (ws *WebServer) registerHandlers() {
 	api.
 		Post("/logout", ws.auth.LogOut)
 
+	api.Get("/version", ws.handlerGetVersion)
+
 	resources := api.Group("/resources")
 	resources.
 		Get("/champions", ws.handlerGetChamps)

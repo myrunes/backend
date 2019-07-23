@@ -1,43 +1,40 @@
+<!-- @format -->
+
 <template>
   <div class="slider" @click="update">
-    <span class="bar" :class="{ 'enabled': state }"></span>
-    <span class="dot" :class="{ 'enabled': state }"></span>
+    <span class="bar" :class="{ enabled: state }"></span>
+    <span class="dot" :class="{ enabled: state }"></span>
     <slot></slot>
   </div>
 </template>
 
 <script>
-
 export default {
   name: 'Slider',
 
   data: function() {
     return {
       state: false,
-    }
-  },  
+    };
+  },
 
   methods: {
     update() {
       this.state = !this.state;
-      this.$emit('input', this.state)
-    }
-  }
-}
-
+      this.$emit('input', this.state);
+    },
+  },
+};
 </script>
 
-
 <style scoped>
-
 * {
-  transition: all .25s ease-in-out;
+  transition: all 0.25s ease-in-out;
 }
 
 .slider {
   display: flex;
 }
-
 
 .dot {
   position: relative;
@@ -68,11 +65,10 @@ export default {
 }
 
 .bar.enabled {
-  border: solid #03A9F4 2px;
+  border: solid #03a9f4 2px;
 }
 
 .slider:hover {
   cursor: pointer;
 }
-
 </style>

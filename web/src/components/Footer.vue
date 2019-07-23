@@ -1,36 +1,53 @@
+<!-- @format -->
+
 <template>
   <footer>
     <p>
-      © 2019 MYRUNES [{{ version }}]
+      © 2019 MYRUNES [{{ version }}] &nbsp;&nbsp;|&nbsp;&nbsp;
+      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt"
+        >IMPRINT</a
+      >
       &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/imprint.txt">IMPRINT</a>
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md">COOKIE USAGE</a>
+      <a
+        href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
+        >COOKIE USAGE</a
+      >
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/zekroTJA/myrunes">GITHUB REPOSITORY</a>
-      &nbsp;&nbsp;|&nbsp;&nbsp;
-      CONTACT: contact[at]zekro.de
+      &nbsp;&nbsp;|&nbsp;&nbsp; CONTACT: contact[at]zekro.de
     </p>
   </footer>
 </template>
 
 <script>
+/** @format */
+
+import Rest from '../js/rest';
 
 export default {
   name: 'Footer',
 
-  props: {
-    version: String
-  },
+  props: {},
 
-  methods: {
-  }
-}
+  methods: {},
+
+  asyncComputed: {
+    version() {
+      return new Promise((resolve, rejects) => {
+        Rest.getVersion().then((data) => {
+          resolve(data.body.version);
+        });
+      });
+    },
+  },
+};
 </script>
 
 <style scoped>
+/** @format */
 
-p, a {
+p,
+a {
   margin: 0px;
   font-size: 12px;
   color: rgb(202, 202, 202) !important;
@@ -46,9 +63,8 @@ footer {
   bottom: 0;
   left: 0;
   padding: 5px 12px;
-  background-color: #37474F;
+  background-color: #37474f;
   text-align: center;
   z-index: 99;
 }
-
 </style>

@@ -1,38 +1,39 @@
+<!-- @format -->
+
 <template>
   <div>
     <div class="outer-container">
       <div class="searchbar mx-auto position-relative">
-        <input type="text" class="tb tb-champ" autocomplete="off" @input="searchAndDisplay"/>
+        <input
+          type="text"
+          class="tb tb-champ"
+          autocomplete="off"
+          @input="searchAndDisplay"
+        />
         <span class="tb tb-champ"></span>
       </div>
     </div>
     <div class="container mt-5 champs-container">
-      <h3 
-        class="mx-auto mb-4"
-        v-if="displayFavs"
-      >YOUR FAVORITES</h3>
-      <a v-for="c in displayedChamps" 
-        :key="c"
-        @click="openChamp(c)"
-      >
-        <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100"/>
+      <h3 class="mx-auto mb-4" v-if="displayFavs">YOUR FAVORITES</h3>
+      <a v-for="c in displayedChamps" :key="c" @click="openChamp(c)">
+        <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100" />
       </a>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 import EventBus from '../../js/eventbus';
 import Rest from '../../js/rest';
 
 export default {
   name: 'Main',
-  
-  props: {
-  },
 
-  components: {
-  },
+  props: {},
+
+  components: {},
 
   data: function() {
     return {
@@ -40,7 +41,7 @@ export default {
       displayedChamps: [],
       favorites: [],
       displayFavs: false,
-    }
+    };
   },
 
   methods: {
@@ -59,33 +60,37 @@ export default {
 
     openChamp(champ) {
       this.$router.push({ name: 'Champ', params: { champ } });
-    }
+    },
   },
 
   created: function() {
-    Rest.getChamps().then((r) => {
-      if (r.body && r.body.data) {
-        this.champs = r.body.data;
-      }
-    }).catch(console.error);
-  
-    Rest.getFavorites().then((r) => {
-      if (r.body && r.body.data) {
-        this.favorites = r.body.data;
-        this.displayedChamps = r.body.data;
-        this.displayFavs = this.favorites && this.favorites.length != 0;
-      }
-    }).catch(console.error);
-  }
+    Rest.getChamps()
+      .then((r) => {
+        if (r.body && r.body.data) {
+          this.champs = r.body.data;
+        }
+      })
+      .catch(console.error);
 
-}
+    Rest.getFavorites()
+      .then((r) => {
+        if (r.body && r.body.data) {
+          this.favorites = r.body.data;
+          this.displayedChamps = r.body.data;
+          this.displayFavs = this.favorites && this.favorites.length != 0;
+        }
+      })
+      .catch(console.error);
+  },
+};
 </script>
 
 <style scoped>
+/** @format */
 
 .outer-container {
-    display: flex;
-    width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 .tb-champ {
@@ -111,12 +116,11 @@ span.tb-champ {
 }
 
 .champs-container > a:hover > img {
-  border: solid 2px #03A9F4;
-  transition: all .25s ease-in-out;
+  border: solid 2px #03a9f4;
+  transition: all 0.25s ease-in-out;
 }
 
 a:hover {
   cursor: pointer;
 }
-
 </style>

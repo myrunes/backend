@@ -115,7 +115,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
-	user, err := auth.db.GetSession(string(key), ctx.RemoteIP().String())
+	user, err := auth.db.GetSession(string(key), getIPAddr(ctx))
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
