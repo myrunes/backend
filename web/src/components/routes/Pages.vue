@@ -3,6 +3,12 @@
 <template>
   <div>
     <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput" />
+    <InfoBubble ref="info" color="orange" @hides="onInfoClose">
+      <p>
+        Searching for a specific page? Press
+        <b>CTRL + F</b>!
+      </p>
+    </InfoBubble>
     <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
       <Page
         v-for="p in pagesVisible"
@@ -34,6 +40,7 @@ import Rest from '../../js/rest';
 import Utils from '../../js/utils';
 import Page from '../Page';
 import SearchBar from '../SearchBar';
+import InfoBubble from '../InfoBubble';
 
 export default {
   name: 'Champ',
@@ -41,6 +48,7 @@ export default {
   components: {
     Page,
     SearchBar,
+    InfoBubble,
   },
 
   data: function() {
@@ -93,6 +101,12 @@ export default {
         );
       });
     },
+
+    onInfoClose(selfTriggered) {
+      if (selfTriggered) {
+        window.localStorage['info-page-search'] = '1';
+      }
+    },
   },
 
   created: function() {
@@ -105,6 +119,12 @@ export default {
   destroyed: function() {
     Utils.removeWindowListener('keydown', this.onSearchPress);
     Utils.removeWindowListener('keydown', this.onEscapePress);
+  },
+
+  mounted() {
+    if (!window.localStorage['info-page-search']) {
+      setTimeout(this.$refs.info.show, 3000);
+    }
   },
 };
 </script>

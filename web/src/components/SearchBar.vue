@@ -19,8 +19,6 @@ export default {
     },
 
     onInput(event) {
-      console.log(this.$refs);
-
       this.$emit('input', {
         text: event.target.value,
         event: event,
