@@ -57,7 +57,11 @@ func jsonResponse(ctx *routing.Context, v interface{}, status int) error {
 			data = d
 		}
 	} else {
-		data, err = json.MarshalIndent(v, "", "  ")
+		if static.Release != "TRUE" {
+			data, err = json.MarshalIndent(v, "", "  ")
+		} else {
+			data, err = json.Marshal(v)
+		}
 		if err != nil {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 		}

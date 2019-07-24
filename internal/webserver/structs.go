@@ -33,3 +33,9 @@ type shareResponse struct {
 	Page  *objects.Page      `json:"page"`
 	User  *objects.User      `json:"user"`
 }
+
+type sessionsResponse struct {
+	listResponse
+
+	CurrentlyConnectedID string `json:"currentlyconnectedid"`
+}
