@@ -2,9 +2,11 @@
 
 <template>
   <div>
-    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">{{
+    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">
+      {{
       banner.content
-    }}</Banner>
+      }}
+    </Banner>
 
     <div class="bg mb-3">
       <h3>ACCOUNT DETAILS</h3>
@@ -39,7 +41,11 @@
             <th>Expires</th>
             <th>Last Access Address</th>
           </tr>
-          <tr v-for="s in sessions" :key="`session-${s.sessionid}`">
+          <tr
+            v-for="s in sessions"
+            :key="`session-${s.sessionid}`"
+            :class="{highlight: s.sessionid === currsessionid}"
+          >
             <td>
               <p class="hider">{{ s.sessionid }}</p>
             </td>
@@ -72,12 +78,7 @@
           <br />The username must be lowercase, longer than 3 characters and
           must only contain letters, numbers, scores and underscores.
         </p>
-        <input
-          type="text"
-          class="tb text-left"
-          v-model="user.username"
-          @input="unameInput"
-        />
+        <input type="text" class="tb text-left" v-model="user.username" @input="unameInput" />
         <span class="tb" />
       </div>
 
@@ -91,12 +92,7 @@
       <div class="position-relative">
         <h5>New Password</h5>
         <p class="explainer">Enter a new password, if you want to change it.</p>
-        <input
-          type="password"
-          ref="tbNewpw"
-          class="tb text-left"
-          v-model="newpassword"
-        />
+        <input type="password" ref="tbNewpw" class="tb text-left" v-model="newpassword" />
         <span class="tb" />
         <a
           class="ml-2"
@@ -109,24 +105,21 @@
 
       <div class="mt-5">
         <hr />
-        <p>
-          You need to enter your current password again to apply these changes:
-        </p>
+        <p>You need to enter your current password again to apply these changes:</p>
         <div class="position-relative mb-4">
           <input type="password" class="tb text-left" v-model="currpassword" />
           <span class="tb" />
         </div>
         <div class="bg danger-zone mb-3">
           <h5 class="mb-3">DANGER ZONE</h5>
-          <button class="btn-slide btn-delete" @click="deleteAcc">
-            DELETE ACCOUNT PERMANENTLY AND FOREVER
-          </button>
+          <button
+            class="btn-slide btn-delete"
+            @click="deleteAcc"
+          >DELETE ACCOUNT PERMANENTLY AND FOREVER</button>
         </div>
         <div class="text-right">
           <button class="btn-slide btn-save mr-3" @click="save">SAVE</button>
-          <button class="btn-slide btn-cancel" @click="$router.back()">
-            CANCEL
-          </button>
+          <button class="btn-slide btn-cancel" @click="$router.back()">CANCEL</button>
         </div>
       </div>
     </div>
@@ -152,6 +145,7 @@ export default {
     return {
       user: {},
       sessions: [],
+      currsessionid: '',
       pages: 0,
       newpassword: '',
       currpassword: '',
@@ -273,6 +267,7 @@ export default {
               .then((res) => {
                 if (!res.body.data) return;
                 this.sessions = res.body.data;
+                this.currsessionid = res.body.currentlyconnectedid;
               })
               .catch(console.error);
           })
@@ -306,6 +301,10 @@ export default {
   font-size: 14px;
   position: absolute;
   transform: translate(4px, 1px);
+}
+
+.highlight {
+  background-color: #ffd92f75;
 }
 
 h5,
