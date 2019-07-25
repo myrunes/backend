@@ -1,0 +1,35 @@
+# MYRUNES example configuration.
+# All values given are default values
+# which are automatically set on creation.
+
+# MongoDB database configuration
+mongodb:
+  # The host address of the database
+  # server
+  host:    'localhost'
+  # The port of the database server
+  port:    '27017'
+  # User which will be used to execute
+  # database commands
+  username: 'lol-runes'
+  # Password for the given user account
+  password: ''
+  # Database to be used to authenticate
+  # the given user against
+  auth_db: 'lol-runes'
+  # Database where the data is stored
+  data_db: 'lol-runes'
+
+# Exposing web server configuration
+webserver:
+  # The address the web server will
+  # expose to
+  addr:    ':443'
+  # TLS / SSL configuration
+  tls:
+    # Enable / Disable TLS
+    enabled:  true
+    # Path to the SSL cert file
+    certfile: ''
+    # Path to the SSL key file
+    keyfile:  ''
