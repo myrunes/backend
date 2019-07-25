@@ -37,6 +37,7 @@ Just use the following command to pull the latest stable image:
 ```
 # docker pull zekro/myrunes:latest
 ```
+
 On startup, you need to bind the exposed web server port `8080` and the volume `/etc/myrunes` to your host system:
 
 ```
@@ -46,7 +47,7 @@ On startup, you need to bind the exposed web server port `8080` and the volume `
   zekro/myrunes:latest
 ```
 
-or with docker-compose:
+You can use following configuration with a MongoDB container using Docker Compose:
 
 ```yml
 myrunes:
@@ -55,9 +56,10 @@ myrunes:
     - "443:8080"
   volumes:
     - "/etc/myrunes:/etc/myrunes"
+  restart: always
 ```
 
-## Requirements
+## As deamon
 
 First of all, if you want to self host the MYRUNES system, your envoirement should pass certain requirements:
 
