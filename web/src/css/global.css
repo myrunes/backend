@@ -263,3 +263,7 @@ span.tb {
 .tree-resolve {
   background-color: rgba(104, 159, 56, 0.25);
 }
+
+.underlined {
+  text-decoration: underline !important;
+}

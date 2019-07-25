@@ -68,6 +68,26 @@
       </table>
     </div>
 
+    <div class="bg mb-3">
+      <h3>DATA STORAGE</h3>
+      <h5>Local storage</h5>
+      <p class="explainer">
+        We store some client-site data directly in the browser using
+        <a
+          class="underlined"
+          href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"
+          target="_blank"
+        >local storage</a>.
+        <br />
+        <a
+          class="underlined"
+          href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
+          target="_blank"
+        >Here</a> you can read about what particular data is saved in the local storage by MYRUNES.
+      </p>
+      <button class="btn-slide btn-delete mt-2" @click="deleteLocalStorage">DELETE LOCAL STORAGE</button>
+    </div>
+
     <div class="bg">
       <h3 class="mb-3">UPDATE ACCOUNT</h3>
 
@@ -248,6 +268,17 @@ export default {
           this.sessions.splice(i, 1);
         })
         .catch(console.error);
+    },
+
+    deleteLocalStorage() {
+      window.localStorage.clear();
+      this.banner = {
+        visible: true,
+        type: 'success',
+        content: `Local storage was cleared.`,
+      };
+      setTimeout(() => (this.banner.visible = false), 10000);
+      window.scrollTo(0, 0);
     },
   },
 
