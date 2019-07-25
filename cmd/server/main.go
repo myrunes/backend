@@ -4,6 +4,7 @@ import (
 	"flag"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 
@@ -31,6 +32,34 @@ func main() {
 	if cfg == nil {
 		logger.Info("CONFIG :: config file was created at '%s'. Set your config values and restart.", *flagConfig)
 		return
+	}
+
+	if v := os.Getenv("DB_HOST"); v != "" {
+		cfg.MongoDB.Host = v
+	}
+	if v := os.Getenv("DB_PORT"); v != "" {
+		cfg.MongoDB.Port = v
+	}
+	if v := os.Getenv("DB_USERNAME"); v != "" {
+		cfg.MongoDB.Username = v
+	}
+	if v := os.Getenv("DB_PASSWORD"); v != "" {
+		cfg.MongoDB.Password = v
+	}
+	if v := os.Getenv("DB_AUTHDB"); v != "" {
+		cfg.MongoDB.AuthDB = v
+	}
+	if v := os.Getenv("DB_DATADB"); v != "" {
+		cfg.MongoDB.DataDB = v
+	}
+	if v := strings.ToLower(os.Getenv("TLS_ENABLE")); v == "true" || v == "t" || v == "1" {
+		cfg.WebServer.TLS.Enabled = true
+	}
+	if v := os.Getenv("TLS_KEY"); v != "" {
+		cfg.WebServer.TLS.Key = v
+	}
+	if v := os.Getenv("TLS_CERT"); v != "" {
+		cfg.WebServer.TLS.Cert = v
 	}
 
 	db := new(database.MongoDB)
