@@ -2,6 +2,7 @@ package webserver
 
 import (
 	"errors"
+	"time"
 
 	"github.com/zekroTJA/myrunes/internal/database"
 
@@ -45,6 +46,7 @@ type WebServer struct {
 
 	db   database.Middleware
 	auth *Authorization
+	rlm  *RateLimitManager
 
 	config *Config
 }
@@ -55,6 +57,7 @@ func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
 	ws.config = config
 	ws.db = db
 	ws.auth = NewAuthorization(db)
+	ws.rlm = NewRateLimitManager()
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
@@ -66,7 +69,11 @@ func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
 }
 
 func (ws *WebServer) registerHandlers() {
-	ws.router.Use(ws.handlerFiles, ws.addHeaders)
+	rlGlobal := ws.rlm.GetHandler(500*time.Millisecond, 50)
+	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
+	rlPageCreate := ws.rlm.GetHandler(5*time.Second, 5)
+
+	ws.router.Use(ws.handlerFiles, ws.addHeaders, rlGlobal)
 
 	api := ws.router.Group("/api")
 	api.
@@ -84,7 +91,7 @@ func (ws *WebServer) registerHandlers() {
 
 	users := api.Group("/users")
 	users.
-		Post("", ws.handlerCreateUser)
+		Post("", rlUsersCreate, ws.handlerCreateUser)
 	users.
 		Post("/me", ws.auth.CheckRequestAuth, ws.handlerPostMe).
 		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe).
@@ -94,7 +101,7 @@ func (ws *WebServer) registerHandlers() {
 
 	pages := api.Group("/pages", ws.addHeaders, ws.auth.CheckRequestAuth)
 	pages.
-		Post("", ws.handlerCreatePage).
+		Post("", rlPageCreate, ws.handlerCreatePage).
 		Get(ws.handlerGetPages)
 	pages.
 		Get(`/<uid:\d+>`, ws.handlerGetPage).
