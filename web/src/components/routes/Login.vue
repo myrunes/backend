@@ -4,7 +4,7 @@
   <div class="outer-container">
     <div class="container my-auto">
       <div class="logo mx-auto"></div>
-      <Banner class="mx-auto mb-5" width="300px" ref="banner"></Banner>
+      <Banner class="mx-auto mb-5" width="300px" ref="banner" @closing="bannerClosing"></Banner>
       <div class="d-flex position-relative">
         <b-tooltip
           target="tbUsername"
@@ -182,6 +182,7 @@ export default {
         Rest.login(this.username, this.password, this.remember)
           .then(() => {
             this.loginRedirect();
+            window.localStorage.setItem('reginfo-dismissed', '1');
           })
           .catch((err) => {
             console.log(err);
@@ -257,6 +258,12 @@ export default {
           });
       } else {
         this.$router.push('/');
+      }
+    },
+
+    bannerClosing(active) {
+      if (active) {
+        window.localStorage.setItem('reginfo-dismissed', '1');
       }
     },
   },
