@@ -37,6 +37,7 @@ type collections struct {
 	users,
 	pages,
 	sessions,
+	apitokens,
 	shares *mongo.Collection
 }
 
@@ -63,10 +64,11 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 	m.db = m.client.Database(cfg.DataDB)
 
 	m.collections = &collections{
-		users:    m.db.Collection("users"),
-		pages:    m.db.Collection("pages"),
-		sessions: m.db.Collection("sessions"),
-		shares:   m.db.Collection("shares"),
+		users:     m.db.Collection("users"),
+		pages:     m.db.Collection("pages"),
+		sessions:  m.db.Collection("sessions"),
+		shares:    m.db.Collection("shares"),
+		apitokens: m.db.Collection("apitokens"),
 	}
 
 	return err
@@ -311,6 +313,34 @@ func (m *MongoDB) CleanupExpiredSessions() error {
 		})
 
 	return err
+}
+
+func (m *MongoDB) SetAPIToken(token *objects.APIToken) error {
+	return m.insertOrUpdate(m.collections.apitokens, &bson.M{"userid": token.UserID}, token)
+}
+
+func (m *MongoDB) GetAPIToken(uID snowflake.ID) (*objects.APIToken, error) {
+	token := new(objects.APIToken)
+	ok, err := m.get(m.collections.apitokens, bson.M{"userid": uID}, token)
+	if err != nil || !ok {
+		return nil, err
+	}
+	return token, nil
+}
+
+func (m *MongoDB) ResetAPIToken(uID snowflake.ID) error {
+	_, err := m.collections.apitokens.DeleteOne(ctxTimeout(5*time.Second), bson.M{"userid": uID})
+	return err
+}
+
+func (m *MongoDB) VerifyAPIToken(tokenStr string) (*objects.User, error) {
+	token := new(objects.APIToken)
+	ok, err := m.get(m.collections.apitokens, bson.M{"token": tokenStr}, token)
+	if err != nil || !ok {
+		return nil, err
+	}
+
+	return m.GetUser(token.UserID, "")
 }
 
 func (m *MongoDB) SetShare(share *objects.SharePage) error {

@@ -20,6 +20,7 @@ const (
 	attemptLimit          = 5 * time.Minute
 	attemptBurst          = 5
 	defCost               = 12
+	apiTokenLength        = 256
 	sessionKeyLength      = 128
 	sessionExpireDefault  = 2 * time.Hour
 	sessionExpireRemember = 30 * 24 * time.Hour
@@ -30,7 +31,8 @@ var (
 	errUnauthorized = errors.New("unauthorized")
 	errRateLimited  = errors.New("rate limited")
 
-	setCookieHeader = []byte("Set-Cookie")
+	setCookieHeader     = []byte("Set-Cookie")
+	authorizationHeader = []byte("Authorization")
 )
 
 type loginRequest struct {
@@ -123,14 +125,31 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 }
 
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
-	key := ctx.Request.Header.Cookie("__session")
-	if key == nil || len(key) == 0 {
-		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	var user *objects.User
+	var err error
+	var keyStr string
+	var apiToken string
+
+	apiTokenB := ctx.Request.Header.PeekBytes(authorizationHeader)
+	if apiTokenB != nil && len(apiTokenB) > 0 {
+		apiToken := string(apiTokenB)
+		if !strings.HasPrefix(strings.ToLower(apiToken), "basic ") {
+			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		}
+
+		apiToken = apiToken[6:]
+		user, err = auth.db.VerifyAPIToken(apiToken)
+	} else {
+		key := ctx.Request.Header.Cookie("__session")
+		if key == nil || len(key) == 0 {
+			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		}
+
+		keyStr = string(key)
+
+		user, err = auth.db.GetSession(keyStr, getIPAddr(ctx))
 	}
 
-	keyStr := string(key)
-
-	user, err := auth.db.GetSession(keyStr, getIPAddr(ctx))
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -140,6 +159,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 
 	ctx.Set("user", user)
 	ctx.Set("sessionkey", keyStr)
+	ctx.Set("apitoken", apiToken)
 
 	return nil
 }
