@@ -50,13 +50,42 @@ On startup, you need to bind the exposed web server port `8080` and the volume `
 You can use following configuration with a MongoDB container using Docker Compose:
 
 ```yml
-myrunes:
-  image: "zekro/myrunes:latest"
-  ports:
-    - "443:8080"
-  volumes:
-    - "/etc/myrunes:/etc/myrunes"
-  restart: always
+version: '3'
+
+services:
+
+  mongo:
+    image: 'mongo:latest'
+    expose:
+      - '27017'
+    volumes:
+      - './mongodb/data/db:/data/db'
+      - '/home/mgr/dump:/var/dump'
+    command: '--auth'
+    restart: always
+ 
+  myrunes:
+    image: "zekro/myrunes:latest"
+    ports:
+      - "443:8080"
+    volumes:
+      - "/etc/myrunes:/etc/myrunes"
+    environment:
+      # You dont need to define the configuration
+      # with environment variables fi you prefer 
+      # using the config file instead.
+      - 'DB_HOST=mongo'
+      - 'DB_PORT=27017'
+      - 'DB_USERNAME=myrunes'
+      - 'DB_PASSWORD=somepw'
+      - 'DB_AUTHDB=myrunes'
+      - 'DB_DATADB=myrunes'
+      - 'TLS_ENABLE=true'
+      - 'TLS_KEY=/etc/cert/key.pem'
+      - 'TLS_CERT=/etc/cert/cert.pem'
+    ports:
+      - '443:8080'
+    restart: always
 ```
 
 ## As deamon
