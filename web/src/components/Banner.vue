@@ -1,13 +1,25 @@
 <!-- @format -->
 
 <template>
-  <div class="banner" :class="classObj" :style="{ width: width || '100%' }">
-    <div class="close" v-if="closable" @click="onclose"></div>
+  <div
+    v-if="internalVisible === null ? visible : internalVisible"
+    class="banner"
+    :class="classObj"
+    :style="{ width: width || '100%' }"
+  >
+    <div
+      class="close"
+      v-if="internalClosable === null ? closable : internalClosable"
+      @click="hide(true)"
+    ></div>
+    <p v-if="text" class="m-0">{{ text }}</p>
     <slot></slot>
   </div>
 </template>
 
 <script>
+/** @format */
+
 export default {
   name: 'Banner',
 
@@ -15,17 +27,49 @@ export default {
     type: String,
     width: String,
     closable: Boolean,
+    visible: Boolean,
+  },
+
+  data() {
+    return {
+      text: null,
+      internalVisible: null,
+      internalType: null,
+      internalClosable: null,
+    };
   },
 
   methods: {
-    onclose() {
-      this.$emit('closing');
+    emitClosing(active) {
+      this.$emit('closing', !!active);
+    },
+
+    show(type, text, time, closable) {
+      this.internalVisible = true;
+      this.internalType = type;
+      this.text = text;
+
+      if (this.closable != null) {
+        this.internalClosable = closable;
+      }
+
+      if (time) {
+        setTimeout(() => this.hide(), time);
+      }
+    },
+
+    hide(active) {
+      if (this.internalVisible) {
+        this.internalVisible = false;
+        this.emitClosing(active);
+      }
     },
   },
 
   computed: {
     classObj: function() {
-      let type = this.type || 'info';
+      let type =
+        (this.internalType != null ? this.internalType : this.type) || 'info';
       let o = {};
       o[type] = true;
       return o;
@@ -35,6 +79,8 @@ export default {
 </script>
 
 <style scoped>
+/** @format */
+
 .banner {
   padding: 10px 15px;
   border-width: 2px;

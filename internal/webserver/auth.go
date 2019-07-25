@@ -17,6 +17,8 @@ import (
 )
 
 const (
+	attemptLimit          = 5 * time.Minute
+	attemptBurst          = 5
 	defCost               = 12
 	sessionKeyLength      = 128
 	sessionExpireDefault  = 2 * time.Hour
@@ -26,6 +28,7 @@ const (
 var (
 	errBadRequest   = errors.New("bad request")
 	errUnauthorized = errors.New("unauthorized")
+	errRateLimited  = errors.New("rate limited")
 
 	setCookieHeader = []byte("Set-Cookie")
 )
@@ -37,12 +40,14 @@ type loginRequest struct {
 }
 
 type Authorization struct {
-	db database.Middleware
+	db  database.Middleware
+	rlm *RateLimitManager
 }
 
-func NewAuthorization(db database.Middleware) (auth *Authorization) {
+func NewAuthorization(db database.Middleware, rlm *RateLimitManager) (auth *Authorization) {
 	auth = new(Authorization)
 	auth.db = db
+	auth.rlm = rlm
 	return
 }
 
@@ -64,15 +69,23 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		return jsonError(ctx, errBadRequest, fasthttp.StatusBadRequest) != nil
 	}
 
+	limiter := auth.rlm.GetLimiter(fmt.Sprintf("loginAttempt#%s", getIPAddr(ctx)), attemptLimit, attemptBurst)
+
+	if limiter.Tokens() <= 0 {
+		return jsonError(ctx, errRateLimited, fasthttp.StatusTooManyRequests) != nil
+	}
+
 	user, err := auth.db.GetUser(snowflake.ID(-1), strings.ToLower(login.UserName))
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError) != nil
 	}
 	if user == nil {
+		limiter.Allow()
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 
 	if !auth.CheckHash(user.PassHash, []byte(login.Password)) {
+		limiter.Allow()
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 

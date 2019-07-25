@@ -56,8 +56,8 @@ func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
 
 	ws.config = config
 	ws.db = db
-	ws.auth = NewAuthorization(db)
 	ws.rlm = NewRateLimitManager()
+	ws.auth = NewAuthorization(db, ws.rlm)
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
