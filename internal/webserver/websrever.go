@@ -23,6 +23,7 @@ var (
 	fileHandlerStatic = fasthttp.FS{
 		Root:       "./web/dist",
 		IndexNames: []string{"index.html"},
+		Compress:   true,
 		// PathRewrite: func(ctx *fasthttp.RequestCtx) []byte {
 		// 	return ctx.Path()[7:]
 		// },
