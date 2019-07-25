@@ -2,11 +2,7 @@
 
 <template>
   <div>
-    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">
-      {{
-      banner.content
-      }}
-    </Banner>
+    <Banner ref="banner" class="mb-3"></Banner>
 
     <div class="bg mb-3">
       <h3>ACCOUNT DETAILS</h3>
@@ -195,12 +191,12 @@ export default {
       this.currpassword = '';
 
       if (this.newpassword && this.newpassword.length < 8) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: `Password must have at least 8 characters.`,
-        };
-        setTimeout(() => (this.banner.visible = false), 10000);
+        this.$refs.show(
+          'error',
+          'Password must have at least 8 characters!',
+          10000,
+          true
+        );
         window.scrollTo(0, 0);
         return;
       }
@@ -213,24 +209,23 @@ export default {
       };
       Rest.updateUser(update)
         .then(() => {
-          this.banner = {
-            visible: true,
-            type: 'success',
-            content: `Account changes saved.`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.banner.show(
+            'success',
+            'Account changes saved.',
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
         })
         .catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content:
-              err.message === 'unauthorized'
-                ? 'Current password is wrong.'
-                : `Saving failed: ${err.message ? err.message : err}`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.show(
+            'error',
+            err.message === 'unauthorized'
+              ? 'Current password is wrong.'
+              : `Saving failed: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
           console.error(err);
         });
@@ -246,15 +241,14 @@ export default {
           this.$router.push('/login');
         })
         .catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content:
-              err.message === 'unauthorized'
-                ? 'Current password is wrong.'
-                : `Saving failed: ${err.message ? err.message : err}`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.show(
+            'error',
+            err.message === 'unauthorized'
+              ? 'Current password is wrong.'
+              : `Saving failed: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
           console.error(err);
         });
@@ -272,12 +266,12 @@ export default {
 
     deleteLocalStorage() {
       window.localStorage.clear();
-      this.banner = {
-        visible: true,
-        type: 'success',
-        content: `Local storage was cleared.`,
-      };
-      setTimeout(() => (this.banner.visible = false), 10000);
+      this.$refs.banner.show(
+        'success',
+        'Local storage was cleared.',
+        10000,
+        true
+      );
       window.scrollTo(0, 0);
     },
   },

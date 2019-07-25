@@ -218,13 +218,6 @@ export default {
       }
     },
 
-    bannerClosing(reason) {
-      this.banner.visible = false;
-      if (reason === 'reginfo') {
-        window.localStorage.setItem('reginfo-dismissed', '1');
-      }
-    },
-
     loginRedirect() {
       EventBus.$emit('login');
       let pid = this.$route.query.createpage;
@@ -243,24 +236,24 @@ export default {
                   }
                 })
                 .catch((err) => {
-                  this.banner = {
-                    visible: true,
-                    type: 'error',
-                    content: `Failed creating clone of shared page: ${
+                  this.$refs.banner.show(
+                    'error',
+                    `Failed creating clone of shared page: ${
                       err.message ? err.message : err
                     }`,
-                  };
+                    null,
+                    false
+                  );
                 });
             }
           })
           .catch((err) => {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `Failed getting shared page: ${
-                err.message ? err.message : err
-              }`,
-            };
+            this.$refs.banner.show(
+              'error',
+              `Failed getting shared page: ${err.message ? err.message : err}`,
+              null,
+              false
+            );
           });
       } else {
         this.$router.push('/');
