@@ -213,7 +213,7 @@ export default {
       this.currpassword = '';
 
       if (this.newpassword && this.newpassword.length < 8) {
-        this.$refs.show(
+        this.$refs.banner.show(
           'error',
           'Password must have at least 8 characters!',
           10000,
@@ -240,7 +240,7 @@ export default {
           window.scrollTo(0, 0);
         })
         .catch((err) => {
-          this.$refs.show(
+          this.$refs.banner.show(
             'error',
             err.message === 'unauthorized'
               ? 'Current password is wrong.'
@@ -263,7 +263,7 @@ export default {
           this.$router.push('/login');
         })
         .catch((err) => {
-          this.$refs.show(
+          this.$refs.banner.show(
             'error',
             err.message === 'unauthorized'
               ? 'Current password is wrong.'
