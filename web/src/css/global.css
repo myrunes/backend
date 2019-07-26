@@ -267,3 +267,12 @@ span.tb {
 .underlined {
   text-decoration: underline !important;
 }
+
+.text-embed {
+  background-color: rgb(33, 33, 33);
+  padding: 4px 6px;  
+}
+
+.w-fit-content {
+  width: fit-content;
+}

@@ -131,6 +131,12 @@ func (ws *WebServer) registerHandlers() {
 		Post(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerPostShare).
 		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteShare)
 
+	apitoken := api.Group("/apitoken", ws.addHeaders, ws.auth.CheckRequestAuth)
+	apitoken.
+		Get("", ws.handlerGetAPIToken).
+		Post(ws.handlerPostAPIToken).
+		Delete(ws.handlerDeleteAPIToken)
+
 }
 
 func (ws *WebServer) ListenAndServeBlocking() error {

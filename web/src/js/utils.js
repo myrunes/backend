@@ -48,6 +48,27 @@ function removeWindowListener(event, cb) {
   }
 }
 
+function copyToClipboard(text) {
+  return new Promise((resolve, reject) => {
+    var id = 'hidden-clipboard-area';
+    var existsTextarea = document.getElementById(id);
+    if (!existsTextarea) {
+      var textarea = document.createElement('textarea');
+      textarea.id = id;
+      document.querySelector('body').appendChild(textarea);
+      existsTextarea = document.getElementById(id);
+    }
+    existsTextarea.value = text;
+    existsTextarea.select();
+    var status = document.execCommand('copy');
+    if (!status) {
+      reject('Could not copy shortlink to clipboard.');
+    } else {
+      resolve();
+    }
+  });
+}
+
 // ----------------------------------
 
 export default {
@@ -56,4 +77,5 @@ export default {
   getCookieValue,
   setWindowListener,
   removeWindowListener,
+  copyToClipboard,
 };

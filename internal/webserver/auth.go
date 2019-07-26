@@ -20,7 +20,7 @@ const (
 	attemptLimit          = 5 * time.Minute
 	attemptBurst          = 5
 	defCost               = 12
-	apiTokenLength        = 256
+	apiTokenLength        = 64
 	sessionKeyLength      = 128
 	sessionExpireDefault  = 2 * time.Hour
 	sessionExpireRemember = 30 * 24 * time.Hour

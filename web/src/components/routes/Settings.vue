@@ -4,6 +4,7 @@
   <div>
     <Banner ref="banner" class="mb-3"></Banner>
 
+    <!-- ACCOUNT DETAILS -->
     <div class="bg mb-3">
       <h3>ACCOUNT DETAILS</h3>
       <table>
@@ -64,6 +65,29 @@
       </table>
     </div>
 
+    <!-- API ACESS -->
+    <div class="bg mb-3">
+      <h3>API ACCESS</h3>
+      <h5>API Token</h5>
+      <p class="explainer mb-3">
+        The API token is a base64 encoded stirng which can used to be passed with API requests to authenticate
+        as your account.
+        <br />
+        <b>Keep this key secure! It gives full access on your account!</b>
+      </p>
+      <div v-if="apitoken" class>
+        <p class="hider w-fit-content">{{ apitoken }}</p>
+        <i class="created">Created: {{ formatTime(apitokencreated) }}</i>
+      </div>
+      <div v-else>
+        <i class="text-embed">No API token generated.</i>
+      </div>
+      <button class="btn-slide mt-3 mr-3" @click="generateAPIToken">GENERATE TOKEN</button>
+      <button class="btn-slide mt-3 mr-3" @click="deleteAPIToken">DELETE TOKEN</button>
+      <button v-if="apitoken" class="btn-slide mt-3" @click="copyTokenToClipboard">COPY TO CLIPBOARD</button>
+    </div>
+
+    <!-- DATA STORAGE -->
     <div class="bg mb-3">
       <h3>DATA STORAGE</h3>
       <h5>Local storage</h5>
@@ -84,6 +108,7 @@
       <button class="btn-slide btn-delete mt-2" @click="deleteLocalStorage">DELETE LOCAL STORAGE</button>
     </div>
 
+    <!-- UPDATE ACCOUNT -->
     <div class="bg">
       <h3 class="mb-3">UPDATE ACCOUNT</h3>
 
@@ -166,11 +191,8 @@ export default {
       newpassword: '',
       currpassword: '',
 
-      banner: {
-        visible: false,
-        type: 'error',
-        content: '',
-      },
+      apitoken: null,
+      apitokencreated: null,
     };
   },
 
@@ -274,6 +296,44 @@ export default {
       );
       window.scrollTo(0, 0);
     },
+
+    generateAPIToken() {
+      Rest.generateAPIToken()
+        .then((res) => {
+          if (!res.body) return;
+          this.apitoken = res.body.token;
+          this.apitokencreated = new Date(res.body.created);
+        })
+        .catch(console.error);
+    },
+
+    deleteAPIToken() {
+      Rest.deleteAPIToken()
+        .then((res) => {
+          this.apitoken = this.apitokencreated = null;
+        })
+        .catch(console.error);
+    },
+
+    copyTokenToClipboard() {
+      Utils.copyToClipboard(this.apitoken)
+        .then(() =>
+          this.$refs.banner.show(
+            'success',
+            'Copied token to clipboard.',
+            6000,
+            true
+          )
+        )
+        .catch((err) =>
+          this.$refs.banner.show(
+            'error',
+            'Copying to clipboard failed: ' + err,
+            10000,
+            true
+          )
+        );
+    },
   },
 
   created: function() {
@@ -282,23 +342,34 @@ export default {
         if (!res.body) return;
         this.user = res.body;
         console.log(this.user);
-
-        Rest.getPages()
-          .then((res) => {
-            if (!res.body) return;
-            this.pages = res.body.n;
-
-            Rest.getSessions()
-              .then((res) => {
-                if (!res.body.data) return;
-                this.sessions = res.body.data;
-                this.currsessionid = res.body.currentlyconnectedid;
-              })
-              .catch(console.error);
-          })
-          .catch(console.error);
       })
       .catch(console.error);
+
+    Rest.getPages()
+      .then((res) => {
+        if (!res.body) return;
+        this.pages = res.body.n;
+      })
+      .catch(console.error);
+
+    Rest.getSessions()
+      .then((res) => {
+        if (!res.body.data) return;
+        this.sessions = res.body.data;
+        this.currsessionid = res.body.currentlyconnectedid;
+      })
+      .catch(console.error);
+
+    Rest.getAPIToken()
+      .then((res) => {
+        if (!res.body) return;
+        this.apitoken = res.body.token;
+        this.apitokencreated = new Date(res.body.created);
+      })
+      .catch((err) => {
+        if (err && err.code === 404) return;
+        console.error(err);
+      });
   },
 };
 </script>
@@ -330,6 +401,12 @@ export default {
 
 .highlight {
   background-color: #ffd92f75;
+}
+
+.created {
+  font-size: 14px;
+  margin-top: 5px;
+  color: rgb(192, 192, 192) !important;
 }
 
 h5,
