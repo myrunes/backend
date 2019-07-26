@@ -100,7 +100,7 @@ func (ws *WebServer) registerHandlers() {
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
 
-	pages := api.Group("/pages", ws.addHeaders, ws.auth.CheckRequestAuth)
+	pages := api.Group("/pages", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	pages.
 		Post("", rlPageCreate, ws.handlerCreatePage).
 		Get(ws.handlerGetPages)
@@ -109,18 +109,18 @@ func (ws *WebServer) registerHandlers() {
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
 
-	sessions := api.Group("/sessions", ws.addHeaders, ws.auth.CheckRequestAuth)
+	sessions := api.Group("/sessions", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	sessions.
 		Get("", ws.handlerGetSessions)
 	sessions.
 		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
 
-	favorites := api.Group("/favorites", ws.addHeaders, ws.auth.CheckRequestAuth)
+	favorites := api.Group("/favorites", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	favorites.
 		Get("", ws.handlerGetFavorites).
 		Post(ws.handlerPostFavorite)
 
-	shares := api.Group("/shares", ws.addHeaders)
+	shares := api.Group("/shares", ws.addHeaders, rlGlobal)
 	shares.
 		Post("", ws.auth.CheckRequestAuth, ws.handlerCreateShare)
 	shares.
@@ -131,7 +131,7 @@ func (ws *WebServer) registerHandlers() {
 		Post(`/<uid:\d+>`, ws.auth.CheckRequestAuth, ws.handlerPostShare).
 		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteShare)
 
-	apitoken := api.Group("/apitoken", ws.addHeaders, ws.auth.CheckRequestAuth)
+	apitoken := api.Group("/apitoken", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	apitoken.
 		Get("", ws.handlerGetAPIToken).
 		Post(ws.handlerPostAPIToken).
