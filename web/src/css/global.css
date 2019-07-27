@@ -46,6 +46,19 @@ img {
 
 /*****************************************************/
 
+#hidden-clipboard-area {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: none;
+  outline: none;
+  box-shadow: none;
+  background: transparent;
+}
+
 .modal-header *, 
 .modal-body * {
   color: black !important;
@@ -262,4 +275,17 @@ span.tb {
 
 .tree-resolve {
   background-color: rgba(104, 159, 56, 0.25);
+}
+
+.underlined {
+  text-decoration: underline !important;
+}
+
+.text-embed {
+  background-color: rgb(33, 33, 33);
+  padding: 4px 6px;  
+}
+
+.w-fit-content {
+  width: fit-content;
 }

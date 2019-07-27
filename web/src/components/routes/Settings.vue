@@ -2,10 +2,9 @@
 
 <template>
   <div>
-    <Banner v-if="banner.visible" :type="banner.type" class="mb-3">{{
-      banner.content
-    }}</Banner>
+    <Banner ref="banner" class="mb-3"></Banner>
 
+    <!-- ACCOUNT DETAILS -->
     <div class="bg mb-3">
       <h3>ACCOUNT DETAILS</h3>
       <table>
@@ -39,7 +38,11 @@
             <th>Expires</th>
             <th>Last Access Address</th>
           </tr>
-          <tr v-for="s in sessions" :key="`session-${s.sessionid}`">
+          <tr
+            v-for="s in sessions"
+            :key="`session-${s.sessionid}`"
+            :class="{highlight: s.sessionid === currsessionid}"
+          >
             <td>
               <p class="hider">{{ s.sessionid }}</p>
             </td>
@@ -62,6 +65,50 @@
       </table>
     </div>
 
+    <!-- API ACESS -->
+    <div class="bg mb-3">
+      <h3>API ACCESS</h3>
+      <h5>API Token</h5>
+      <p class="explainer mb-3">
+        The API token is a base64 encoded stirng which can used to be passed with API requests to authenticate
+        as your account.
+        <br />
+        <b>Keep this key secure! It gives full access on your account!</b>
+      </p>
+      <div v-if="apitoken" class>
+        <p class="hider w-fit-content">{{ apitoken }}</p>
+        <i class="created">Created: {{ formatTime(apitokencreated) }}</i>
+      </div>
+      <div v-else>
+        <i class="text-embed">No API token generated.</i>
+      </div>
+      <button class="btn-slide mt-3 mr-3" @click="generateAPIToken">GENERATE TOKEN</button>
+      <button class="btn-slide mt-3 mr-3" @click="deleteAPIToken">DELETE TOKEN</button>
+      <button v-if="apitoken" class="btn-slide mt-3" @click="copyTokenToClipboard">COPY TO CLIPBOARD</button>
+    </div>
+
+    <!-- DATA STORAGE -->
+    <div class="bg mb-3">
+      <h3>DATA STORAGE</h3>
+      <h5>Local storage</h5>
+      <p class="explainer">
+        We store some client-site data directly in the browser using
+        <a
+          class="underlined"
+          href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"
+          target="_blank"
+        >local storage</a>.
+        <br />
+        <a
+          class="underlined"
+          href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
+          target="_blank"
+        >Here</a> you can read about what particular data is saved in the local storage by MYRUNES.
+      </p>
+      <button class="btn-slide btn-delete mt-2" @click="deleteLocalStorage">DELETE LOCAL STORAGE</button>
+    </div>
+
+    <!-- UPDATE ACCOUNT -->
     <div class="bg">
       <h3 class="mb-3">UPDATE ACCOUNT</h3>
 
@@ -72,12 +119,7 @@
           <br />The username must be lowercase, longer than 3 characters and
           must only contain letters, numbers, scores and underscores.
         </p>
-        <input
-          type="text"
-          class="tb text-left"
-          v-model="user.username"
-          @input="unameInput"
-        />
+        <input type="text" class="tb text-left" v-model="user.username" @input="unameInput" />
         <span class="tb" />
       </div>
 
@@ -91,12 +133,7 @@
       <div class="position-relative">
         <h5>New Password</h5>
         <p class="explainer">Enter a new password, if you want to change it.</p>
-        <input
-          type="password"
-          ref="tbNewpw"
-          class="tb text-left"
-          v-model="newpassword"
-        />
+        <input type="password" ref="tbNewpw" class="tb text-left" v-model="newpassword" />
         <span class="tb" />
         <a
           class="ml-2"
@@ -109,24 +146,21 @@
 
       <div class="mt-5">
         <hr />
-        <p>
-          You need to enter your current password again to apply these changes:
-        </p>
+        <p>You need to enter your current password again to apply these changes:</p>
         <div class="position-relative mb-4">
           <input type="password" class="tb text-left" v-model="currpassword" />
           <span class="tb" />
         </div>
         <div class="bg danger-zone mb-3">
           <h5 class="mb-3">DANGER ZONE</h5>
-          <button class="btn-slide btn-delete" @click="deleteAcc">
-            DELETE ACCOUNT PERMANENTLY AND FOREVER
-          </button>
+          <button
+            class="btn-slide btn-delete"
+            @click="deleteAcc"
+          >DELETE ACCOUNT PERMANENTLY AND FOREVER</button>
         </div>
         <div class="text-right">
           <button class="btn-slide btn-save mr-3" @click="save">SAVE</button>
-          <button class="btn-slide btn-cancel" @click="$router.back()">
-            CANCEL
-          </button>
+          <button class="btn-slide btn-cancel" @click="$router.back()">CANCEL</button>
         </div>
       </div>
     </div>
@@ -152,15 +186,13 @@ export default {
     return {
       user: {},
       sessions: [],
+      currsessionid: '',
       pages: 0,
       newpassword: '',
       currpassword: '',
 
-      banner: {
-        visible: false,
-        type: 'error',
-        content: '',
-      },
+      apitoken: null,
+      apitokencreated: null,
     };
   },
 
@@ -181,12 +213,12 @@ export default {
       this.currpassword = '';
 
       if (this.newpassword && this.newpassword.length < 8) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: `Password must have at least 8 characters.`,
-        };
-        setTimeout(() => (this.banner.visible = false), 10000);
+        this.$refs.banner.show(
+          'error',
+          'Password must have at least 8 characters!',
+          10000,
+          true
+        );
         window.scrollTo(0, 0);
         return;
       }
@@ -199,24 +231,23 @@ export default {
       };
       Rest.updateUser(update)
         .then(() => {
-          this.banner = {
-            visible: true,
-            type: 'success',
-            content: `Account changes saved.`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.banner.show(
+            'success',
+            'Account changes saved.',
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
         })
         .catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content:
-              err.message === 'unauthorized'
-                ? 'Current password is wrong.'
-                : `Saving failed: ${err.message ? err.message : err}`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.banner.show(
+            'error',
+            err.message === 'unauthorized'
+              ? 'Current password is wrong.'
+              : `Saving failed: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
           console.error(err);
         });
@@ -232,15 +263,14 @@ export default {
           this.$router.push('/login');
         })
         .catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content:
-              err.message === 'unauthorized'
-                ? 'Current password is wrong.'
-                : `Saving failed: ${err.message ? err.message : err}`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.banner.show(
+            'error',
+            err.message === 'unauthorized'
+              ? 'Current password is wrong.'
+              : `Saving failed: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
           console.error(err);
         });
@@ -255,6 +285,55 @@ export default {
         })
         .catch(console.error);
     },
+
+    deleteLocalStorage() {
+      window.localStorage.clear();
+      this.$refs.banner.show(
+        'success',
+        'Local storage was cleared.',
+        10000,
+        true
+      );
+      window.scrollTo(0, 0);
+    },
+
+    generateAPIToken() {
+      Rest.generateAPIToken()
+        .then((res) => {
+          if (!res.body) return;
+          this.apitoken = res.body.token;
+          this.apitokencreated = new Date(res.body.created);
+        })
+        .catch(console.error);
+    },
+
+    deleteAPIToken() {
+      Rest.deleteAPIToken()
+        .then((res) => {
+          this.apitoken = this.apitokencreated = null;
+        })
+        .catch(console.error);
+    },
+
+    copyTokenToClipboard() {
+      Utils.copyToClipboard(this.apitoken)
+        .then(() =>
+          this.$refs.banner.show(
+            'success',
+            'Copied token to clipboard.',
+            6000,
+            true
+          )
+        )
+        .catch((err) =>
+          this.$refs.banner.show(
+            'error',
+            'Copying to clipboard failed: ' + err,
+            10000,
+            true
+          )
+        );
+    },
   },
 
   created: function() {
@@ -263,22 +342,34 @@ export default {
         if (!res.body) return;
         this.user = res.body;
         console.log(this.user);
-
-        Rest.getPages()
-          .then((res) => {
-            if (!res.body) return;
-            this.pages = res.body.n;
-
-            Rest.getSessions()
-              .then((res) => {
-                if (!res.body.data) return;
-                this.sessions = res.body.data;
-              })
-              .catch(console.error);
-          })
-          .catch(console.error);
       })
       .catch(console.error);
+
+    Rest.getPages()
+      .then((res) => {
+        if (!res.body) return;
+        this.pages = res.body.n;
+      })
+      .catch(console.error);
+
+    Rest.getSessions()
+      .then((res) => {
+        if (!res.body.data) return;
+        this.sessions = res.body.data;
+        this.currsessionid = res.body.currentlyconnectedid;
+      })
+      .catch(console.error);
+
+    Rest.getAPIToken()
+      .then((res) => {
+        if (!res.body) return;
+        this.apitoken = res.body.token;
+        this.apitokencreated = new Date(res.body.created);
+      })
+      .catch((err) => {
+        if (err && err.code === 404) return;
+        console.error(err);
+      });
   },
 };
 </script>
@@ -306,6 +397,16 @@ export default {
   font-size: 14px;
   position: absolute;
   transform: translate(4px, 1px);
+}
+
+.highlight {
+  background-color: #ffd92f75;
+}
+
+.created {
+  font-size: 14px;
+  margin-top: 5px;
+  color: rgb(192, 192, 192) !important;
 }
 
 h5,

@@ -38,6 +38,11 @@ type Middleware interface {
 	DeleteSession(key string, sessionID snowflake.ID) error
 	CleanupExpiredSessions() error
 
+	SetAPIToken(token *objects.APIToken) error
+	GetAPIToken(uID snowflake.ID) (*objects.APIToken, error)
+	ResetAPIToken(uID snowflake.ID) error
+	VerifyAPIToken(tokenStr string) (*objects.User, error)
+
 	SetShare(share *objects.SharePage) error
 	GetShare(ident string, uid, pageID snowflake.ID) (*objects.SharePage, error)
 	DeleteShare(ident string, uid, pageID snowflake.ID) error

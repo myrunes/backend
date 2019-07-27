@@ -186,6 +186,27 @@ function getVersion() {
   });
 }
 
+function getAPIToken() {
+  return _req({
+    url: `${HOST}/api/apitoken`,
+    method: 'GET',
+  });
+}
+
+function generateAPIToken() {
+  return _req({
+    url: `${HOST}/api/apitoken`,
+    method: 'POST',
+  });
+}
+
+function deleteAPIToken() {
+  return _req({
+    url: `${HOST}/api/apitoken`,
+    method: 'DELETE',
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -233,4 +254,7 @@ export default {
   updateShare,
   deleteShare,
   getVersion,
+  getAPIToken,
+  generateAPIToken,
+  deleteAPIToken,
 };

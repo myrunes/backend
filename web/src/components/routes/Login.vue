@@ -4,15 +4,7 @@
   <div class="outer-container">
     <div class="container my-auto">
       <div class="logo mx-auto"></div>
-      <Banner
-        class="mx-auto mb-5"
-        width="300px"
-        v-if="banner.visible"
-        :type="banner.type"
-        :closable="banner.closable"
-        @closing="bannerClosing('reginfo')"
-        >{{ banner.content }}</Banner
-      >
+      <Banner class="mx-auto mb-5" width="300px" ref="banner" @closing="bannerClosing"></Banner>
       <div class="d-flex position-relative">
         <b-tooltip
           target="tbUsername"
@@ -22,7 +14,8 @@
           :show.sync="unameToolTipShow"
         >
           Username can only contain lower case letters, numbers, minuses (
-          <code>-</code>) and underscores ( <code>_</code>). You can later
+          <code>-</code>) and underscores (
+          <code>_</code>). You can later
           change your username or set a specific display name.
         </b-tooltip>
         <input
@@ -54,14 +47,10 @@
         <span class="tb mx-auto"></span>
       </div>
       <div class="d-flex mt-5">
-        <Slider class="mx-auto" v-model="remember"
-          >Stay logged in (30 days)</Slider
-        >
+        <Slider class="mx-auto" v-model="remember">Stay logged in (30 days)</Slider>
       </div>
       <div class="d-flex mt-5">
-        <button class="btn-bubble mx-auto" @click="login">
-          {{ register ? 'REGISTER' : 'LOGIN' }}
-        </button>
+        <button class="btn-bubble mx-auto" @click="login">{{ register ? 'REGISTER' : 'LOGIN' }}</button>
       </div>
     </div>
   </div>
@@ -87,12 +76,6 @@ export default {
 
   data: function() {
     return {
-      banner: {
-        visible: false,
-        type: 'warning',
-        content: '',
-      },
-
       register: false,
 
       username: '',
@@ -108,31 +91,33 @@ export default {
 
       let val = this.username;
       if (val.length === 0) {
-        this.banner.visible = false;
+        this.$refs.banner.hide();
         return;
       }
 
       Rest.checkUsername(val)
         .then(() => {
-          this.banner.visible = false;
+          this.$refs.banner.hide();
           this.register = false;
         })
         .catch((err) => {
           if (err && err.code === 404) {
-            this.banner = {
-              visible: true,
-              type: 'warning',
-              content: `This user name is not existent. If you continue, a new account with the entered credentials will be created.`,
-            };
+            this.$refs.banner.show(
+              'warning',
+              'This user name is not existent. If you continue, a new account with the entered credentials will be created.',
+              null,
+              true
+            );
             this.register = true;
           } else {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              cintent: `An error occured while fetching user name availability: ${
+            this.$refs.banner.show(
+              'error',
+              `An error occured while fetching user name availability: ${
                 err.message ? err.message : err
               }`,
-            };
+              null,
+              false
+            );
           }
         });
     },
@@ -149,20 +134,22 @@ export default {
       if (!this.username || !this.password) return;
 
       if (this.register && this.username.length < 3) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: 'Username must have at least 3 characters.',
-        };
+        this.$refs.banner.show(
+          'error',
+          'Username must have at least 3 characters.',
+          null,
+          false
+        );
         return;
       }
 
       if (this.register && this.password.length < 8) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: 'Password must have at least 8 characters.',
-        };
+        this.$refs.banner.show(
+          'error',
+          'Password must have at least 8 characters',
+          null,
+          false
+        );
         return;
       }
 
@@ -174,50 +161,61 @@ export default {
           })
           .catch((err) => {
             if (err && err.code === 409) {
-              this.banner = {
-                visible: true,
-                type: 'error',
-                content: 'The passes username is already in use.',
-              };
+              this.$refs.banner.show(
+                'error',
+                'This username is already in use.',
+                null,
+                false
+              );
             } else {
-              this.banner = {
-                visible: true,
-                type: 'error',
-                content: `An error occured during registration: ${
+              this.$refs.banner.show(
+                'error',
+                `An error occured during registration: ${
                   err.message ? err.message : err
                 }`,
-              };
+                null,
+                false
+              );
             }
           });
       } else {
         Rest.login(this.username, this.password, this.remember)
           .then(() => {
             this.loginRedirect();
+            window.localStorage.setItem('reginfo-dismissed', '1');
           })
           .catch((err) => {
-            if (err && err.code === 401) {
-              this.banner = {
-                visible: true,
-                type: 'error',
-                content: 'Invalid username-password combination.',
-              };
-            } else {
-              this.banner = {
-                visible: true,
-                type: 'error',
-                content: `An error occured during registration: ${
-                  err.message ? err.message : err
-                }`,
-              };
+            console.log(err);
+            switch (err.code) {
+              case 401:
+                this.$refs.banner.show(
+                  'error',
+                  'Invalid username-password combination.',
+                  null,
+                  false
+                );
+                break;
+
+              case 429:
+                this.$refs.banner.show(
+                  'error',
+                  'You have exceed your allowed ammount of login attempts. Please try again later.',
+                  null,
+                  false
+                );
+                break;
+
+              default:
+                this.$refs.banner.show(
+                  'error',
+                  `An error occured during login: ${
+                    err.message ? err.message : err
+                  }`,
+                  null,
+                  false
+                );
             }
           });
-      }
-    },
-
-    bannerClosing(reason) {
-      this.banner.visible = false;
-      if (reason === 'reginfo') {
-        window.localStorage.setItem('reginfo-dismissed', '1');
       }
     },
 
@@ -239,40 +237,45 @@ export default {
                   }
                 })
                 .catch((err) => {
-                  this.banner = {
-                    visible: true,
-                    type: 'error',
-                    content: `Failed creating clone of shared page: ${
+                  this.$refs.banner.show(
+                    'error',
+                    `Failed creating clone of shared page: ${
                       err.message ? err.message : err
                     }`,
-                  };
+                    null,
+                    false
+                  );
                 });
             }
           })
           .catch((err) => {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `Failed getting shared page: ${
-                err.message ? err.message : err
-              }`,
-            };
+            this.$refs.banner.show(
+              'error',
+              `Failed getting shared page: ${err.message ? err.message : err}`,
+              null,
+              false
+            );
           });
       } else {
         this.$router.push('/');
       }
     },
+
+    bannerClosing(active) {
+      if (active) {
+        window.localStorage.setItem('reginfo-dismissed', '1');
+      }
+    },
   },
 
-  created: function() {
+  mounted: function() {
     if (window.localStorage.getItem('reginfo-dismissed') !== '1') {
-      this.banner = {
-        closable: true,
-        visible: true,
-        type: 'info',
-        content:
-          'Not having an account? Simply register by typing in an unused username and the password you want to use.',
-      };
+      this.$refs.banner.show(
+        'info',
+        'Not having an account? Simply register by typing in an unused username and the password you want to use.',
+        null,
+        true
+      );
     }
   },
 };

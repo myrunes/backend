@@ -168,6 +168,10 @@ export default {
 <style scoped>
 /** @format */
 
+* {
+  transition: padding 0.25s ease-in-out;
+}
+
 .champ-header {
   display: flex;
 }

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zekroTJA/myrunes/pkg/random"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -286,17 +288,28 @@ func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetSessions(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
+	sessionKey := ctx.Get("sessionkey").(string)
 
 	sessions, err := ws.db.GetSessions(user.UID)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
+	var currentSession *objects.Session
 	for _, s := range sessions {
+		if sessionKey == s.Key {
+			currentSession = s
+		}
 		s.Key = fmt.Sprintf("%s...%s", s.Key[:3], s.Key[len(s.Key)-3:])
 	}
 
-	return jsonResponse(ctx, listResponse{N: len(sessions), Data: sessions}, fasthttp.StatusOK)
+	return jsonResponse(ctx, sessionsResponse{
+		listResponse: listResponse{
+			N:    len(sessions),
+			Data: sessions,
+		},
+		CurrentlyConnectedID: currentSession.SessionID.String(),
+	}, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerDeleteSession(ctx *routing.Context) error {
@@ -543,4 +556,48 @@ func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
 		"version": static.AppVersion,
 		"release": static.Release,
 	}, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+	var err error
+	token := new(objects.APIToken)
+
+	if token.Token, err = random.GetRandBase64Str(apiTokenLength); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	token.UserID = user.UID
+	token.Created = time.Now()
+
+	if err = ws.db.SetAPIToken(token); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, token, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerGetAPIToken(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	token, err := ws.db.GetAPIToken(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if token == nil {
+		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
+	}
+
+	return jsonResponse(ctx, token, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	if err := ws.db.ResetAPIToken(user.UID); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

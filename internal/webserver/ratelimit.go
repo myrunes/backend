@@ -53,7 +53,7 @@ func (rlm *RateLimitManager) GetHandler(limit time.Duration, burst int) routing.
 	rlh.handler = func(ctx *routing.Context) error {
 		limiterID := fmt.Sprintf("%d#%s",
 			rlh.id, getIPAddr(ctx))
-		ok, res := rlm.getLimiter(limiterID, limit, burst).Reserve()
+		ok, res := rlm.GetLimiter(limiterID, limit, burst).Reserve()
 
 		ctx.Response.Header.Set("X-RateLimit-Limit", fmt.Sprintf("%d", res.Burst))
 		ctx.Response.Header.Set("X-RateLimit-Remaining", fmt.Sprintf("%d", res.Remaining))
@@ -75,11 +75,11 @@ func (rlm *RateLimitManager) GetHandler(limit time.Duration, burst int) routing.
 	return rlh.handler
 }
 
-// getLimiter tries to get an existent limiter
+// GetLimiter tries to get an existent limiter
 // from the limiter map. If there is no limiter
 // existent for this address, a new limiter
 // will be created and added to the map.
-func (rlm *RateLimitManager) getLimiter(addr string, limit time.Duration, burst int) *ratelimit.Limiter {
+func (rlm *RateLimitManager) GetLimiter(addr string, limit time.Duration, burst int) *ratelimit.Limiter {
 	var ok bool
 	var limiter *ratelimit.Limiter
 

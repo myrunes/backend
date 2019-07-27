@@ -3,9 +3,7 @@
 <template>
   <div>
     <b-modal id="modalShare" title="Share Page" @ok="shareOk">
-      <p v-if="!share.uid">
-        This page has not been shared yet. Create a share link below.
-      </p>
+      <p v-if="!share.uid">This page has not been shared yet. Create a share link below.</p>
       <div v-else>
         <p class="m-0">Share link:</p>
         <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
@@ -16,36 +14,23 @@
       </div>
 
       <h5 class="mt-4">Max Uses</h5>
-      <i
-        >Number of times the link can be accessed. Set to -1 to set this
-        infinite.</i
-      >
-      <b-form-input
-        type="number"
-        min="-1"
-        value="0"
-        v-model="share.maxaccesses"
-      ></b-form-input>
+      <i>
+        Number of times the link can be accessed. Set to -1 to set this
+        infinite.
+      </i>
+      <b-form-input type="number" min="-1" value="0" v-model="share.maxaccesses"></b-form-input>
 
       <h5 class="mt-4">Expires</h5>
-      <i
-        >Time at which the link will expire. Leave empty to set to never
-        expire.</i
-      >
+      <i>
+        Time at which the link will expire. Leave empty to set to never
+        expire.
+      </i>
       <b-row>
         <b-col>
-          <b-form-input
-            type="date"
-            ref="shareDate"
-            v-model="share._expires.date"
-          ></b-form-input>
+          <b-form-input type="date" ref="shareDate" v-model="share._expires.date"></b-form-input>
         </b-col>
         <b-col>
-          <b-form-input
-            type="time"
-            ref="shareTime"
-            v-model="share._expires.time"
-          ></b-form-input>
+          <b-form-input type="time" ref="shareTime" v-model="share._expires.time"></b-form-input>
         </b-col>
       </b-row>
 
@@ -54,18 +39,10 @@
         class="w-100 mt-3 text-white"
         @click="resetShare"
         v-if="share.uid"
-        >RESET SHARE</b-button
-      >
+      >RESET SHARE</b-button>
     </b-modal>
 
-    <Banner
-      v-if="banner.visible"
-      :type="banner.type"
-      class="mb-3"
-      :closable="banner.closable"
-      @closing="banner.visible = false"
-      >{{ banner.content }}</Banner
-    >
+    <Banner class="mb-3" ref="banner"></Banner>
 
     <div>
       <div class="position-relative mb-3">
@@ -117,11 +94,7 @@
             :class="{ disabled: page.primary.rows[rowIndex] !== rune }"
             @click="primaryClick(rowIndex, rune)"
           >
-            <img
-              :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`"
-              width="60"
-              height="60"
-            />
+            <img :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`" width="60" height="60" />
           </a>
         </div>
       </div>
@@ -179,12 +152,8 @@
     </div>
 
     <div class="ctrl-btns">
-      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">
-        SHARE
-      </button>
-      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">
-        CANCEL
-      </button>
+      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">SHARE</button>
+      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">CANCEL</button>
       <button class="btn-slide btn-save shadow" @click="save">SAVE</button>
     </div>
   </div>
@@ -238,12 +207,6 @@ export default {
         _expires: {},
       },
 
-      banner: {
-        visible: false,
-        type: 'error',
-        content: '',
-      },
-
       changes: {
         trees: 0,
         primary: 0,
@@ -266,13 +229,9 @@ export default {
 
     titleChange(e) {
       if (e.target.value.length < 1) {
-        this.banner = {
-          visible: true,
-          type: 'error',
-          content: 'Title can not be empty!',
-        };
+        this.$refs.banner.show('error', 'Title can not be empty!', 10000, true);
       } else {
-        this.banner.visible = false;
+        this.$refs.banner.hide();
       }
     },
 
@@ -356,11 +315,7 @@ export default {
 
       method
         .then((res) => {
-          this.banner = {
-            visible: true,
-            type: 'success',
-            content: 'Page saved!',
-          };
+          this.$refs.banner.show('success', 'Page saved!', 10000, true);
           if (this.uid === 'new') {
             this.uid = res.body.uid;
             this.$router.replace({
@@ -370,15 +325,14 @@ export default {
           }
           this.created = true;
           window.scrollTo(0, 0);
-          setTimeout(() => (this.banner.visible = false), 10000);
         })
         .catch((err) => {
-          this.banner = {
-            visible: true,
-            type: 'error',
-            content: `Error: ${err.message ? err.message : err}`,
-          };
-          setTimeout(() => (this.banner.visible = false), 10000);
+          this.$refs.banner.show(
+            'error',
+            `Error: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
           window.scrollTo(0, 0);
           console.error(err);
         });
@@ -417,47 +371,42 @@ export default {
       if (this.share.uid) {
         Rest.updateShare(this.share)
           .then(() => {
-            this.banner = {
-              visible: true,
-              type: 'success',
-              content: `Share successfully updated.`,
-              closable: true,
-            };
+            this.$refs.banner.show('success', 'Share updated!', 10000, true);
           })
           .catch((err) => {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `An error occured during saving share status: ${
+            this.$refs.banner.show(
+              'error',
+              `An error occured during saving share status: ${
                 err.message ? err.message : err
               }`,
-              closable: true,
-            };
+              10000,
+              true
+            );
           });
       } else {
         this.share.page = this.uid;
         Rest.createShare(this.share)
           .then((res) => {
             if (res.body) {
-              this.banner = {
-                visible: true,
-                type: 'success',
-                content: `Share successfully created. Sharelink is: ${this.getWindowLocation()}/p/${
+              this.$refs.banner.show(
+                'success',
+                `Share successfully created. Sharelink is: ${this.getWindowLocation()}/p/${
                   res.body.ident
                 }`,
-                closable: true,
-              };
+                null,
+                true
+              );
             }
           })
           .catch((err) => {
-            this.banner = {
-              visible: true,
-              type: 'error',
-              content: `An error occured during saving share status: ${
+            this.$refs.banner.show(
+              'error',
+              `An error occured during saving share status: ${
                 err.message ? err.message : err
               }`,
-              closable: true,
-            };
+              10000,
+              true
+            );
           });
       }
     },
@@ -465,12 +414,12 @@ export default {
     resetShare() {
       Rest.deleteShare(this.share)
         .then(() => {
-          this.banner = {
-            visible: true,
-            type: 'success',
-            content: `Now, this page is private again and share link will not work anymore.`,
-            closable: true,
-          };
+          this.$refs.banner.show(
+            'success',
+            'Now, this page is private again and share link will not work anymore.',
+            10000,
+            true
+          );
         })
         .catch(console.error);
       this.$bvModal.hide('modalShare');
