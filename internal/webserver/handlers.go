@@ -5,10 +5,11 @@ import (
 	"strings"
 	"time"
 
+	"github.com/zekroTJA/myrunes/pkg/comparison"
 	"github.com/zekroTJA/myrunes/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/qiangxue/fasthttp-routing"
+	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 	"github.com/zekroTJA/myrunes/internal/database"
 	"github.com/zekroTJA/myrunes/internal/objects"
@@ -175,7 +176,21 @@ func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
 func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
-	pages, err := ws.db.GetPages(user.UID)
+	sortBy := string(ctx.QueryArgs().Peek("sortBy"))
+	var sortFunc func(i, j *objects.Page) bool
+
+	switch sortBy {
+	case "created":
+		sortFunc = func(i, j *objects.Page) bool {
+			return i.Created.After(j.Created)
+		}
+	case "title":
+		sortFunc = func(i, j *objects.Page) bool {
+			return comparison.Alphabetically(i.Title, j.Title)
+		}
+	}
+
+	pages, err := ws.db.GetPages(user.UID, sortFunc)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
