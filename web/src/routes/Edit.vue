@@ -162,9 +162,9 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import Banner from '../Banner';
-import TagsInput from '../TagsInput';
+import Rest from '../js/rest';
+import Banner from '../components/Banner';
+import TagsInput from '../components/TagsInput';
 
 export default {
   name: 'Edit',

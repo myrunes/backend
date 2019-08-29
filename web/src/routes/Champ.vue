@@ -9,7 +9,11 @@
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
-    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+    <div class="champ-header mb-4" v-if="champ" :style="{ 'padding-top': search ? '20px' : '0' }">
+      <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
+      <h2>{{ champ.toUpperCase() }}</h2>
+    </div>
+    <div>
       <Page
         v-for="p in pagesVisible"
         :key="p.uid"
@@ -26,9 +30,20 @@
     </div>
     <div class="ctrl-btns">
       <button
+        class="btn-slide btn-new favorite"
+        :class="{ active: this.favorites.includes(this.champ) }"
+        @click="toggleFav"
+      ></button>
+      <button
         class="btn-slide btn-new"
-        @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >+</button>
+        @click="
+          $router.push({
+            name: 'RunePage',
+            params: { uid: 'new' },
+            query: { champ },
+          })
+        "
+      ></button>
     </div>
   </div>
 </template>
@@ -36,23 +51,26 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import Utils from '../../js/utils';
-import Page from '../Page';
-import SearchBar from '../SearchBar';
-import InfoBubble from '../InfoBubble';
+import Rest from '../js/rest';
+import Utils from '../js/utils';
+import Page from '../components/Page';
+import SearchBar from '../components/SearchBar';
+import InfoBubble from '../components/InfoBubble';
 
 export default {
   name: 'Champ',
 
   components: {
     Page,
-    SearchBar,
     InfoBubble,
+    SearchBar,
   },
 
   data: function() {
     return {
+      champ: null,
+      favorite: false,
+      favorites: [],
       pages: [],
       pagesVisible: [],
       search: false,
@@ -64,13 +82,33 @@ export default {
       Rest.getPages()
         .then((res) => {
           if (!res.body) return;
-          this.pages = this.pagesVisible = res.body.data;
+          this.pages = this.pagesVisible = res.body.data.filter((p) =>
+            p.champions.includes(this.champ)
+          );
+
+          Rest.getFavorites()
+            .then((res) => {
+              if (!res.body || !res.body.data) return;
+              this.favorites = res.body.data;
+            })
+            .catch(console.error);
         })
         .catch(console.error);
     },
 
     deleted() {
       this.reload();
+    },
+
+    toggleFav() {
+      let ind = this.favorites.indexOf(this.champ);
+      if (ind > -1) {
+        this.favorites.splice(ind, 1);
+      } else {
+        this.favorites.push(this.champ);
+      }
+
+      Rest.setFavorites(this.favorites).catch(console.error);
     },
 
     onSearchPress(event) {
@@ -95,10 +133,7 @@ export default {
         return;
       }
       this.pagesVisible = this.pages.filter((p) => {
-        return (
-          p.title.toLowerCase().includes(txt) ||
-          p.champions.find((c) => c.includes(txt))
-        );
+        return p.title.toLowerCase().includes(txt);
       });
     },
 
@@ -110,6 +145,7 @@ export default {
   },
 
   created: function() {
+    this.champ = this.$route.params.champ;
     this.reload();
 
     Utils.setWindowListener('keydown', this.onSearchPress);
@@ -132,8 +168,8 @@ export default {
 <style scoped>
 /** @format */
 
-.page-container {
-  transition: all 0.25s ease-in-out;
+* {
+  transition: padding 0.25s ease-in-out;
 }
 
 .champ-header {
@@ -145,11 +181,11 @@ export default {
   margin-right: 15px;
 }
 
-.searchbar {
-  position: fixed;
-  left: 20px;
-  right: 20px;
-  z-index: 5;
-  transition: all 0.25s ease-in-out;
+.favorite::after {
+  background-image: url('/assets/fav.svg');
+}
+
+.active::after {
+  background-image: url('/assets/fav-active.svg');
 }
 </style>

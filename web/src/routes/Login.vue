@@ -59,10 +59,10 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import Banner from '../Banner';
-import Slider from '../Slider';
-import EventBus from '../../js/eventbus';
+import Rest from '../js/rest';
+import EventBus from '../js/eventbus';
+import Banner from '../components/Banner';
+import Slider from '../components/Slider';
 
 export default {
   name: 'Login',

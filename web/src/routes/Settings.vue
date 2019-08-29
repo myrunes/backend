@@ -170,10 +170,10 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import Banner from '../Banner';
-import Utils from '../../js/utils';
-import EventBus from '../../js/eventbus';
+import Rest from '../js/rest';
+import Utils from '../js/utils';
+import EventBus from '../js/eventbus';
+import Banner from '../components/Banner';
 
 export default {
   name: 'Settings',
