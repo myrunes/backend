@@ -15,8 +15,8 @@
 
 # Introduction
 
-MYRUNES is a little web tool where you can simply create and store League of Legends rune pages without spending ingame (or even real) money for rune pages. Just visit [myrunes.com](https://myrunes.com), create an account and save your runes to be ready for the nex pick and ban.  
-Of course, if you don't trust us, you can download the source code and build the binaries and front end to be hosted on your own server envoirement.
+MYRUNES is a little web tool where you can simply create and store League of Legends rune pages without spending ingame (or even real) money for rune pages. Just visit [myrunes.com](https://myrunes.com), create an account and save your runes to be ready for the next pick and ban.  
+Of course, if you don't trust us, you can download the source code and build the binaries and front end to be hosted on your own server environment.
 
 ---
 
@@ -88,15 +88,15 @@ services:
     restart: always
 ```
 
-## As deamon
+## As daemon
 
-First of all, if you want to self host the MYRUNES system, your envoirement should pass certain requirements:
+First of all, if you want to self host the MYRUNES system, your environment should pass certain requirements:
 
 - [**MongoDB**](https://www.mongodb.com/)  
   The server application uses MongoDB as database and storage system.
 
 - **[PM2](https://pm2.io/)** or **[screen](https://linux.die.net/man/1/screen)**  
-  ...or something else to deamonize an application which is highly recommendet for running the server component.
+  ...or something else to deamonize an application which is highly recommended for running the server component.
 
 Also, you need the following toolchains for building the backend and frontend components:
 
@@ -106,7 +106,7 @@ Also, you need the following toolchains for building the backend and frontend co
 - **[nodejs](https://nodejs.org/en/)** and **[npm](https://www.npmjs.com/)** *(npm will be automatically installed with nodejs)*
 - **[Vue CLI](https://cli.vuejs.org/)**
 
-Also, it is highly recommendet to install **[GNU make](https://www.gnu.org/software/make/)** to simplyfy the build process. If you are using windows, you can install **[make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)**.
+Also, it is highly recommended to install **[GNU make](https://www.gnu.org/software/make/)** to simplify the build process. If you are using windows, you can install **[make for Windows](http://gnuwin32.sourceforge.net/packages/make.htm)**.
 
 ## Compiling
 
@@ -123,11 +123,11 @@ Also, it is highly recommendet to install **[GNU make](https://www.gnu.org/softw
    $ make
    ```
 
-Now, the server binary and the web assets are located in the `./bin` directory. You can move them whereever you want, just always keep the `web` folder in the same location where the server binary is located to ensure that all web assets can be found by the web server.
+Now, the server binary and the web assets are located in the `./bin` directory. You can move them wherever you want, just always keep the `web` folder in the same location where the server binary is located to ensure that all web assets can be found by the web server.
 
 ## Startup
 
-Now, you just need to start the server binary passing the location of your prefered config location. A preset config file will be then automatically created. Now, enter your preferences and restart the server.
+Now, you just need to start the server binary passing the location of your preferred config location. A preset config file will be then automatically created. Now, enter your preferences and restart the server.
 
 ```
 $ ./server -c /etc/myrunes/config.yml
