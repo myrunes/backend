@@ -1,0 +1,12 @@
+assets/
+ci/
+config/
+docs/
+scripts/
+vendor/
+.prettierrc.yml
+.travis.yml
+Gopkg.toml
+Makefile
+*.md
+node_modules

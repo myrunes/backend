@@ -1,36 +1,24 @@
-FROM golang:1.11
+FROM golang:1.13
 
 LABEL maintainer="zekro <contact@zekro.de>"
 
 #### PREPARINGS #####
 
-# adding go binaries to path
-ENV PATH="$GOPATH/bin:${PATH}"
-
 # install node.js
-RUN curl -sL https://deb.nodesource.com/setup_12.x | bash - &&\
-    apt-get install -y nodejs &&\
-    apt-get install -y git
+RUN curl -sL https://deb.nodesource.com/setup_13.x | bash - &&\
+        apt-get install -y nodejs
 
 # install vue CLI
 RUN npm i -g @vue/cli
 
 # set workdir to go application dir
-WORKDIR $GOPATH/src/github.com/zekroTJA/myrunes
+WORKDIR /var/myrunes
 
 # add nessecary repository files
-ADD ./.git ./.git
-ADD ./cmd ./cmd
-ADD ./internal ./internal
-ADD ./pkg ./pkg
-ADD ./web ./web
-ADD ./Gopkg.toml .
+ADD . . 
 
-# install dep
-RUN go get -u github.com/golang/dep/cmd/dep
-
-# ensure go dependencies via dep
-RUN dep ensure -v
+# ensure dependencies with go mod
+RUN go mod tidy
 
 # install web dependencies
 RUN cd web &&\
