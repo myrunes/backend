@@ -1,17 +1,14 @@
 #!/bin/bash
 
-# install dep dependnecy manager
-curl https://raw.githubusercontent.com/golang/dep/master/install.sh | bash
-
 # install node.js & npm
-curl -sL https://deb.nodesource.com/setup_12.x | bash -
+curl -sL https://deb.nodesource.com/setup_13.x | bash -
 apt-get install -y nodejs
 
 # install vue CLI
 npm i -g @vue/cli
 
 # ensuring backend server dependencies
-dep ensure -v
+go mod tidy
 
 # building backend
 go build \
