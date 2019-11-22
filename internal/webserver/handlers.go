@@ -8,7 +8,7 @@ import (
 	"github.com/zekroTJA/myrunes/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/qiangxue/fasthttp-routing"
+	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 	"github.com/zekroTJA/myrunes/internal/database"
 	"github.com/zekroTJA/myrunes/internal/objects"

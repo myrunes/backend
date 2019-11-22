@@ -33,7 +33,7 @@ var Champs = []string{
 	"miss-fortune", "mordekaiser", "morgana", "nami", "nasus", "nautilus", "neeko",
 	"nidalee", "nocturne", "nunu", "olaf", "orianna", "ornn", "pantheon", "poppy",
 	"pyke", "qiyana", "quinn", "rakan", "rammus", "reksai", "renekton", "rengar", "riven",
-	"rumble", "ryze", "sejuani", "shaco", "shen", "shyvana", "singed", "sion", "sivir",
+	"rumble", "ryze", "sejuani", "senna", "shaco", "shen", "shyvana", "singed", "sion", "sivir",
 	"skarner", "sona", "swain", "sylas", "syndra", "tahm-kench", "taliyah", "talon",
 	"taric", "teemo", "thresh", "tristana", "trundle", "tryndamere", "twisted-fate",
 	"twitch", "udyr", "urgot", "varus", "vayne", "veigar", "velkoz", "vi", "viktor",
@@ -72,7 +72,7 @@ var RunesPrimary = map[string][][]string{
 		[]string{"overgrowth", "revitalize", "unflinching"},
 	},
 	"inspiration": [][]string{
-		[]string{"unsealed-spellbook", "glacial-augment", "kleptomancy"},
+		[]string{"unsealed-spellbook", "glacial-augment", "prototype-omnistone"},
 		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
 		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
 		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
