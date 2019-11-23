@@ -1,6 +1,7 @@
 <template>
   <div class="searchbar">
     <input ref="inpt" type="text" @input="onInput" />
+    <slot></slot>
     <a @click="onClose">
       <img src="/assets/close-black.svg" />
     </a>

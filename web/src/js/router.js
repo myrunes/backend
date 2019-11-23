@@ -1,13 +1,13 @@
 /** @format */
 
 import Router from 'vue-router';
-import Login from '../components/routes/Login';
-import Main from '../components/routes/Main';
-import Champ from '../components/routes/Champ';
-import Edit from '../components/routes/Edit';
-import Pages from '../components/routes/Pages';
-import Settings from '../components/routes/Settings';
-import Share from '../components/routes/Share';
+import Login from '../routes/Login';
+import Main from '../routes/Main';
+import Champ from '../routes/Champ';
+import Edit from '../routes/Edit';
+import Pages from '../routes/Pages';
+import Settings from '../routes/Settings';
+import Share from '../routes/Share';
 
 export default new Router({
   mode: 'history',

@@ -4,12 +4,7 @@
   <div>
     <div class="outer-container">
       <div class="searchbar mx-auto position-relative">
-        <input
-          type="text"
-          class="tb tb-champ"
-          autocomplete="off"
-          @input="searchAndDisplay"
-        />
+        <input type="text" class="tb tb-champ" autocomplete="off" @input="searchAndDisplay" />
         <span class="tb tb-champ"></span>
       </div>
     </div>
@@ -25,8 +20,8 @@
 <script>
 /** @format */
 
-import EventBus from '../../js/eventbus';
-import Rest from '../../js/rest';
+import EventBus from '../js/eventbus';
+import Rest from '../js/rest';
 
 export default {
   name: 'Main',

@@ -75,8 +75,8 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import EventBus from '../../js/eventbus';
+import Rest from '../js/rest';
+import EventBus from '../js/eventbus';
 
 export default {
   name: 'Share',

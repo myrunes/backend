@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"fmt"
+	"sort"
 	"time"
 
 	"go.mongodb.org/mongo-driver/bson"
@@ -154,7 +155,7 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 	return m.insert(m.collections.pages, page)
 }
 
-func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
+func (m *MongoDB) GetPages(uid snowflake.ID, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
 	count, err := m.count(m.collections.pages, bson.M{"owner": uid})
 	if err != nil {
 		return nil, err
@@ -180,6 +181,12 @@ func (m *MongoDB) GetPages(uid snowflake.ID) ([]*objects.Page, error) {
 		}
 		pages[i] = page
 		i++
+	}
+
+	if sortLess != nil {
+		sort.Slice(pages, func(i, j int) bool {
+			return sortLess(pages[i], pages[j])
+		})
 	}
 
 	return pages, nil

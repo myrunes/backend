@@ -67,9 +67,13 @@ function getRunes() {
   });
 }
 
-function getPages() {
+function getPages(sortBy) {
+  let url = `${HOST}/api/pages`;
+  if (sortBy) {
+    url += `?sortBy=${sortBy}`;
+  }
   return _req({
-    url: `${HOST}/api/pages`,
+    url,
     method: 'GET',
   });
 }

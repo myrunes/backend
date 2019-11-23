@@ -2,7 +2,13 @@
 
 <template>
   <div>
-    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput" />
+    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
+      <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
+        <b-dropdown-item @click="onSortBy(undefined)">Default</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
+      </b-dropdown>
+    </SearchBar>
     <InfoBubble ref="info" color="orange" @hides="onInfoClose">
       <p>
         Searching for a specific page? Press
@@ -51,11 +57,11 @@
 <script>
 /** @format */
 
-import Rest from '../../js/rest';
-import Utils from '../../js/utils';
-import Page from '../Page';
-import SearchBar from '../SearchBar';
-import InfoBubble from '../InfoBubble';
+import Rest from '../js/rest';
+import Utils from '../js/utils';
+import Page from '../components/Page';
+import SearchBar from '../components/SearchBar';
+import InfoBubble from '../components/InfoBubble';
 
 export default {
   name: 'Champ',
@@ -74,12 +80,26 @@ export default {
       pages: [],
       pagesVisible: [],
       search: false,
+      sortBy: undefined,
     };
+  },
+
+  computed: {
+    sortByText: function() {
+      switch (this.sortBy) {
+        case 'created':
+          return 'Created Date';
+        case 'title':
+          return 'Title';
+        default:
+          return 'Default';
+      }
+    },
   },
 
   methods: {
     reload() {
-      Rest.getPages()
+      Rest.getPages(this.sortBy)
         .then((res) => {
           if (!res.body) return;
           this.pages = this.pagesVisible = res.body.data.filter((p) =>
@@ -142,9 +162,21 @@ export default {
         window.localStorage['info-page-search'] = '1';
       }
     },
+
+    onSortBy(sortBy) {
+      this.sortBy = sortBy;
+      this.reload();
+      window.localStorage.setItem('sort-pages-by', sortBy);
+    },
   },
 
   created: function() {
+    this.sortBy = this.$route.query.sortBy;
+
+    if (!this.sortBy) {
+      this.sortBy = window.localStorage.getItem('sort-pages-by');
+    }
+
     this.champ = this.$route.params.champ;
     this.reload();
 
