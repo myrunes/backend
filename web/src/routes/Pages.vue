@@ -2,10 +2,31 @@
 
 <template>
   <div>
-    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
+    <div
+      v-if="isDragging"
+      @dragenter="onHoverDetectorEnter(true)"
+      @dragleave="onHoverDetectorLeave(true)"
+      class="hover-detector top"
+    ></div>
+    <div
+      v-if="isDragging"
+      @dragenter="onHoverDetectorEnter(false)"
+      @dragleave="onHoverDetectorLeave(false)"
+      class="hover-detector bottom"
+    ></div>
+
+    <SearchBar
+      v-if="search"
+      class="searchbar"
+      @close="search = false"
+      @input="onSearchInput"
+    >
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
         <b-dropdown-item @click="onSortBy(undefined)">Default</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')"
+          >Created Date</b-dropdown-item
+        >
         <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
     </SearchBar>
@@ -15,26 +36,39 @@
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
-    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
-      <Page
-        v-for="p in pagesVisible"
-        :key="p.uid"
-        :uid="p.uid"
-        :title="p.title"
-        :champs="p.champions.join(' ')"
-        :primary="p.primary.tree"
-        :secondary="p.secondary.tree"
-        :prows="p.primary.rows.join(' ')"
-        :srows="p.secondary.rows.join(' ')"
-        :perks="p.perks.rows.join(' ')"
-        @delete="deleted"
-      />
+    <div
+      class="page-container"
+      :style="{ 'padding-top': search ? '75px' : '0' }"
+    >
+      <draggable
+        :list="pagesVisible"
+        chosenClass="chosen"
+        @start="isDragging = true"
+        @end="isDragging = false"
+        @update="onUpdate"
+      >
+        <Page
+          v-for="p in pagesVisible"
+          :key="p.uid"
+          :uid="p.uid"
+          :title="p.title"
+          :champs="p.champions.join(' ')"
+          :primary="p.primary.tree"
+          :secondary="p.secondary.tree"
+          :prows="p.primary.rows.join(' ')"
+          :srows="p.secondary.rows.join(' ')"
+          :perks="p.perks.rows.join(' ')"
+          @delete="deleted"
+        />
+      </draggable>
     </div>
     <div class="ctrl-btns">
       <button
         class="btn-slide btn-new"
         @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >+</button>
+      >
+        +
+      </button>
     </div>
   </div>
 </template>
@@ -48,6 +82,8 @@ import Page from '../components/Page';
 import SearchBar from '../components/SearchBar';
 import InfoBubble from '../components/InfoBubble';
 
+import Draggable from 'vuedraggable';
+
 export default {
   name: 'Champ',
 
@@ -55,6 +91,7 @@ export default {
     Page,
     SearchBar,
     InfoBubble,
+    Draggable,
   },
 
   data: function() {
@@ -63,6 +100,9 @@ export default {
       pagesVisible: [],
       search: false,
       sortBy: undefined,
+
+      isDragging: false,
+      scrollTimer: null,
     };
   },
 
@@ -71,6 +111,8 @@ export default {
       switch (this.sortBy) {
         case 'created':
           return 'Created Date';
+        case 'custom':
+          return 'Custom';
         case 'title':
           return 'Title';
         default:
@@ -87,6 +129,12 @@ export default {
           this.pages = this.pagesVisible = res.body.data;
         })
         .catch(console.error);
+    },
+
+    onUpdate(e) {
+      this.sortBy = 'custom';
+      window.localStorage.setItem('sort-pages-by', this.sortBy);
+      // todo: API request to save custom sort
     },
 
     deleted() {
@@ -132,6 +180,28 @@ export default {
       this.sortBy = sortBy;
       this.reload();
       window.localStorage.setItem('sort-pages-by', sortBy);
+    },
+
+    onHoverDetectorEnter(isTop) {
+      if (!this.isDragging) return;
+
+      if (isTop) {
+        this.scrollTimer = setInterval(() => {
+          window.scrollBy({
+            top: -100,
+          });
+        }, 100);
+      } else {
+        this.scrollTimer = setInterval(() => {
+          window.scrollBy({
+            top: 100,
+          });
+        }, 100);
+      }
+    },
+
+    onHoverDetectorLeave(isTop) {
+      clearInterval(this.scrollTimer);
     },
   },
 
@@ -183,5 +253,30 @@ export default {
   right: 20px;
   z-index: 5;
   transition: all 0.25s ease-in-out;
+}
+
+.hover-detector {
+  position: fixed;
+  left: 0;
+  right: 0;
+  z-index: 100;
+
+  opacity: 0.3;
+
+  height: 15vh;
+}
+
+.hover-detector.top {
+  background-image: linear-gradient(to bottom, black, transparent);
+  top: 0;
+}
+
+.hover-detector.bottom {
+  background-image: linear-gradient(to top, black, transparent);
+  bottom: 0;
+}
+
+.chosen {
+  box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.6);
 }
 </style>
