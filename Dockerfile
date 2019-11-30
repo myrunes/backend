@@ -29,7 +29,7 @@ RUN mkdir ./bin
 #### BUILD BACK END ####
 
 RUN go build \
-        -v -o ./bin/myrunes -ldflags "\
+        -v -o /app/myrunes -ldflags "\
             -X github.com/zekroTJA/myrunes/internal/static.Release=TRUE \
             -X github.com/zekroTJA/myrunes/internal/static.AppVersion=$(git describe --tags)" \
         ./cmd/server/*.go
@@ -39,8 +39,8 @@ RUN go build \
 RUN cd ./web &&\
     npm run build &&\
     cd .. &&\
-    mkdir -p ./bin/web &&\
-    cp -r ./web/dist ./bin/web/dist
+    mkdir -p /app/web &&\
+    cp -r ./web/dist /app/web/dist
 
 
 #### EXPOSE AND RUN SETTINGS ####
@@ -49,4 +49,4 @@ EXPOSE 8080
 
 RUN mkdir -p /etc/myrunes
 
-CMD ["./bin/myrunes", "-c", "/etc/myrunes/config.yml"]
+CMD ["/app/myrunes", "-c", "/etc/myrunes/config.yml"]
