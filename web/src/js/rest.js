@@ -211,6 +211,14 @@ function deleteAPIToken() {
   });
 }
 
+function setPageOrder(pageorder) {
+  return _req({
+    url: `${HOST}/api/users/me/pageorder`,
+    method: 'POST',
+    json: { pageorder },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -261,4 +269,5 @@ export default {
   getAPIToken,
   generateAPIToken,
   deleteAPIToken,
+  setPageOrder,
 };

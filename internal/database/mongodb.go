@@ -135,6 +135,10 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 		oldUser.PassHash = user.PassHash
 	}
 
+	if user.PageOrder != nil {
+		oldUser.PageOrder = user.PageOrder
+	}
+
 	return true, m.insertOrUpdate(m.collections.users,
 		bson.M{"uid": oldUser.UID}, oldUser)
 }

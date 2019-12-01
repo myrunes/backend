@@ -15,18 +15,11 @@
       class="hover-detector bottom"
     ></div>
 
-    <SearchBar
-      v-if="search"
-      class="searchbar"
-      @close="search = false"
-      @input="onSearchInput"
-    >
+    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
         <b-dropdown-item @click="onSortBy(undefined)">Default</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')"
-          >Created Date</b-dropdown-item
-        >
+        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
     </SearchBar>
@@ -36,12 +29,10 @@
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
-    <div
-      class="page-container"
-      :style="{ 'padding-top': search ? '75px' : '0' }"
-    >
+    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
       <draggable
-        :list="pagesVisible"
+        :list="pages"
+        :disabled="search"
         chosenClass="chosen"
         @start="isDragging = true"
         @end="isDragging = false"
@@ -66,9 +57,7 @@
       <button
         class="btn-slide btn-new"
         @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >
-        +
-      </button>
+      >+</button>
     </div>
   </div>
 </template>
@@ -134,7 +123,8 @@ export default {
     onUpdate(e) {
       this.sortBy = 'custom';
       window.localStorage.setItem('sort-pages-by', this.sortBy);
-      // todo: API request to save custom sort
+      console.log(this.pages.map((p) => p.uid));
+      Rest.setPageOrder(this.pages.map((p) => p.uid));
     },
 
     deleted() {

@@ -99,6 +99,8 @@ func (ws *WebServer) registerHandlers() {
 		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteMe)
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
+	users.
+		Post("/me/pageorder", ws.auth.CheckRequestAuth, ws.handlerPostPageOrder)
 
 	pages := api.Group("/pages", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	pages.

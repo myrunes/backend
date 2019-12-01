@@ -188,6 +188,21 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 		sortFunc = func(i, j *objects.Page) bool {
 			return comparison.Alphabetically(i.Title, j.Title)
 		}
+	case "custom":
+		pageOrder := user.PageOrder
+		if pageOrder != nil {
+			sortFunc = func(i, j *objects.Page) bool {
+				var pix, jix int
+				for ix, uid := range pageOrder {
+					if uid == i.UID {
+						pix = ix
+					} else if uid == j.UID {
+						jix = ix
+					}
+				}
+				return jix > pix
+			}
+		}
 	}
 
 	pages, err := ws.db.GetPages(user.UID, sortFunc)
@@ -611,6 +626,22 @@ func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
 	if err := ws.db.ResetAPIToken(user.UID); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	pageOrder := new(pageOrderRequest)
+	if err := parseJSONBody(ctx, pageOrder); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	user.PageOrder = pageOrder.PageOrder
+	if _, err := ws.db.EditUser(user, false); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
