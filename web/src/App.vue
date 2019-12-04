@@ -3,6 +3,12 @@
     <CookieInfo />
     <Header v-if="loggedIn" />
     <router-view :class="{ m : loggedIn }"></router-view>
+    <InfoBubble ref="betawarn" color="red" @hides="onBetaWarnHides" style="z-index: 110;">
+      <p class="text-center m-2">
+        <b>ATTENTION:</b>&nbsp;This instance is running on a non-release canary build which is not fully tested yet!
+        <br />Actions taken here may lead to loss or corruption of data!
+      </p>
+    </InfoBubble>
     <Footer />
   </div>
 </template>
@@ -21,6 +27,7 @@ import EventBus from './js/eventbus';
 import Header from './components/Header';
 import Footer from './components/Footer';
 import CookieInfo from './components/CookieInfo';
+import InfoBubble from './components/InfoBubble';
 
 export default {
   name: 'app',
@@ -29,6 +36,7 @@ export default {
     Header,
     CookieInfo,
     Footer,
+    InfoBubble,
   },
 
   router: Router,
@@ -41,6 +49,15 @@ export default {
 
   created: function() {
     this.checkLogin();
+
+    Rest.getVersion().then((res) => {
+      if (
+        res.body.release !== 'TRUE' &&
+        window.sessionStorage.getItem('beta-info-accepted') !== '1'
+      ) {
+        setTimeout(() => this.$refs.betawarn.show(), 1000);
+      }
+    });
 
     EventBus.$on('login', () => {
       this.checkLogin();
@@ -62,6 +79,10 @@ export default {
             this.$router.replace('/login');
           }
         });
+    },
+
+    onBetaWarnHides() {
+      window.sessionStorage.setItem('beta-info-accepted', '1');
     },
   },
 };

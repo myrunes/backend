@@ -2,6 +2,8 @@ FROM golang:1.13
 
 LABEL maintainer="zekro <contact@zekro.de>"
 
+ARG RELEASE=TRUE
+
 #### PREPARINGS #####
 
 # install node.js
@@ -30,7 +32,7 @@ RUN mkdir ./bin
 
 RUN go build \
         -v -o /app/myrunes -ldflags "\
-            -X github.com/zekroTJA/myrunes/internal/static.Release=TRUE \
+            -X github.com/zekroTJA/myrunes/internal/static.Release=${RELEASE} \
             -X github.com/zekroTJA/myrunes/internal/static.AppVersion=$(git describe --tags)" \
         ./cmd/server/*.go
 
