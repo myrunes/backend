@@ -17,7 +17,6 @@
 
     <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy(undefined)">Default</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
@@ -88,7 +87,7 @@ export default {
       pages: [],
       pagesVisible: [],
       search: false,
-      sortBy: undefined,
+      sortBy: 'created',
 
       isDragging: false,
       scrollTimer: null,
@@ -104,8 +103,6 @@ export default {
           return 'Custom';
         case 'title':
           return 'Title';
-        default:
-          return 'Default';
       }
     },
   },
@@ -199,7 +196,7 @@ export default {
     this.sortBy = this.$route.query.sortBy;
 
     if (!this.sortBy) {
-      this.sortBy = window.localStorage.getItem('sort-pages-by');
+      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
     }
 
     this.reload();

@@ -98,7 +98,7 @@ func (ws *WebServer) registerHandlers() {
 		Get(ws.auth.CheckRequestAuth, ws.handlerGetMe).
 		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteMe)
 	users.
-		Get("/<uname>", ws.handlerCheckUsername)
+		Get("/<uname>", ws.auth.CheckRequestAuth, ws.handlerCheckUsername)
 	users.
 		Post("/me/pageorder", ws.auth.CheckRequestAuth, ws.handlerPostPageOrder)
 

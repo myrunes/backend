@@ -159,8 +159,15 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 	return m.insert(m.collections.pages, page)
 }
 
-func (m *MongoDB) GetPages(uid snowflake.ID, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
-	count, err := m.count(m.collections.pages, bson.M{"owner": uid})
+func (m *MongoDB) GetPages(uid snowflake.ID, champion string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
+	var query bson.M
+	if champion != "" && champion != "general" {
+		query = bson.M{"owner": uid, "champions": champion}
+	} else {
+		query = bson.M{"owner": uid}
+	}
+
+	count, err := m.count(m.collections.pages, query)
 	if err != nil {
 		return nil, err
 	}
@@ -171,7 +178,7 @@ func (m *MongoDB) GetPages(uid snowflake.ID, sortLess func(i, j *objects.Page) b
 		return pages, nil
 	}
 
-	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), bson.M{"owner": uid})
+	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), query)
 	if err != nil {
 		return nil, err
 	}

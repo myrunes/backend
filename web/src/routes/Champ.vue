@@ -4,7 +4,7 @@
   <div>
     <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy(undefined)">Default</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
@@ -19,20 +19,29 @@
       <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champ.toUpperCase() }}</h2>
     </div>
-    <div>
-      <Page
-        v-for="p in pagesVisible"
-        :key="p.uid"
-        :uid="p.uid"
-        :title="p.title"
-        :champs="p.champions.join(' ')"
-        :primary="p.primary.tree"
-        :secondary="p.secondary.tree"
-        :prows="p.primary.rows.join(' ')"
-        :srows="p.secondary.rows.join(' ')"
-        :perks="p.perks.rows.join(' ')"
-        @delete="deleted"
-      />
+    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+      <draggable
+        :list="pages"
+        :disabled="search"
+        chosenClass="chosen"
+        @start="isDragging = true"
+        @end="isDragging = false"
+        @update="onUpdate"
+      >
+        <Page
+          v-for="p in pagesVisible"
+          :key="p.uid"
+          :uid="p.uid"
+          :title="p.title"
+          :champs="p.champions.join(' ')"
+          :primary="p.primary.tree"
+          :secondary="p.secondary.tree"
+          :prows="p.primary.rows.join(' ')"
+          :srows="p.secondary.rows.join(' ')"
+          :perks="p.perks.rows.join(' ')"
+          @delete="deleted"
+        />
+      </draggable>
     </div>
     <div class="ctrl-btns">
       <button
@@ -63,6 +72,8 @@ import Page from '../components/Page';
 import SearchBar from '../components/SearchBar';
 import InfoBubble from '../components/InfoBubble';
 
+import Draggable from 'vuedraggable';
+
 export default {
   name: 'Champ',
 
@@ -70,6 +81,7 @@ export default {
     Page,
     InfoBubble,
     SearchBar,
+    Draggable,
   },
 
   data: function() {
@@ -80,7 +92,10 @@ export default {
       pages: [],
       pagesVisible: [],
       search: false,
-      sortBy: undefined,
+      sortBy: 'created',
+
+      isDragging: false,
+      scrollTimer: null,
     };
   },
 
@@ -89,22 +104,20 @@ export default {
       switch (this.sortBy) {
         case 'created':
           return 'Created Date';
+        case 'custom':
+          return 'Custom';
         case 'title':
           return 'Title';
-        default:
-          return 'Default';
       }
     },
   },
 
   methods: {
     reload() {
-      Rest.getPages(this.sortBy)
+      Rest.getPages(this.sortBy, this.champ)
         .then((res) => {
           if (!res.body) return;
-          this.pages = this.pagesVisible = res.body.data.filter((p) =>
-            p.champions.includes(this.champ)
-          );
+          this.pages = this.pagesVisible = res.body.data;
 
           Rest.getFavorites()
             .then((res) => {
@@ -114,6 +127,13 @@ export default {
             .catch(console.error);
         })
         .catch(console.error);
+    },
+
+    onUpdate(e) {
+      this.sortBy = 'custom';
+      window.localStorage.setItem('sort-pages-by', this.sortBy);
+      console.log(this.pages.map((p) => p.uid));
+      Rest.setPageOrder(this.pages.map((p) => p.uid), this.champ);
     },
 
     deleted() {
@@ -168,13 +188,35 @@ export default {
       this.reload();
       window.localStorage.setItem('sort-pages-by', sortBy);
     },
+
+    onHoverDetectorEnter(isTop) {
+      if (!this.isDragging) return;
+
+      if (isTop) {
+        this.scrollTimer = setInterval(() => {
+          window.scrollBy({
+            top: -100,
+          });
+        }, 100);
+      } else {
+        this.scrollTimer = setInterval(() => {
+          window.scrollBy({
+            top: 100,
+          });
+        }, 100);
+      }
+    },
+
+    onHoverDetectorLeave(isTop) {
+      clearInterval(this.scrollTimer);
+    },
   },
 
   created: function() {
     this.sortBy = this.$route.query.sortBy;
 
     if (!this.sortBy) {
-      this.sortBy = window.localStorage.getItem('sort-pages-by');
+      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
     }
 
     this.champ = this.$route.params.champ;

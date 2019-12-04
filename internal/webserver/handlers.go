@@ -175,8 +175,14 @@ func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
+	queryArgs := ctx.QueryArgs()
 
-	sortBy := string(ctx.QueryArgs().Peek("sortBy"))
+	sortBy := string(queryArgs.Peek("sortBy"))
+	champion := string(queryArgs.Peek("champion"))
+	if champion == "" {
+		champion = "general"
+	}
+
 	var sortFunc func(i, j *objects.Page) bool
 
 	switch sortBy {
@@ -189,23 +195,25 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 			return comparison.Alphabetically(i.Title, j.Title)
 		}
 	case "custom":
-		pageOrder := user.PageOrder
-		if pageOrder != nil {
-			sortFunc = func(i, j *objects.Page) bool {
-				var pix, jix int
-				for ix, uid := range pageOrder {
-					if uid == i.UID {
-						pix = ix
-					} else if uid == j.UID {
-						jix = ix
+		if user.PageOrder != nil {
+			pageOrder, ok := user.PageOrder[champion]
+			if ok {
+				sortFunc = func(i, j *objects.Page) bool {
+					var pix, jix int
+					for ix, uid := range pageOrder {
+						if uid == i.UID {
+							pix = ix
+						} else if uid == j.UID {
+							jix = ix
+						}
 					}
+					return jix > pix
 				}
-				return jix > pix
 			}
 		}
 	}
 
-	pages, err := ws.db.GetPages(user.UID, sortFunc)
+	pages, err := ws.db.GetPages(user.UID, champion, sortFunc)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -635,12 +643,23 @@ func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
 func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
+	queryArgs := ctx.QueryArgs()
+	champion := string(queryArgs.Peek("champion"))
+
+	if champion == "" {
+		champion = "general"
+	}
+
 	pageOrder := new(pageOrderRequest)
 	if err := parseJSONBody(ctx, pageOrder); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	user.PageOrder = pageOrder.PageOrder
+	if user.PageOrder == nil {
+		user.PageOrder = make(map[string][]snowflake.ID)
+	}
+
+	user.PageOrder[champion] = pageOrder.PageOrder
 	if _, err := ws.db.EditUser(user, false); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
