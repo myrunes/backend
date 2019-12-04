@@ -241,29 +241,4 @@ export default {
   z-index: 5;
   transition: all 0.25s ease-in-out;
 }
-
-.hover-detector {
-  position: fixed;
-  left: 0;
-  right: 0;
-  z-index: 100;
-
-  opacity: 0.3;
-
-  height: 15vh;
-}
-
-.hover-detector.top {
-  background-image: linear-gradient(to bottom, black, transparent);
-  top: 0;
-}
-
-.hover-detector.bottom {
-  background-image: linear-gradient(to top, black, transparent);
-  bottom: 0;
-}
-
-.chosen {
-  box-shadow: 0px 0px 40px 0px rgba(0, 0, 0, 0.6);
-}
 </style>

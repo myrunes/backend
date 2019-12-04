@@ -2,6 +2,19 @@
 
 <template>
   <div>
+    <div
+      v-if="isDragging"
+      @dragenter="onHoverDetectorEnter(true)"
+      @dragleave="onHoverDetectorLeave(true)"
+      class="hover-detector top"
+    ></div>
+    <div
+      v-if="isDragging"
+      @dragenter="onHoverDetectorEnter(false)"
+      @dragleave="onHoverDetectorLeave(false)"
+      class="hover-detector bottom"
+    ></div>
+
     <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
         <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
