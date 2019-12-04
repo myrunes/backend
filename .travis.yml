@@ -21,6 +21,6 @@ jobs:
       name: Docker Deploy Tag
       if: tag IS present
       script: |
-        docker build . -t zekro/vctr:${TRAVIS_TAG}
+        docker build . -t zekro/myrunes:${TRAVIS_TAG}
         docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        docker push zekro/vctr:${TRAVIS_TAG}
+        docker push zekro/myrunes:${TRAVIS_TAG}
