@@ -52,8 +52,12 @@ type WebServer struct {
 	config *Config
 }
 
-func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
+func NewWebServer(db database.Middleware, config *Config, assets string) (ws *WebServer) {
 	ws = new(WebServer)
+
+	if assets != "" {
+		fileHandlerStatic.Root = assets
+	}
 
 	ws.config = config
 	ws.db = db

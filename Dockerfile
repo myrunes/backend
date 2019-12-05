@@ -28,4 +28,4 @@ COPY --from=build /app .
 
 EXPOSE 8080
 RUN mkdir -p /etc/myrunes
-CMD ["/app/myrunes", "-c", "/etc/myrunes/config.yml"]
+CMD ["/app/myrunes", "-c", "/etc/myrunes/config.yml", "-assets", "/app/web/dist"]
