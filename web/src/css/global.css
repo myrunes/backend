@@ -13,7 +13,8 @@ body {
   padding: 0px;
 }
 
-button:focus {
+button:focus,
+input:focus {
   outline : 0;
   -moz-outline : 0;
 }

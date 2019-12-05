@@ -8,10 +8,17 @@
         <span class="tb tb-champ"></span>
       </div>
     </div>
+    <h3 class="mx-auto my-5 text-center" v-if="displayFavs">YOUR FAVORITES</h3>
     <div class="container mt-5 champs-container">
-      <h3 class="mx-auto mb-4" v-if="displayFavs">YOUR FAVORITES</h3>
-      <a v-for="c in displayedChamps" :key="c" @click="openChamp(c)">
+      <a
+        v-for="c in displayedChamps"
+        :key="c"
+        @click="openChamp(c)"
+        class="champ-tile"
+        :class="{ 'no-pages': !pages[c] }"
+      >
         <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100" />
+        <p>{{ pages[c] }}</p>
       </a>
     </div>
   </div>
@@ -34,6 +41,7 @@ export default {
     return {
       champs: [],
       displayedChamps: [],
+      pages: {},
       favorites: [],
       displayFavs: false,
     };
@@ -76,6 +84,14 @@ export default {
         }
       })
       .catch(console.error);
+
+    Rest.getPages(null, null, true)
+      .then((r) => {
+        if (r.body && r.body.data) {
+          this.pages = r.body.data;
+        }
+      })
+      .catch(console.error);
   },
 };
 </script>
@@ -103,19 +119,48 @@ span.tb-champ {
 }
 
 .champs-container {
-  text-align: center;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
 }
 
-.champs-container > a > img {
+.champ-tile {
+  transition: all 0.25s ease;
+  position: relative;
+}
+
+.champ-tile > img {
   border: solid 2px rgba(3, 168, 244, 0);
 }
 
-.champs-container > a:hover > img {
+.champ-tile > p {
+  position: absolute;
+  top: 5px;
+  left: 5px;
+  font-size: 12px;
+  padding: 0px 6px;
+  background-color: rgba(3, 168, 244, 0.75);
+  opacity: 0;
+  transition: all 0.25s ease;
+}
+
+.champ-tile:hover > img {
   border: solid 2px #03a9f4;
   transition: all 0.25s ease-in-out;
 }
 
+.champ-tile:hover > p {
+  opacity: 1;
+}
+
+.no-pages {
+  opacity: 0.6;
+  filter: grayscale(0.9);
+}
+
 a:hover {
   cursor: pointer;
+  opacity: 1;
+  filter: none;
 }
 </style>

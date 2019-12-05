@@ -179,6 +179,8 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 
 	sortBy := string(queryArgs.Peek("sortBy"))
 	champion := string(queryArgs.Peek("champion"))
+	short := string(queryArgs.Peek("short"))
+
 	if champion == "" {
 		champion = "general"
 	}
@@ -216,6 +218,21 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	pages, err := ws.db.GetPages(user.UID, champion, sortFunc)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if comparison.IsTrue(short) {
+		m := make(map[string]int)
+		for _, p := range pages {
+			for _, c := range p.Champions {
+				if _, ok := m[c]; !ok {
+					m[c] = 1
+				} else {
+					m[c]++
+				}
+			}
+		}
+
+		return jsonResponse(ctx, &listResponse{N: len(m), Data: m}, fasthttp.StatusOK)
 	}
 
 	return jsonResponse(ctx, &listResponse{N: len(pages), Data: pages}, fasthttp.StatusOK)
