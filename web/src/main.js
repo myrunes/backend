@@ -6,6 +6,8 @@ import BootstrapVue from 'bootstrap-vue';
 import Router from 'vue-router';
 import AsyncComputed from 'vue-async-computed';
 
+import { Sortable, AutoScroll } from 'vuedraggable';
+
 Vue.config.productionTip = false;
 
 Vue.use(BootstrapVue);

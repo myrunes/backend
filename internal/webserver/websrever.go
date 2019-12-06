@@ -52,8 +52,12 @@ type WebServer struct {
 	config *Config
 }
 
-func NewWebServer(db database.Middleware, config *Config) (ws *WebServer) {
+func NewWebServer(db database.Middleware, config *Config, assets string) (ws *WebServer) {
 	ws = new(WebServer)
+
+	if assets != "" {
+		fileHandlerStatic.Root = assets
+	}
 
 	ws.config = config
 	ws.db = db
@@ -99,6 +103,8 @@ func (ws *WebServer) registerHandlers() {
 		Delete(ws.auth.CheckRequestAuth, ws.handlerDeleteMe)
 	users.
 		Get("/<uname>", ws.handlerCheckUsername)
+	users.
+		Post("/me/pageorder", ws.auth.CheckRequestAuth, ws.handlerPostPageOrder)
 
 	pages := api.Group("/pages", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	pages.

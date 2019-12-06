@@ -27,7 +27,7 @@ type Middleware interface {
 	DeleteUser(uid snowflake.ID) error
 
 	CreatePage(page *objects.Page) error
-	GetPages(uid snowflake.ID, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
+	GetPages(uid snowflake.ID, champion string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
 	GetPage(uid snowflake.ID) (*objects.Page, error)
 	EditPage(page *objects.Page) (*objects.Page, error)
 	DeletePage(uid snowflake.ID) error

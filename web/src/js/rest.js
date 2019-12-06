@@ -67,14 +67,15 @@ function getRunes() {
   });
 }
 
-function getPages(sortBy) {
-  let url = `${HOST}/api/pages`;
-  if (sortBy) {
-    url += `?sortBy=${sortBy}`;
-  }
+function getPages(sortBy, champion, short) {
   return _req({
-    url,
+    url: `${HOST}/api/pages`,
     method: 'GET',
+    qs: {
+      sortBy,
+      champion,
+      short,
+    },
   });
 }
 
@@ -211,6 +212,15 @@ function deleteAPIToken() {
   });
 }
 
+function setPageOrder(pageorder, champion) {
+  return _req({
+    url: `${HOST}/api/users/me/pageorder`,
+    method: 'POST',
+    json: { pageorder },
+    qs: { champion },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -261,4 +271,5 @@ export default {
   getAPIToken,
   generateAPIToken,
   deleteAPIToken,
+  setPageOrder,
 };

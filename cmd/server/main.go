@@ -17,6 +17,7 @@ import (
 
 var (
 	flagConfig = flag.String("c", "config.yml", "config file location")
+	flagAssets = flag.String("assets", "", "assets location")
 )
 
 func main() {
@@ -73,7 +74,7 @@ func main() {
 	}()
 
 	logger.Info("WEBSERVER :: initialization")
-	ws := webserver.NewWebServer(db, cfg.WebServer)
+	ws := webserver.NewWebServer(db, cfg.WebServer, *flagAssets)
 	go func() {
 		if err := ws.ListenAndServeBlocking(); err != nil {
 			logger.Fatal("WEBSERVER :: failed starting web server: %s", err.Error())

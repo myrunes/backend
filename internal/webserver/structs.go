@@ -3,6 +3,7 @@ package webserver
 import (
 	"time"
 
+	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/myrunes/internal/objects"
 )
 
@@ -38,4 +39,8 @@ type sessionsResponse struct {
 	listResponse
 
 	CurrentlyConnectedID string `json:"currentlyconnectedid"`
+}
+
+type pageOrderRequest struct {
+	PageOrder []snowflake.ID `json:"pageorder"`
 }

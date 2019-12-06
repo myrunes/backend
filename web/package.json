@@ -13,9 +13,10 @@
     "core-js": "^2.6.5",
     "request": "^2.88.0",
     "vue": "^2.6.10",
+    "vue-async-computed": "^3.7.0",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.0.6",
-    "vue-async-computed": "^3.7.0"
+    "vuedraggable": "^2.23.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.8.0",
