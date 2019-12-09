@@ -9,7 +9,7 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/zekroTJA/myrunes/internal/objects"
+	"github.com/myrunes/myrunes/internal/objects"
 
 	"github.com/bwmarrin/snowflake"
 	"go.mongodb.org/mongo-driver/mongo"

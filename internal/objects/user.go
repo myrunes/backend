@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zekroTJA/myrunes/internal/auth"
-	"github.com/zekroTJA/myrunes/internal/static"
+	"github.com/myrunes/myrunes/internal/auth"
+	"github.com/myrunes/myrunes/internal/static"
 
 	"github.com/bwmarrin/snowflake"
 )

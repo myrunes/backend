@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/zekroTJA/myrunes/internal/objects"
+	"github.com/myrunes/myrunes/internal/objects"
 )
 
 var (

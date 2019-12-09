@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/zekroTJA/myrunes/internal/static"
+	"github.com/myrunes/myrunes/internal/static"
 )
 
 var pageIDCluster, _ = snowflake.NewNode(static.ClusterIDPages)

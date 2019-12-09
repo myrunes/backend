@@ -8,11 +8,11 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/zekroTJA/myrunes/internal/config"
-	"github.com/zekroTJA/myrunes/internal/database"
-	"github.com/zekroTJA/myrunes/internal/logger"
-	"github.com/zekroTJA/myrunes/internal/webserver"
-	"github.com/zekroTJA/myrunes/pkg/lifecycletimer"
+	"github.com/myrunes/myrunes/internal/config"
+	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/logger"
+	"github.com/myrunes/myrunes/internal/webserver"
+	"github.com/myrunes/myrunes/pkg/lifecycletimer"
 )
 
 var (

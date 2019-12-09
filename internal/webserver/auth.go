@@ -10,9 +10,9 @@ import (
 	"github.com/valyala/fasthttp"
 
 	routing "github.com/qiangxue/fasthttp-routing"
-	"github.com/zekroTJA/myrunes/internal/database"
-	"github.com/zekroTJA/myrunes/internal/objects"
-	"github.com/zekroTJA/myrunes/pkg/random"
+	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/objects"
+	"github.com/myrunes/myrunes/pkg/random"
 	"golang.org/x/crypto/bcrypt"
 )
 

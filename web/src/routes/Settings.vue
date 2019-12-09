@@ -101,7 +101,7 @@
         <br />
         <a
           class="underlined"
-          href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
+          href="https://github.com/myrunes/myrunes/blob/master/docs/cookie-usage.md"
           target="_blank"
         >Here</a> you can read about what particular data is saved in the local storage by MYRUNES.
       </p>

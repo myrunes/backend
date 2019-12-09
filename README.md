@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/zekroTJA/myrunes/master/assets/logo-dark-1000-237.png" width="400"/>
+    <img src="https://raw.githubusercontent.com/myrunes/myrunes/master/assets/logo-dark-1000-237.png" width="400"/>
     <br/>
     <strong>Save your League of Legends rune pages without wasting money.</strong><br><br>
     <img src="https://forthebadge.com/images/badges/made-with-go.svg" height="30" />&nbsp;
@@ -8,7 +8,7 @@
     <a href="https://zekro.de/discord"><img src="https://img.shields.io/discord/307084334198816769.svg?logo=discord&style=for-the-badge" height="30"></a>
     <br/><br/>
     <a href="https://hub.docker.com/r/zekro/myrunes"><img alt="Docker Cloud Automated build" src="https://img.shields.io/docker/cloud/automated/zekro/myrunes.svg?color=cyan&logo=docker&logoColor=cyan&style=for-the-badge"></a>&nbsp;
-    <a href="https://travis-ci.org/zekroTJA/myrunes"><img alt="Travis (.org)" src="https://img.shields.io/travis/zekrotja/myrunes.svg?logo=travis&style=for-the-badge"></a>
+    <a href="https://travis-ci.org/myrunes/myrunes"><img alt="Travis (.org)" src="https://img.shields.io/travis/myrunes/myrunes.svg?logo=travis&style=for-the-badge"></a>
 </div>
 
 ---
@@ -114,8 +114,8 @@ Also, it is highly recommended to install **[GNU make](https://www.gnu.org/softw
 
 2. Clone the repository into your GOPATH:  
    ```
-   $ git clone https://github.com/zekroTJA/myrunes $GOPATH/src/github.com/zekroTJA/myrunes
-   $ cd $GOPATH/src/github.com/zekroTJA/myrunes
+   $ git clone https://github.com/myrunes/myrunes $GOPATH/src/github.com/myrunes/myrunes
+   $ cd $GOPATH/src/github.com/myrunes/myrunes
    ```
 
 3. Build binaries and assets using the `Makefile`:  
