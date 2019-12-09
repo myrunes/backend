@@ -29,6 +29,7 @@
 
 import EventBus from '../js/eventbus';
 import Rest from '../js/rest';
+import ChampData from '../data/champs.json';
 
 export default {
   name: 'Main',
@@ -55,8 +56,9 @@ export default {
         this.displayedChamps = this.favorites || [];
         this.displayFavs = this.favorites && this.favorites.length != 0;
       } else {
-        console.log(this.champs.filter((c) => c.includes(val)));
-        this.displayedChamps = this.champs.filter((c) => c.includes(val));
+        this.displayedChamps = this.champs
+          .filter((c) => c.name.toLowerCase().includes(val))
+          .map((c) => c.id);
         this.displayFavs = false;
       }
     },
@@ -67,13 +69,7 @@ export default {
   },
 
   created: function() {
-    Rest.getChamps()
-      .then((r) => {
-        if (r.body && r.body.data) {
-          this.champs = r.body.data;
-        }
-      })
-      .catch(console.error);
+    this.champs = ChampData;
 
     Rest.getFavorites()
       .then((r) => {
