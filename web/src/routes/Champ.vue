@@ -30,7 +30,7 @@
     </InfoBubble>
     <div class="champ-header mb-4" v-if="champ" :style="{ 'padding-top': search ? '20px' : '0' }">
       <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
-      <h2>{{ champ.toUpperCase() }}</h2>
+      <h2>{{ champData.name.toUpperCase() }}</h2>
     </div>
     <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
       <draggable
@@ -84,6 +84,7 @@ import Utils from '../js/utils';
 import Page from '../components/Page';
 import SearchBar from '../components/SearchBar';
 import InfoBubble from '../components/InfoBubble';
+import ChampData from '../data/champs.json';
 
 import Draggable from 'vuedraggable';
 
@@ -106,6 +107,10 @@ export default {
       pagesVisible: [],
       search: false,
       sortBy: 'created',
+      champData: {
+        name: '',
+        id: '',
+      },
 
       isDragging: false,
       scrollTimer: null,
@@ -234,6 +239,8 @@ export default {
 
     this.champ = this.$route.params.champ;
     this.reload();
+
+    this.champData = ChampData.find((c) => c.id === this.champ);
 
     Utils.setWindowListener('keydown', this.onSearchPress);
     Utils.setWindowListener('keydown', this.onEscapePress);

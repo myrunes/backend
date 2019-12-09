@@ -3,8 +3,8 @@
 <template>
   <div>
     <div class="d-flex flex-wrap">
-      <div v-for="e in elements" :key="`element-${e}`" class="element mb-2">
-        <p>{{ e }}</p>
+      <div v-for="e in elements" :key="`element-${formatter(e)}`" class="element mb-2">
+        <p>{{ formatter(e) }}</p>
         <a class="xbtn" @click="removeElement(e, true)">X</a>
       </div>
       <input type="text" class="tags-tb mb-2" ref="tbInput" @input="tbInput" />
@@ -12,17 +12,17 @@
     <div class="d-flex flex-wrap mt-3">
       <a
         v-for="s in suggestions"
-        :key="`element-${s}`"
+        :key="`element-${formatter(s)}`"
         class="suggestion mb-2"
         @click="append(s, true)"
-      >
-        {{ s }}
-      </a>
+      >{{ formatter(s) }}</a>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 export default {
   name: 'TagsInput',
 
@@ -32,6 +32,18 @@ export default {
       default: () => {
         return [];
       },
+    },
+    formatter: {
+      type: Function,
+      default: (s) => s.toString(),
+    },
+    filter: {
+      type: Function,
+      default: (s, q) =>
+        s
+          .toString()
+          .toLowerCase()
+          .includes(q.toLowerCase()),
     },
   },
 
@@ -63,9 +75,9 @@ export default {
       if (!val) {
         this.suggestions = [];
       } else {
-        this.suggestions = this.tags.filter(
-          (t) => t.includes(val) && !this.elements.find((e) => e.includes(val))
-        );
+        this.suggestions = this.tags
+          .filter((e) => this.filter(e, val))
+          .filter((e) => !this.elements.find((el) => el === e));
       }
     },
 
@@ -83,6 +95,8 @@ export default {
 </script>
 
 <style scoped>
+/** @format */
+
 p {
   margin: 0px;
 }

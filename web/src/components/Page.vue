@@ -16,12 +16,7 @@
         </div>
       </div>
       <div class="runes" :class="`tree-${primary}`">
-        <img
-          :src="`/assets/rune-avis/${primary}.png`"
-          class="mr-3"
-          width="50"
-          height="50"
-        />
+        <img :src="`/assets/rune-avis/${primary}.png`" class="mr-3" width="50" height="50" />
         <img
           v-for="r in prows.split(' ')"
           :key="r"
@@ -31,12 +26,7 @@
         />
       </div>
       <div class="runes" :class="`tree-${secondary}`">
-        <img
-          :src="`/assets/rune-avis/${secondary}.png`"
-          class="mr-3"
-          width="50"
-          height="50"
-        />
+        <img :src="`/assets/rune-avis/${secondary}.png`" class="mr-3" width="50" height="50" />
         <img
           v-for="r in srows.split(' ')"
           :key="r"
@@ -58,14 +48,14 @@
       </div>
     </div>
     <div>
-      <button class="btn-slide btn-delete" @click="deletePage">
-        {{ suredel ? 'SURE?' : 'DELETE' }}
-      </button>
+      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
     </div>
   </div>
 </template>
 
 <script>
+/** @format */
+
 import Rest from '../js/rest';
 
 export default {
@@ -113,6 +103,8 @@ export default {
 </script>
 
 <style scoped>
+/** @format */
+
 * {
   transition: all 0.25s ease-in-out;
 }
