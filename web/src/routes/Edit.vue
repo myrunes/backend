@@ -55,7 +55,13 @@
         />
         <span class="tb w-100" />
       </div>
-      <TagsInput ref="tagChamps" :tags="champs" @change="champsChanged" />
+      <TagsInput
+        ref="tagChamps"
+        :tags="champs"
+        :formatter="champFormatter"
+        :filter="champFilter"
+        @change="champsChanged"
+      />
     </div>
 
     <!-- TREE PICKER -->
@@ -165,6 +171,7 @@
 import Rest from '../js/rest';
 import Banner from '../components/Banner';
 import TagsInput from '../components/TagsInput';
+import ChampData from '../data/champs.json';
 
 export default {
   name: 'Edit',
@@ -236,7 +243,7 @@ export default {
     },
 
     champsChanged(champs) {
-      this.page.champions = champs;
+      this.page.champions = champs.map((c) => c.id);
     },
 
     treeClick(tree) {
@@ -432,35 +439,38 @@ export default {
     getWindowLocation() {
       return window.location.origin;
     },
+
+    champFormatter(c) {
+      return c.name;
+    },
+
+    champFilter(c, q) {
+      return c.name.toLowerCase().includes(q.toLowerCase());
+    },
   },
 
   created: function() {
     this.uid = this.$route.params.uid;
 
-    Rest.getChamps()
+    this.champs = ChampData;
+
+    Rest.getRunes()
       .then((res) => {
-        if (!res.body || !res.body.data) return;
-        this.champs = res.body.data;
+        if (!res.body) return;
+        this.runes = res.body;
 
-        Rest.getRunes()
-          .then((res) => {
-            if (!res.body) return;
-            this.runes = res.body;
-
-            if (this.uid !== 'new') {
-              Rest.getPage(this.uid)
-                .then((res) => {
-                  if (!res.body) return;
-                  this.created = true;
-                  this.page = res.body;
-                  this.page.champions.forEach((c) =>
-                    this.$refs.tagChamps.append(c)
-                  );
-                })
-                .catch(console.error);
-            }
-          })
-          .catch(console.error);
+        if (this.uid !== 'new') {
+          Rest.getPage(this.uid)
+            .then((res) => {
+              if (!res.body) return;
+              this.created = true;
+              this.page = res.body;
+              this.page.champions
+                .map((c) => ChampData.find((cd) => cd.id === c))
+                .forEach((c) => this.$refs.tagChamps.append(c));
+            })
+            .catch(console.error);
+        }
       })
       .catch(console.error);
   },
