@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/zekroTJA/myrunes/pkg/comparison"
-	"github.com/zekroTJA/myrunes/pkg/random"
+	"github.com/myrunes/myrunes/pkg/comparison"
+	"github.com/myrunes/myrunes/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
-	"github.com/zekroTJA/myrunes/internal/database"
-	"github.com/zekroTJA/myrunes/internal/objects"
-	"github.com/zekroTJA/myrunes/internal/static"
+	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/objects"
+	"github.com/myrunes/myrunes/internal/static"
 )
 
 func (ws *WebServer) handlerFiles(ctx *routing.Context) error {

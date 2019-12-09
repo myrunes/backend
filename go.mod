@@ -1,4 +1,4 @@
-module github.com/zekroTJA/myrunes
+module github.com/myrunes/myrunes
 
 go 1.13
 

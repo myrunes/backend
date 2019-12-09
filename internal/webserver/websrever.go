@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/zekroTJA/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/database"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"

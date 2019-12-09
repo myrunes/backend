@@ -1,6 +1,6 @@
 ### NAMES AND LOCS ############################
 APPNAME      = lol-runes
-PACKAGE      = github.com/zekroTJA/myrunes
+PACKAGE      = github.com/myrunes/myrunes
 LDPAKAGE     = internal/static
 CONFIG       = $(CURDIR)/config/private.config.yml
 BINPATH      = $(CURDIR)/bin

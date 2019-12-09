@@ -12,8 +12,8 @@ RUN cd web &&\
 RUN mkdir ./bin
 RUN go build \
         -v -o /app/myrunes -ldflags "\
-            -X github.com/zekroTJA/myrunes/internal/static.Release=${RELEASE} \
-            -X github.com/zekroTJA/myrunes/internal/static.AppVersion=$(git describe --tags)" \
+            -X github.com/myrunes/myrunes/internal/static.Release=${RELEASE} \
+            -X github.com/myrunes/myrunes/internal/static.AppVersion=$(git describe --tags)" \
         ./cmd/server/*.go
 RUN cd ./web &&\
     npm run build &&\

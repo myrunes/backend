@@ -8,7 +8,7 @@
         page.<br />
         More information about how we are using cookies you can read about
         <a
-          href="https://github.com/zekroTJA/myrunes/blob/master/docs/cookie-usage.md"
+          href="https://github.com/myrunes/myrunes/blob/master/docs/cookie-usage.md"
           >here</a
         >.
       </p>
