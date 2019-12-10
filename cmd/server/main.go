@@ -2,6 +2,7 @@ package main
 
 import (
 	"flag"
+	"fmt"
 	"os"
 	"os/signal"
 	"strings"
@@ -11,6 +12,7 @@ import (
 	"github.com/myrunes/myrunes/internal/config"
 	"github.com/myrunes/myrunes/internal/database"
 	"github.com/myrunes/myrunes/internal/logger"
+	"github.com/myrunes/myrunes/internal/mailserver"
 	"github.com/myrunes/myrunes/internal/webserver"
 	"github.com/myrunes/myrunes/pkg/lifecycletimer"
 )
@@ -81,6 +83,13 @@ func main() {
 		}
 	}()
 	logger.Info("WEBSERVER :: started")
+
+	logger.Info("MAILSERVER :: initialization")
+	ms, err := mailserver.NewMailServer(cfg.MailServer)
+	if err != nil {
+		logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+	}
+	fmt.Println(ms.SendMail("noreply@myrunes.com", "myrunes.com", "riho@live.de", "myrunes.com TEST", "This is a test", "text/plain"))
 
 	lct := lifecycletimer.New(5 * time.Minute).
 		Handle(func() {
