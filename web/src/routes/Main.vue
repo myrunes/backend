@@ -31,6 +31,14 @@ import EventBus from '../js/eventbus';
 import Rest from '../js/rest';
 import ChampData from '../data/champs.json';
 
+const SHORTS = {
+  mf: 'miss-fortune',
+  ww: 'warwick',
+  lb: 'leblanc',
+  tf: 'twisted-fate',
+  gp: 'gankplank',
+};
+
 export default {
   name: 'Main',
 
@@ -57,10 +65,25 @@ export default {
         this.displayFavs = this.favorites && this.favorites.length != 0;
       } else {
         this.displayedChamps = this.champs
-          .filter((c) => c.name.toLowerCase().includes(val))
+          .filter((c) => this.searchFilter(c, val))
           .map((c) => c.id);
         this.displayFavs = false;
       }
+    },
+
+    searchFilter(c, val) {
+      const name = c.name.toLowerCase();
+      const nameStripped = c.id.replace('-', ' ');
+      const nameConcat = c.id.replace('-', '');
+
+      val = val.toLowerCase();
+
+      return (
+        name.includes(val) ||
+        nameStripped.includes(val) ||
+        nameConcat.includes(val) ||
+        SHORTS[val] === c.id
+      );
     },
 
     openChamp(champ) {
