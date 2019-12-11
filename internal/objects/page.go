@@ -21,7 +21,7 @@ var (
 )
 
 var Champs = []string{
-	"aatrox", "ahri", "akali", "alistar", "amumu", "anivia", "annie", "ashe",
+	"aatrox", "ahri", "akali", "alistar", "amumu", "anivia", "annie", "aphelios", "ashe",
 	"aurelion-sol", "azir", "bard", "blitzcrank", "brand", "braum", "caitlyn",
 	"camille", "cassiopeia", "chogath", "corki", "darius", "dr-mundo", "draven",
 	"ekko", "elise", "evelynn", "ezreal", "fiddlesticks", "fiora", "fizz", "galio",
