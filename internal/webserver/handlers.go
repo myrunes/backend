@@ -733,6 +733,7 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	}
 
 	if !ws.mailConfirmation.Contains(token.Token) {
+		fmt.Println(token.Token)
 		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
 	}
 
