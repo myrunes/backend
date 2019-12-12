@@ -4,7 +4,11 @@ import (
 	"errors"
 	"time"
 
+	"github.com/bwmarrin/snowflake"
+	"github.com/zekroTJA/timedmap"
+
 	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/mailserver"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -46,13 +50,21 @@ type WebServer struct {
 	router *routing.Router
 
 	db   database.Middleware
+	ms   *mailserver.MailServer
 	auth *Authorization
 	rlm  *RateLimitManager
+
+	mailConfirmation *timedmap.TimedMap
 
 	config *Config
 }
 
-func NewWebServer(db database.Middleware, config *Config, assets string) (ws *WebServer) {
+type mailConfirmationData struct {
+	UserID      snowflake.ID
+	MailAddress string
+}
+
+func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config, assets string) (ws *WebServer) {
 	ws = new(WebServer)
 
 	if assets != "" {
@@ -61,12 +73,15 @@ func NewWebServer(db database.Middleware, config *Config, assets string) (ws *We
 
 	ws.config = config
 	ws.db = db
+	ws.ms = ms
 	ws.rlm = NewRateLimitManager()
 	ws.auth = NewAuthorization(db, ws.rlm)
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
 	}
+
+	ws.mailConfirmation = timedmap.New(1 * time.Hour)
 
 	ws.registerHandlers()
 
@@ -77,6 +92,7 @@ func (ws *WebServer) registerHandlers() {
 	rlGlobal := ws.rlm.GetHandler(500*time.Millisecond, 50)
 	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
 	rlPageCreate := ws.rlm.GetHandler(5*time.Second, 5)
+	rlPostMail := ws.rlm.GetHandler(60*time.Second, 1)
 
 	ws.router.Use(ws.handlerFiles, ws.addHeaders, rlGlobal)
 
@@ -105,6 +121,12 @@ func (ws *WebServer) registerHandlers() {
 		Get("/<uname>", ws.handlerCheckUsername)
 	users.
 		Post("/me/pageorder", ws.auth.CheckRequestAuth, ws.handlerPostPageOrder)
+
+	email := users.Group("/me/mail")
+	email.
+		Post("", ws.auth.CheckRequestAuth, rlPostMail, ws.handlerPostMail)
+	email.
+		Post("/confirm", ws.handlerPostConfirmMail)
 
 	pages := api.Group("/pages", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	pages.

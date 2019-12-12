@@ -23,6 +23,7 @@ var (
 type User struct {
 	UID         snowflake.ID              `json:"uid"`
 	Username    string                    `json:"username"`
+	MailAddress string                    `json:"mailaddress"`
 	DisplayName string                    `json:"displayname"`
 	PassHash    []byte                    `json:"passhash,omitempty"`
 	LastLogin   time.Time                 `json:"lastlogin"`

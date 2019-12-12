@@ -139,6 +139,10 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 		oldUser.PageOrder = user.PageOrder
 	}
 
+	if user.MailAddress != "" {
+		oldUser.MailAddress = user.MailAddress
+	}
+
 	return true, m.insertOrUpdate(m.collections.users,
 		bson.M{"uid": oldUser.UID}, oldUser)
 }

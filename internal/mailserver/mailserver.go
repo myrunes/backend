@@ -13,9 +13,12 @@ type Config struct {
 
 type MailServer struct {
 	dialer *gomail.Dialer
+
+	defFrom     string
+	defFromName string
 }
 
-func NewMailServer(config *Config) (*MailServer, error) {
+func NewMailServer(config *Config, defFrom, defFromName string) (*MailServer, error) {
 	ms := new(MailServer)
 	ms.dialer = gomail.NewPlainDialer(config.Host, config.Port, config.Username, config.Password)
 
@@ -26,6 +29,9 @@ func NewMailServer(config *Config) (*MailServer, error) {
 
 	defer closer.Close()
 
+	ms.defFrom = defFrom
+	ms.defFromName = defFromName
+
 	return ms, nil
 }
 
@@ -34,10 +40,22 @@ func (ms *MailServer) SendMailRaw(msg *gomail.Message) error {
 }
 
 func (ms *MailServer) SendMail(from, fromName, to, subject, body, bodyType string) error {
+	if from == "" {
+		from = ms.defFrom
+	}
+
+	if fromName == "" {
+		fromName = ms.defFromName
+	}
+
 	msg := gomail.NewMessage()
 	msg.SetAddressHeader("From", from, fromName)
 	msg.SetAddressHeader("To", to, "")
 	msg.SetHeader("Subject", subject)
 	msg.SetBody(bodyType, body)
 	return ms.SendMailRaw(msg)
+}
+
+func (ms *MailServer) SendMailFromDef(to, subject, body, bodyType string) error {
+	return ms.SendMail("", "", to, subject, body, bodyType)
 }
