@@ -8,12 +8,14 @@ import (
 
 	"github.com/ghodss/yaml"
 	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/mailserver"
 	"github.com/myrunes/myrunes/internal/webserver"
 )
 
 type Main struct {
-	MongoDB   *database.MongoConfig `json:"mongodb"`
-	WebServer *webserver.Config     `json:"webserver"`
+	MongoDB    *database.MongoConfig `json:"mongodb"`
+	WebServer  *webserver.Config     `json:"webserver"`
+	MailServer *mailserver.Config    `json:"mailserver"`
 }
 
 func Open(loc string) (*Main, error) {
@@ -41,10 +43,14 @@ func cretaeDefault(loc string) error {
 			DataDB:   "lol-runes",
 		},
 		WebServer: &webserver.Config{
-			Addr: ":443",
+			Addr:       ":443",
+			PublicAddr: "https://myrunes.com",
 			TLS: &webserver.TLSConfig{
 				Enabled: true,
 			},
+		},
+		MailServer: &mailserver.Config{
+			Port: 465,
 		},
 	}
 

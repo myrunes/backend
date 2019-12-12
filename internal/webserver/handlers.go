@@ -9,11 +9,11 @@ import (
 	"github.com/myrunes/myrunes/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	routing "github.com/qiangxue/fasthttp-routing"
-	"github.com/valyala/fasthttp"
 	"github.com/myrunes/myrunes/internal/database"
 	"github.com/myrunes/myrunes/internal/objects"
 	"github.com/myrunes/myrunes/internal/static"
+	routing "github.com/qiangxue/fasthttp-routing"
+	"github.com/valyala/fasthttp"
 )
 
 func (ws *WebServer) handlerFiles(ctx *routing.Context) error {
@@ -682,4 +682,72 @@ func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	mail := new(setMailRequest)
+	if err := parseJSONBody(ctx, mail); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if mail.Reset {
+		_, err := ws.db.EditUser(&objects.User{
+			UID:         user.UID,
+			MailAddress: "__RESET__",
+		}, false)
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	token, err := random.GetRandBase64Str(16)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	mailText := fmt.Sprintf(
+		"Please open the following link to confirm your E-Mail address:\n"+
+			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
+
+	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	ws.mailConfirmation.Set(token, &mailConfirmationData{
+		MailAddress: mail.MailAddress,
+		UserID:      user.UID,
+	}, 12*time.Hour)
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
+	token := new(confirmMail)
+	if err := parseJSONBody(ctx, token); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.mailConfirmation.Contains(token.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	data, ok := ws.mailConfirmation.GetValue(token.Token).(*mailConfirmationData)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	_, err := ws.db.EditUser(&objects.User{
+		UID:         data.UserID,
+		MailAddress: data.MailAddress,
+	}, false)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, err, fasthttp.StatusOK)
 }

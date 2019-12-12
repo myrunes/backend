@@ -8,6 +8,7 @@ import Edit from '../routes/Edit';
 import Pages from '../routes/Pages';
 import Settings from '../routes/Settings';
 import Share from '../routes/Share';
+import MailConfirm from '../routes/MailConfirm';
 
 export default new Router({
   mode: 'history',
@@ -22,6 +23,11 @@ export default new Router({
       path: '/login',
       name: 'Login',
       component: Login,
+    },
+    {
+      path: '/mailConfirmation',
+      name: 'MailConfirm',
+      component: MailConfirm,
     },
     {
       path: '/champ/:champ',

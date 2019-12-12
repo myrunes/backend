@@ -29,6 +29,8 @@ import Footer from './components/Footer';
 import CookieInfo from './components/CookieInfo';
 import InfoBubble from './components/InfoBubble';
 
+const NO_LOGIN_ROUTES = ['Share', 'MailConfirm'];
+
 export default {
   name: 'app',
 
@@ -75,7 +77,7 @@ export default {
           this.loggedIn = true;
         })
         .catch((err) => {
-          if (this.$route.name !== 'Share') {
+          if (!NO_LOGIN_ROUTES.includes(this.$route.name)) {
             this.$router.replace('/login');
           }
         });

@@ -11,6 +11,7 @@ import (
 	"github.com/myrunes/myrunes/internal/config"
 	"github.com/myrunes/myrunes/internal/database"
 	"github.com/myrunes/myrunes/internal/logger"
+	"github.com/myrunes/myrunes/internal/mailserver"
 	"github.com/myrunes/myrunes/internal/webserver"
 	"github.com/myrunes/myrunes/pkg/lifecycletimer"
 )
@@ -73,8 +74,15 @@ func main() {
 		db.Close()
 	}()
 
+	logger.Info("MAILSERVER :: initialization")
+	ms, err := mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")
+	if err != nil {
+		logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+	}
+	logger.Info("MAILSERVER :: started")
+
 	logger.Info("WEBSERVER :: initialization")
-	ws := webserver.NewWebServer(db, cfg.WebServer, *flagAssets)
+	ws := webserver.NewWebServer(db, ms, cfg.WebServer, *flagAssets)
 	go func() {
 		if err := ws.ListenAndServeBlocking(); err != nil {
 			logger.Fatal("WEBSERVER :: failed starting web server: %s", err.Error())

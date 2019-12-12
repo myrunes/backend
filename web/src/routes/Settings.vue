@@ -3,6 +3,9 @@
 <template>
   <div>
     <Banner ref="banner" class="mb-3"></Banner>
+    <InfoBubble ref="mailInfo" color="orange">
+      <p>Mail Address changed. Please confirm your Mail Address by following the link in the confirmation link we have sent to you.</p>
+    </InfoBubble>
 
     <!-- ACCOUNT DETAILS -->
     <div class="bg mb-3">
@@ -130,6 +133,15 @@
         <span class="tb" />
       </div>
 
+      <div class="position-relative mb-4">
+        <h5>Mail Address</h5>
+        <p
+          class="explainer"
+        >Your E-Mail Address, which can be contacted if you forgot your account password.</p>
+        <input type="text" class="tb text-left" v-model="user.mailaddress" />
+        <span class="tb" />
+      </div>
+
       <div class="position-relative">
         <h5>New Password</h5>
         <p class="explainer">Enter a new password, if you want to change it.</p>
@@ -174,12 +186,14 @@ import Rest from '../js/rest';
 import Utils from '../js/utils';
 import EventBus from '../js/eventbus';
 import Banner from '../components/Banner';
+import InfoBubble from '../components/InfoBubble';
 
 export default {
   name: 'Settings',
 
   components: {
     Banner,
+    InfoBubble,
   },
 
   data: function() {
@@ -190,6 +204,7 @@ export default {
       pages: 0,
       newpassword: '',
       currpassword: '',
+      originMailAddress: '',
 
       apitoken: null,
       apitokencreated: null,
@@ -229,6 +244,21 @@ export default {
         currpassword: currpw,
         newpassword: this.newpassword,
       };
+
+      if (this.user.mailaddress !== this.originMailAddress) {
+        if (!this.user.mailaddress) {
+          Rest.setMailAddress('', true)
+            .then(() => {})
+            .catch(console.error);
+        } else {
+          Rest.setMailAddress(this.user.mailaddress)
+            .then(() => {
+              this.$refs.mailInfo.show();
+            })
+            .catch(console.error);
+        }
+      }
+
       Rest.updateUser(update)
         .then(() => {
           this.$refs.banner.show(
@@ -341,6 +371,7 @@ export default {
       .then((res) => {
         if (!res.body) return;
         this.user = res.body;
+        this.originMailAddress = this.user.mailaddress;
         console.log(this.user);
       })
       .catch(console.error);
