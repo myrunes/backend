@@ -35,8 +35,9 @@ var (
 )
 
 type Config struct {
-	Addr string     `json:"addr"`
-	TLS  *TLSConfig `json:"tls"`
+	Addr       string     `json:"addr"`
+	TLS        *TLSConfig `json:"tls"`
+	PublicAddr string     `json:"publicaddress"`
 }
 
 type TLSConfig struct {

@@ -43,10 +43,14 @@ func cretaeDefault(loc string) error {
 			DataDB:   "lol-runes",
 		},
 		WebServer: &webserver.Config{
-			Addr: ":443",
+			Addr:       ":443",
+			PublicAddr: "https://myrunes.com",
 			TLS: &webserver.TLSConfig{
 				Enabled: true,
 			},
+		},
+		MailServer: &mailserver.Config{
+			Port: 465,
 		},
 	}
 

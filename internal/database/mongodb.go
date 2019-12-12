@@ -140,7 +140,11 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 	}
 
 	if user.MailAddress != "" {
-		oldUser.MailAddress = user.MailAddress
+		if user.MailAddress == "__RESET__" {
+			oldUser.MailAddress = ""
+		} else {
+			oldUser.MailAddress = user.MailAddress
+		}
 	}
 
 	return true, m.insertOrUpdate(m.collections.users,

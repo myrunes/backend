@@ -46,7 +46,8 @@ type pageOrderRequest struct {
 }
 
 type setMailRequest struct {
-	MailAddress string `json:"string"`
+	MailAddress string `json:"mailaddress"`
+	Reset       bool   `json:"reset"`
 }
 
 type confirmMail struct {

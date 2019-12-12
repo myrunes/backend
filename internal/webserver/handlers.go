@@ -692,6 +692,18 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
+	if mail.Reset {
+		_, err := ws.db.EditUser(&objects.User{
+			UID:         user.UID,
+			MailAddress: "__RESET__",
+		}, false)
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
 	token, err := random.GetRandBase64Str(16)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
@@ -699,7 +711,7 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 
 	mailText := fmt.Sprintf(
 		"Please open the following link to confirm your E-Mail address:\n"+
-			"https://myrunes.com/mailConfirmation?token=%s", token)
+			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
 
 	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
 	if err != nil {
@@ -721,7 +733,7 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	}
 
 	if !ws.mailConfirmation.Contains(token.Token) {
-		return jsonError(ctx, nil, fasthttp.StatusBadRequest)
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
 	}
 
 	data, ok := ws.mailConfirmation.GetValue(token.Token).(*mailConfirmationData)

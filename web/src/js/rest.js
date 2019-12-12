@@ -221,6 +221,26 @@ function setPageOrder(pageorder, champion) {
   });
 }
 
+function setMailAddress(mailaddress, reset) {
+  if (reset === undefined || reset === null) {
+    reset = false;
+  }
+
+  return _req({
+    url: `${HOST}/api/users/me/mail`,
+    method: 'POST',
+    json: { mailaddress, reset },
+  });
+}
+
+function confirmMail(token) {
+  return _req({
+    url: `${HOST}/api/users/me/mail/confirm`,
+    method: 'POST',
+    json: { token },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -272,4 +292,6 @@ export default {
   generateAPIToken,
   deleteAPIToken,
   setPageOrder,
+  setMailAddress,
+  confirmMail,
 };
