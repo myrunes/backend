@@ -93,7 +93,7 @@ func (ws *WebServer) registerHandlers() {
 	rlGlobal := ws.rlm.GetHandler(500*time.Millisecond, 50)
 	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
 	rlPageCreate := ws.rlm.GetHandler(5*time.Second, 5)
-	rlPostMail := ws.rlm.GetHandler(60*time.Second, 1)
+	rlPostMail := ws.rlm.GetHandler(60*time.Second, 3)
 
 	ws.router.Use(ws.handlerFiles, ws.addHeaders, rlGlobal)
 

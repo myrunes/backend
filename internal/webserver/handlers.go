@@ -704,16 +704,14 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		return jsonResponse(ctx, nil, fasthttp.StatusOK)
 	}
 
-	token, err := random.GetRandBase64Str(16)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token := random.GetRandString(16, charset)
 
 	mailText := fmt.Sprintf(
 		"Please open the following link to confirm your E-Mail address:\n"+
 			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
 
-	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
+	err := ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
@@ -741,6 +739,8 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	if !ok {
 		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
 	}
+
+	ws.mailConfirmation.Remove(token.Token)
 
 	_, err := ws.db.EditUser(&objects.User{
 		UID:         data.UserID,
