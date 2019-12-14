@@ -56,6 +56,7 @@ type WebServer struct {
 	rlm  *RateLimitManager
 
 	mailConfirmation *timedmap.TimedMap
+	pwReset          *timedmap.TimedMap
 
 	config *Config
 }
@@ -83,6 +84,7 @@ func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Con
 	}
 
 	ws.mailConfirmation = timedmap.New(1 * time.Hour)
+	ws.mailConfirmation = timedmap.New(1 * time.Minute)
 
 	ws.registerHandlers()
 
@@ -94,6 +96,7 @@ func (ws *WebServer) registerHandlers() {
 	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
 	rlPageCreate := ws.rlm.GetHandler(5*time.Second, 5)
 	rlPostMail := ws.rlm.GetHandler(60*time.Second, 3)
+	rlPwReset := ws.rlm.GetHandler(60*time.Second, 3)
 
 	ws.router.Use(ws.handlerFiles, ws.addHeaders, rlGlobal)
 
@@ -128,6 +131,12 @@ func (ws *WebServer) registerHandlers() {
 		Post("", ws.auth.CheckRequestAuth, rlPostMail, ws.handlerPostMail)
 	email.
 		Post("/confirm", ws.handlerPostConfirmMail)
+
+	pwReset := users.Group("/me/passwordreset")
+	pwReset.
+		Post("", rlPwReset, ws.handlerPostPwReset)
+	pwReset.
+		Post("/confirm", rlPwReset, ws.handlerPostPwResetConfirm)
 
 	pages := api.Group("/pages", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	pages.

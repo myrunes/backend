@@ -53,3 +53,13 @@ type setMailRequest struct {
 type confirmMail struct {
 	Token string `json:"token"`
 }
+
+type passwordReset struct {
+	MailAddress string `json:"mailaddress"`
+}
+
+type confirmPasswordReset struct {
+	Token       string   `json:"token"`
+	NewPassword string   `json:"new_password"`
+	PageNames   []string `json:"page_names"`
+}

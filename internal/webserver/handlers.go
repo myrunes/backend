@@ -731,7 +731,6 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	}
 
 	if !ws.mailConfirmation.Contains(token.Token) {
-		fmt.Println(token.Token)
 		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
 	}
 
@@ -751,4 +750,87 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	}
 
 	return jsonResponse(ctx, err, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
+	reset := new(passwordReset)
+	if err := parseJSONBody(ctx, reset); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	user, err := ws.db.GetUser(-1, reset.MailAddress)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user.MailAddress == "" {
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token := random.GetRandString(24, charset)
+
+	mailText := fmt.Sprintf("Please follow the link below to reset your accounts password:\n"+
+		"%s/passwordReset?token=%s", ws.config.PublicAddr, token)
+	err = ws.ms.SendMailFromDef(user.MailAddress, "Password reset | myrunes", mailText, "text/plain")
+	if err != nil {
+		ws.pwReset.Set(token, user.UID, 10*time.Minute)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
+	data := new(confirmPasswordReset)
+	if err := parseJSONBody(ctx, data); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if data.NewPassword == "" {
+		return jsonError(ctx, fmt.Errorf("invalid password length"), fasthttp.StatusBadRequest)
+	}
+
+	if !ws.pwReset.Contains(data.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	uID, ok := ws.pwReset.GetValue(data.Token).(snowflake.ID)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	user, err := ws.db.GetUser(uID, "")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user == nil {
+		return jsonError(ctx, fmt.Errorf("unknown user"), fasthttp.StatusBadRequest)
+	}
+
+	errCheckFailed := fmt.Errorf("security check failed")
+	if len(data.PageNames) < 3 || data.PageNames[0] == "" || data.PageNames[1] == "" || data.PageNames[2] == "" {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	pages, err := ws.db.GetPages(uID, "", nil)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	var guessed int
+
+	for _, page := range pages {
+		for _, guess := range data.PageNames {
+			if checkPageName(page.Title, guess, 0.2) {
+				guessed++
+			}
+		}
+	}
+
+	if guessed < 3 {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

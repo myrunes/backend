@@ -88,6 +88,7 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 
 	ok, err := m.get(m.collections.users, bson.M{"$or": bson.A{
 		bson.M{"username": username},
+		bson.M{"mailaddress": username},
 		bson.M{"uid": uid},
 	}}, user)
 

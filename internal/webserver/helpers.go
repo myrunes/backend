@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strings"
 
 	"github.com/myrunes/myrunes/internal/static"
 
@@ -108,4 +109,28 @@ func getIPAddr(ctx *routing.Context) string {
 	}
 
 	return ctx.RemoteIP().String()
+}
+
+func checkPageName(pageName, guess string, tollerance float64) bool {
+	if pageName == "" || guess == "" {
+		return false
+	}
+
+	lenPageName := float64(len(strings.Replace(pageName, " ", "", -1)))
+	lenGuesses := float64(len(strings.Replace(guess, " ", "", -1)))
+
+	pageNameSplit := strings.Split(strings.ToLower(pageName), " ")
+	guessSplit := strings.Split(strings.ToLower(guess), " ")
+
+	var matchedChars int
+	for _, wordName := range pageNameSplit {
+		for _, guessName := range guessSplit {
+			if wordName == guessName {
+				matchedChars += len(wordName)
+			}
+		}
+	}
+
+	return float64(matchedChars)/lenPageName >= (1-tollerance) &&
+		float64(matchedChars)/lenGuesses >= (1-tollerance)
 }

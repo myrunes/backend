@@ -9,6 +9,7 @@ import Pages from '../routes/Pages';
 import Settings from '../routes/Settings';
 import Share from '../routes/Share';
 import MailConfirm from '../routes/MailConfirm';
+import PasswordReset from '../routes/PasswordReset';
 
 export default new Router({
   mode: 'history',
@@ -28,6 +29,11 @@ export default new Router({
       path: '/mailConfirmation',
       name: 'MailConfirm',
       component: MailConfirm,
+    },
+    {
+      path: '/passwordReset',
+      name: 'PasswordReset',
+      component: PasswordReset,
     },
     {
       path: '/champ/:champ',

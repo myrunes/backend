@@ -241,6 +241,22 @@ function confirmMail(token) {
   });
 }
 
+function resetPassword(mailaddress) {
+  return _req({
+    url: `${HOST}/api/users/me/passwordreset`,
+    method: 'POST',
+    json: { mailaddress },
+  });
+}
+
+function resetPasswordConfirm(token, new_password, page_names) {
+  return _req({
+    url: `${HOST}/api/users/me/passwordreset/confirm`,
+    method: 'POST',
+    json: { token, new_password, page_names },
+  });
+}
+
 // ----------------------------
 
 function _req(options) {
@@ -294,4 +310,6 @@ export default {
   setPageOrder,
   setMailAddress,
   confirmMail,
+  resetPassword,
+  resetPasswordConfirm,
 };
