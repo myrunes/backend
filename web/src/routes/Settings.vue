@@ -73,7 +73,7 @@
       <h3>API ACCESS</h3>
       <h5>API Token</h5>
       <p class="explainer mb-3">
-        The API token is a base64 encoded stirng which can used to be passed with API requests to authenticate
+        The API token is a base64 encoded string which can used to be passed with API requests to authenticate
         as your account.
         <br />
         <b>Keep this key secure! It gives full access on your account!</b>
@@ -95,7 +95,7 @@
       <h3>DATA STORAGE</h3>
       <h5>Local storage</h5>
       <p class="explainer">
-        We store some client-site data directly in the browser using
+        We store some client-side data directly in the browser using
         <a
           class="underlined"
           href="https://developer.mozilla.org/en-US/docs/Web/API/Web_Storage_API"
