@@ -21,7 +21,7 @@
         <button
           class="btn-bubble mx-auto mt-5"
           @click="resetClick"
-          :disabled="!mailaddress"
+          :disabled="mailDisabled()"
         >RESET PASSWORD</button>
       </div>
 
@@ -146,6 +146,10 @@ export default {
           }
           this.$refs.banner.show('error', txt, null, true);
         });
+    },
+
+    mailDisabled() {
+      return !this.mailaddress || !this.mailaddress.includes('@');
     },
 
     confirmDisabled() {
