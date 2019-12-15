@@ -4,7 +4,8 @@
   <div>
     <Banner ref="banner" class="mb-3"></Banner>
     <InfoBubble ref="mailInfo" color="orange">
-      <p>Mail Address changed. Please confirm your Mail Address by following the link in the confirmation link we have sent to you.</p>
+      <p>Mail Address changed. Please confirm your Mail Address by following the link in the confirmation mail we have sent to you.</p>
+      <p>Please also check your spam folder for the mail.</p>
     </InfoBubble>
 
     <!-- ACCOUNT DETAILS -->

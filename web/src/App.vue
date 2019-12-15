@@ -29,7 +29,7 @@ import Footer from './components/Footer';
 import CookieInfo from './components/CookieInfo';
 import InfoBubble from './components/InfoBubble';
 
-const NO_LOGIN_ROUTES = ['Share', 'MailConfirm'];
+const NO_LOGIN_ROUTES = ['Share', 'MailConfirm', 'PasswordReset'];
 
 export default {
   name: 'app',
@@ -55,7 +55,7 @@ export default {
     Rest.getVersion().then((res) => {
       if (
         res.body.release !== 'TRUE' &&
-        window.sessionStorage.getItem('beta-info-accepted') !== '1'
+        window.localStorage.getItem('beta-info-accepted') !== '1'
       ) {
         setTimeout(() => this.$refs.betawarn.show(), 1000);
       }
@@ -84,7 +84,7 @@ export default {
     },
 
     onBetaWarnHides() {
-      window.sessionStorage.setItem('beta-info-accepted', '1');
+      window.localStorage.setItem('beta-info-accepted', '1');
     },
   },
 };

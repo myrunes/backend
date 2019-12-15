@@ -52,6 +52,12 @@
       <div class="d-flex mt-5">
         <button class="btn-bubble mx-auto" @click="login">{{ register ? 'REGISTER' : 'LOGIN' }}</button>
       </div>
+      <div class="d-flex mt-5">
+        <router-link
+          class="text-center mx-auto forgot-password"
+          to="/passwordReset"
+        >Forgot password?</router-link>
+      </div>
     </div>
   </div>
 </template>
@@ -303,5 +309,15 @@ button {
   background-size: 100%;
   background-position: center;
   margin-bottom: 50px;
+}
+
+.forgot-password {
+  text-decoration: underline !important;
+  font-size: 14px;
+  opacity: 0.8;
+  transition: all 0.25s ease;
+}
+.forgot-password:hover {
+  opacity: 1;
 }
 </style>

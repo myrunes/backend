@@ -618,7 +618,7 @@ func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
 	var err error
 	token := new(objects.APIToken)
 
-	if token.Token, err = random.GetRandBase64Str(apiTokenLength); err != nil {
+	if token.Token, err = random.Base64(apiTokenLength); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -705,7 +705,10 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 	}
 
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token := random.GetRandString(16, charset)
+	token, err := random.String(16, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
 
 	mailText := fmt.Sprintf(
 		"Please open the following link to confirm your E-Mail address:\n"+
@@ -763,17 +766,20 @@ func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	if user.MailAddress == "" {
+	if user == nil || user.MailAddress == "" {
 		return jsonResponse(ctx, nil, fasthttp.StatusOK)
 	}
 
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token := random.GetRandString(24, charset)
+	token, err := random.String(24, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
 
 	mailText := fmt.Sprintf("Please follow the link below to reset your accounts password:\n"+
 		"%s/passwordReset?token=%s", ws.config.PublicAddr, token)
 	err = ws.ms.SendMailFromDef(user.MailAddress, "Password reset | myrunes", mailText, "text/plain")
-	if err != nil {
+	if err == nil {
 		ws.pwReset.Set(token, user.UID, 10*time.Minute)
 	}
 
@@ -830,6 +836,20 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 
 	if guessed < 3 {
 		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	newUser := &objects.User{
+		UID: user.UID,
+	}
+
+	newUser.PassHash, err = ws.auth.CreateHash([]byte(data.NewPassword))
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	_, err = ws.db.EditUser(newUser, false)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)

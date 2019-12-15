@@ -84,7 +84,7 @@ func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Con
 	}
 
 	ws.mailConfirmation = timedmap.New(1 * time.Hour)
-	ws.mailConfirmation = timedmap.New(1 * time.Minute)
+	ws.pwReset = timedmap.New(1 * time.Minute)
 
 	ws.registerHandlers()
 
