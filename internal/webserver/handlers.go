@@ -714,7 +714,7 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		"Please open the following link to confirm your E-Mail address:\n"+
 			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
 
-	err := ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
+	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
