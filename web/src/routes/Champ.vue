@@ -127,6 +127,8 @@ export default {
         case 'title':
           return 'Title';
       }
+
+      return 'Default';
     },
   },
 
