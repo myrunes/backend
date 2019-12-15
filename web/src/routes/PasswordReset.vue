@@ -29,7 +29,19 @@
       <div v-if="token != null && token.length > 0" class="mx-auto mb-5 max-w-container">
         <h2>Password Reset Security Check</h2>
         <p class="mt-4">Please enter your new password</p>
-        <input type="password" class="tb text-center" v-model="password" placeholder="New Password" />
+        <b-tooltip
+          target="passwordInput"
+          triggers
+          boundary="passwordInput"
+          :show="password.length > 0 && password.length < 8"
+        >The password must have at least a length of 8 characters.</b-tooltip>
+        <input
+          id="passwordInput"
+          type="password"
+          class="tb text-center"
+          v-model="password"
+          placeholder="New Password"
+        />
         <br />
         <input
           type="password"
@@ -88,6 +100,8 @@ export default {
 
   data: function() {
     return {
+      passwordToolTipShow: false,
+
       token: null,
 
       mailaddress: '',
@@ -138,6 +152,7 @@ export default {
       return (
         !this.password ||
         !this.passwordRepeated ||
+        this.password.length < 8 ||
         this.password !== this.passwordRepeated ||
         !this.page_names[0] ||
         !this.page_names[1] ||

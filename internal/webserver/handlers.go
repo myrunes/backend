@@ -45,7 +45,7 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if data.UserName == "" || data.Password == "" {
+	if data.UserName == "" || data.Password == "" || len(data.Password) < 8 {
 		return jsonError(ctx, errInvalidArguments, fasthttp.StatusBadRequest)
 	}
 
@@ -115,6 +115,9 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	if reqUser.NewPassword != "" {
+		if len(reqUser.NewPassword) < 8 {
+			return jsonError(ctx, fmt.Errorf("invalid new password"), fasthttp.StatusBadRequest)
+		}
 		newUser.PassHash, err = ws.auth.CreateHash([]byte(reqUser.NewPassword))
 		if err != nil {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
@@ -792,7 +795,7 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if data.NewPassword == "" {
+	if data.NewPassword == "" || len(data.NewPassword) < 8 {
 		return jsonError(ctx, fmt.Errorf("invalid password length"), fasthttp.StatusBadRequest)
 	}
 
