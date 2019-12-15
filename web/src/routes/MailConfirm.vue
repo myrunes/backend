@@ -4,12 +4,18 @@
   <div class="outer-container">
     <div class="container my-auto text-center">
       <div class="logo mx-auto"></div>
-      <Banner class="mx-auto mb-5" ref="banner"></Banner>
+      <Banner
+        ref="banner"
+        class="mx-auto mb-5"
+      ></Banner>
       <h2>Mail Address Confirmation</h2>
       <p class="mt-4">
         Click the following button to confirm your Mail Address.
       </p>
-      <button class="btn-bubble mx-auto mt-4" @click="confirmClick">
+      <button
+        class="btn-bubble mx-auto mt-4"
+        @click="confirmClick"
+      >
         Confirm Mail Address
       </button>
     </div>
@@ -25,16 +31,20 @@ import Banner from '../components/Banner';
 export default {
   name: 'Login',
 
-  props: {},
-
   components: {
     Banner,
   },
+
+  props: {},
 
   data: function() {
     return {
       token: '',
     };
+  },
+
+  mounted: function() {
+    this.token = this.$route.query.token;
   },
 
   methods: {
@@ -53,10 +63,6 @@ export default {
           console.error(err);
         });
     },
-  },
-
-  mounted: function() {
-    this.token = this.$route.query.token;
   },
 };
 </script>

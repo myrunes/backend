@@ -1,6 +1,10 @@
 <template>
   <div class="searchbar">
-    <input ref="inpt" type="text" @input="onInput" />
+    <input
+      ref="inpt"
+      type="text"
+      @input="onInput"
+    />
     <slot></slot>
     <a @click="onClose">
       <img src="/assets/close-black.svg" />
@@ -14,6 +18,10 @@
 export default {
   name: 'SearchBar',
 
+  mounted() {
+    this.$refs.inpt.focus();
+  },
+
   methods: {
     onClose() {
       this.$emit('close');
@@ -25,10 +33,6 @@ export default {
         event: event,
       });
     },
-  },
-
-  mounted() {
-    this.$refs.inpt.focus();
   },
 };
 </script>

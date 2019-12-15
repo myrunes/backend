@@ -3,9 +3,8 @@
 module.exports = {
   extends: ['plugin:vue/recommended'],
   rules: {
-    'no-console': 'off',
-    'vue': {
-      'html-self-closing': 'off',
-    },
+    'no-console': 0,
+    'vue/html-self-closing': 0,
+    'vue/require-default-prop': 0,
   },
 };

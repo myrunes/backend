@@ -2,54 +2,86 @@
 
 <template>
   <div>
-    <b-modal id="modalShare" title="Share Page" @ok="shareOk">
-      <p v-if="!share.uid">This page has not been shared yet. Create a share link below.</p>
+    <b-modal
+      id="modalShare"
+      title="Share Page"
+      @ok="shareOk"
+    >
+      <p v-if="!share.uid">
+        This page has not been shared yet. Create a share link below.
+      </p>
       <div v-else>
-        <p class="m-0">Share link:</p>
-        <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
+        <p class="m-0">
+          Share link:
+        </p>
+        <p class="bg-ident">
+          {{ `${getWindowLocation()}/p/${share.ident}` }}
+        </p>
         <p>
           Visited
           <b>{{ share.accesses }}</b> times.
         </p>
       </div>
 
-      <h5 class="mt-4">Max Uses</h5>
+      <h5 class="mt-4">
+        Max Uses
+      </h5>
       <i>
         Number of times the link can be accessed. Set to -1 to set this
         infinite.
       </i>
-      <b-form-input type="number" min="-1" value="0" v-model="share.maxaccesses"></b-form-input>
+      <b-form-input
+        v-model="share.maxaccesses"
+        type="number"
+        min="-1"
+        value="0"
+      ></b-form-input>
 
-      <h5 class="mt-4">Expires</h5>
+      <h5 class="mt-4">
+        Expires
+      </h5>
       <i>
         Time at which the link will expire. Leave empty to set to never
         expire.
       </i>
       <b-row>
         <b-col>
-          <b-form-input type="date" ref="shareDate" v-model="share._expires.date"></b-form-input>
+          <b-form-input
+            ref="shareDate"
+            v-model="share._expires.date"
+            type="date"
+          ></b-form-input>
         </b-col>
         <b-col>
-          <b-form-input type="time" ref="shareTime" v-model="share._expires.time"></b-form-input>
+          <b-form-input
+            ref="shareTime"
+            v-model="share._expires.time"
+            type="time"
+          ></b-form-input>
         </b-col>
       </b-row>
 
       <b-button
+        v-if="share.uid"
         variant="danger"
         class="w-100 mt-3 text-white"
         @click="resetShare"
-        v-if="share.uid"
-      >RESET SHARE</b-button>
+      >
+        RESET SHARE
+      </b-button>
     </b-modal>
 
-    <Banner class="mb-3" ref="banner"></Banner>
+    <Banner
+      ref="banner"
+      class="mb-3"
+    ></Banner>
 
     <div>
       <div class="position-relative mb-3">
         <input
+          v-model="page.title"
           type="text"
           class="tb tb-title"
-          v-model="page.title"
           placeholder="TITLE"
           @change="titleChange"
         />
@@ -100,7 +132,11 @@
             :class="{ disabled: page.primary.rows[rowIndex] !== rune }"
             @click="primaryClick(rowIndex, rune)"
           >
-            <img :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`" width="60" height="60" />
+            <img
+              :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`"
+              width="60"
+              height="60"
+            />
           </a>
         </div>
       </div>
@@ -158,9 +194,25 @@
     </div>
 
     <div class="ctrl-btns">
-      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">SHARE</button>
-      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">CANCEL</button>
-      <button class="btn-slide btn-save shadow" @click="save">SAVE</button>
+      <button
+        v-if="created"
+        class="btn-slide mr-3 shadow"
+        @click="shareOpen"
+      >
+        SHARE
+      </button>
+      <button
+        class="btn-slide mr-3 btn-cancel shadow"
+        @click="$router.back()"
+      >
+        CANCEL
+      </button>
+      <button
+        class="btn-slide btn-save shadow"
+        @click="save"
+      >
+        SAVE
+      </button>
     </div>
   </div>
 </template>
@@ -223,6 +275,41 @@ export default {
 
       wasUpdated: false,
     };
+  },
+
+  created: function() {
+    this.uid = this.$route.params.uid;
+
+    this.champs = ChampData;
+
+    Rest.getRunes()
+      .then((res) => {
+        if (!res.body) return;
+        this.runes = res.body;
+
+        if (this.uid !== 'new') {
+          Rest.getPage(this.uid)
+            .then((res) => {
+              if (!res.body) return;
+              this.created = true;
+              this.page = res.body;
+              this.page.champions
+                .map((c) => ChampData.find((cd) => cd.id === c))
+                .forEach((c) => this.$refs.tagChamps.append(c));
+            })
+            .catch(console.error);
+        }
+      })
+      .catch(console.error);
+  },
+
+  updated: function() {
+    if (!this.wasUpdated && this.$route.query && this.$route.query.champ) {
+      let champ = this.$route.query.champ;
+      this.page.champions.push(champ);
+      this.$refs.tagChamps.append(champ);
+      this.wasUpdated = true;
+    }
   },
 
   methods: {
@@ -447,41 +534,6 @@ export default {
     champFilter(c, q) {
       return c.name.toLowerCase().includes(q.toLowerCase());
     },
-  },
-
-  created: function() {
-    this.uid = this.$route.params.uid;
-
-    this.champs = ChampData;
-
-    Rest.getRunes()
-      .then((res) => {
-        if (!res.body) return;
-        this.runes = res.body;
-
-        if (this.uid !== 'new') {
-          Rest.getPage(this.uid)
-            .then((res) => {
-              if (!res.body) return;
-              this.created = true;
-              this.page = res.body;
-              this.page.champions
-                .map((c) => ChampData.find((cd) => cd.id === c))
-                .forEach((c) => this.$refs.tagChamps.append(c));
-            })
-            .catch(console.error);
-        }
-      })
-      .catch(console.error);
-  },
-
-  updated: function() {
-    if (!this.wasUpdated && this.$route.query && this.$route.query.champ) {
-      let champ = this.$route.query.champ;
-      this.page.champions.push(champ);
-      this.$refs.tagChamps.append(champ);
-      this.wasUpdated = true;
-    }
   },
 };
 </script>

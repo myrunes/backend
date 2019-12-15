@@ -4,39 +4,68 @@
   <div>
     <div
       v-if="isDragging"
+      class="hover-detector top"
       @dragenter="onHoverDetectorEnter(true)"
       @dragleave="onHoverDetectorLeave(true)"
-      class="hover-detector top"
     ></div>
     <div
       v-if="isDragging"
+      class="hover-detector bottom"
       @dragenter="onHoverDetectorEnter(false)"
       @dragleave="onHoverDetectorLeave(false)"
-      class="hover-detector bottom"
     ></div>
 
-    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
-      <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
+    <SearchBar
+      v-if="search"
+      class="searchbar"
+      @close="search = false"
+      @input="onSearchInput"
+    >
+      <b-dropdown
+        :text="`Sorted by: ${sortByText}`"
+        class="my-auto mr-3"
+      >
+        <b-dropdown-item @click="onSortBy('custom')">
+          Custom
+        </b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')">
+          Created Date
+        </b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('title')">
+          Title
+        </b-dropdown-item>
       </b-dropdown>
     </SearchBar>
-    <InfoBubble ref="info" color="orange" @hides="onInfoClose">
+    <InfoBubble
+      ref="info"
+      color="orange"
+      @hides="onInfoClose"
+    >
       <p>
         Searching for a specific page? Press
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
-    <div class="champ-header mb-4" v-if="champ" :style="{ 'padding-top': search ? '20px' : '0' }">
-      <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
+    <div
+      v-if="champ"
+      class="champ-header mb-4"
+      :style="{ 'padding-top': search ? '20px' : '0' }"
+    >
+      <img
+        :src="`/assets/champ-avis/${champ}.png`"
+        width="42"
+        height="42"
+      />
       <h2>{{ champData.name.toUpperCase() }}</h2>
     </div>
-    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+    <div
+      class="page-container"
+      :style="{ 'padding-top': search ? '75px' : '0' }"
+    >
       <draggable
         :list="pages"
         :disabled="search"
-        chosenClass="chosen"
+        chosen-class="chosen"
         @start="isDragging = true"
         @end="isDragging = false"
         @update="onUpdate"
@@ -59,7 +88,7 @@
     <div class="ctrl-btns">
       <button
         class="btn-slide btn-new favorite"
-        :class="{ active: this.favorites.includes(this.champ) }"
+        :class="{ active: favorites.includes(champ) }"
         @click="toggleFav"
       ></button>
       <button
@@ -130,6 +159,33 @@ export default {
 
       return 'Default';
     },
+  },
+
+  created: function() {
+    this.sortBy = this.$route.query.sortBy;
+
+    if (!this.sortBy) {
+      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
+    }
+
+    this.champ = this.$route.params.champ;
+    this.reload();
+
+    this.champData = ChampData.find((c) => c.id === this.champ);
+
+    Utils.setWindowListener('keydown', this.onSearchPress);
+    Utils.setWindowListener('keydown', this.onEscapePress);
+  },
+
+  destroyed: function() {
+    Utils.removeWindowListener('keydown', this.onSearchPress);
+    Utils.removeWindowListener('keydown', this.onEscapePress);
+  },
+
+  mounted() {
+    if (!window.localStorage['info-page-search']) {
+      setTimeout(this.$refs.info.show, 3000);
+    }
   },
 
   methods: {
@@ -230,33 +286,6 @@ export default {
     onHoverDetectorLeave(isTop) {
       clearInterval(this.scrollTimer);
     },
-  },
-
-  created: function() {
-    this.sortBy = this.$route.query.sortBy;
-
-    if (!this.sortBy) {
-      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
-    }
-
-    this.champ = this.$route.params.champ;
-    this.reload();
-
-    this.champData = ChampData.find((c) => c.id === this.champ);
-
-    Utils.setWindowListener('keydown', this.onSearchPress);
-    Utils.setWindowListener('keydown', this.onEscapePress);
-  },
-
-  destroyed: function() {
-    Utils.removeWindowListener('keydown', this.onSearchPress);
-    Utils.removeWindowListener('keydown', this.onEscapePress);
-  },
-
-  mounted() {
-    if (!window.localStorage['info-page-search']) {
-      setTimeout(this.$refs.info.show, 3000);
-    }
   },
 };
 </script>

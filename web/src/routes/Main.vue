@@ -4,20 +4,34 @@
   <div>
     <div class="outer-container">
       <div class="searchbar mx-auto position-relative">
-        <input type="text" class="tb tb-champ" autocomplete="off" @input="searchAndDisplay" />
+        <input
+          type="text"
+          class="tb tb-champ"
+          autocomplete="off"
+          @input="searchAndDisplay"
+        />
         <span class="tb tb-champ"></span>
       </div>
     </div>
-    <h3 class="mx-auto my-5 text-center" v-if="displayFavs">YOUR FAVORITES</h3>
+    <h3
+      v-if="displayFavs"
+      class="mx-auto my-5 text-center"
+    >
+      YOUR FAVORITES
+    </h3>
     <div class="container mt-5 champs-container">
       <a
         v-for="c in displayedChamps"
         :key="c"
-        @click="openChamp(c)"
         class="champ-tile"
         :class="{ 'no-pages': !pages[c] }"
+        @click="openChamp(c)"
       >
-        <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100" />
+        <img
+          :src="`/assets/champ-avis/${c}.png`"
+          width="100"
+          height="100"
+        />
         <p>{{ pages[c] }}</p>
       </a>
     </div>
@@ -42,9 +56,9 @@ const SHORTS = {
 export default {
   name: 'Main',
 
-  props: {},
-
   components: {},
+
+  props: {},
 
   data: function() {
     return {
@@ -54,6 +68,28 @@ export default {
       favorites: [],
       displayFavs: false,
     };
+  },
+
+  created: function() {
+    this.champs = ChampData;
+
+    Rest.getFavorites()
+      .then((r) => {
+        if (r.body && r.body.data) {
+          this.favorites = r.body.data;
+          this.displayedChamps = r.body.data;
+          this.displayFavs = this.favorites && this.favorites.length != 0;
+        }
+      })
+      .catch(console.error);
+
+    Rest.getPages(null, null, true)
+      .then((r) => {
+        if (r.body && r.body.data) {
+          this.pages = r.body.data;
+        }
+      })
+      .catch(console.error);
   },
 
   methods: {
@@ -89,28 +125,6 @@ export default {
     openChamp(champ) {
       this.$router.push({ name: 'Champ', params: { champ } });
     },
-  },
-
-  created: function() {
-    this.champs = ChampData;
-
-    Rest.getFavorites()
-      .then((r) => {
-        if (r.body && r.body.data) {
-          this.favorites = r.body.data;
-          this.displayedChamps = r.body.data;
-          this.displayFavs = this.favorites && this.favorites.length != 0;
-        }
-      })
-      .catch(console.error);
-
-    Rest.getPages(null, null, true)
-      .then((r) => {
-        if (r.body && r.body.data) {
-          this.pages = r.body.data;
-        }
-      })
-      .catch(console.error);
   },
 };
 </script>

@@ -1,7 +1,10 @@
 <!-- @format -->
 
 <template>
-  <div class="cooke-info" v-if="!hidden">
+  <div
+    v-if="!hidden"
+    class="cooke-info"
+  >
     <div class="mx-auto d-flex">
       <p class="my-auto mr-4">
         By using our site, you acknowledge and accept the use of cookies on this
@@ -9,10 +12,14 @@
         More information about how we are using cookies you can read about
         <a
           href="https://github.com/myrunes/myrunes/blob/master/docs/cookie-usage.md"
-          >here</a
-        >.
+        >here</a>.
       </p>
-      <button class="btn-bubble my-auto" @click="hide">OK</button>
+      <button
+        class="btn-bubble my-auto"
+        @click="hide"
+      >
+        OK
+      </button>
     </div>
   </div>
 </template>
@@ -31,17 +38,17 @@ export default {
     };
   },
 
+  created: function() {
+    if (window.localStorage.getItem('cookies-accepted') !== '1') {
+      this.hidden = false;
+    }
+  },
+
   methods: {
     hide() {
       this.hidden = true;
       window.localStorage.setItem('cookies-accepted', '1');
     },
-  },
-
-  created: function() {
-    if (window.localStorage.getItem('cookies-accepted') !== '1') {
-      this.hidden = false;
-    }
   },
 };
 </script>

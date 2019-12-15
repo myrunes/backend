@@ -1,10 +1,20 @@
 <template>
-  <div class="wrapper" v-if="wrapper">
-    <div class="bubble" :style="{ 'background-image': gradient }" :class="{ visible: bubble }">
+  <div
+    v-if="wrapper"
+    class="wrapper"
+  >
+    <div
+      class="bubble"
+      :style="{ 'background-image': gradient }"
+      :class="{ visible: bubble }"
+    >
       <div class="my-auto">
         <slot></slot>
       </div>
-      <a class="close-btn" @click="hide(true)">
+      <a
+        class="close-btn"
+        @click="hide(true)"
+      >
         <img src="/assets/close.svg" />
       </a>
     </div>
@@ -28,24 +38,6 @@ export default {
     };
   },
 
-  methods: {
-    show() {
-      this.wrapper = true;
-      setTimeout(() => {
-        this.bubble = true;
-      }, 10);
-      this.$emit('shows');
-    },
-
-    hide(selfTriggered) {
-      this.bubble = false;
-      setTimeout(() => {
-        this.wrapper = false;
-      }, 700);
-      this.$emit('hides', !!selfTriggered);
-    },
-  },
-
   computed: {
     gradient() {
       let color1 = '#33691E';
@@ -66,6 +58,24 @@ export default {
       }
 
       return `linear-gradient(-10deg, ${color1}, ${color2})`;
+    },
+  },
+
+  methods: {
+    show() {
+      this.wrapper = true;
+      setTimeout(() => {
+        this.bubble = true;
+      }, 10);
+      this.$emit('shows');
+    },
+
+    hide(selfTriggered) {
+      this.bubble = false;
+      setTimeout(() => {
+        this.wrapper = false;
+      }, 700);
+      this.$emit('hides', !!selfTriggered);
     },
   },
 };

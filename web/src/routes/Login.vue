@@ -4,11 +4,16 @@
   <div class="outer-container">
     <div class="container my-auto">
       <div class="logo mx-auto"></div>
-      <Banner class="mx-auto mb-5" width="300px" ref="banner" @closing="bannerClosing"></Banner>
+      <Banner
+        ref="banner"
+        class="mx-auto mb-5"
+        width="300px"
+        @closing="bannerClosing"
+      ></Banner>
       <div class="d-flex position-relative">
         <b-tooltip
-          target="tbUsername"
           ref="unameToolTipShow"
+          target="tbUsername"
           triggers
           boundary="tbUsername"
           :show.sync="unameToolTipShow"
@@ -20,20 +25,20 @@
         </b-tooltip>
         <input
           id="tbUsername"
+          v-model="username"
           type="text"
           class="tb mx-auto"
-          @change="checkUsername"
-          @input="usernameInput"
-          v-model="username"
           placeholder="USERNAME"
           autocomplete="off"
+          @change="checkUsername"
+          @input="usernameInput"
         />
         <span class="tb mx-auto"></span>
       </div>
       <div class="d-flex mt-5 position-relative">
         <input
-          v-model="password"
           id="tbPassword"
+          v-model="password"
           type="password"
           class="tb mx-auto"
           placeholder="PASSWORD"
@@ -47,16 +52,28 @@
         <span class="tb mx-auto"></span>
       </div>
       <div class="d-flex mt-5">
-        <Slider class="mx-auto" v-model="remember">Stay logged in (30 days)</Slider>
+        <Slider
+          v-model="remember"
+          class="mx-auto"
+        >
+          Stay logged in (30 days)
+        </Slider>
       </div>
       <div class="d-flex mt-5">
-        <button class="btn-bubble mx-auto" @click="login">{{ register ? 'REGISTER' : 'LOGIN' }}</button>
+        <button
+          class="btn-bubble mx-auto"
+          @click="login"
+        >
+          {{ register ? 'REGISTER' : 'LOGIN' }}
+        </button>
       </div>
       <div class="d-flex mt-5">
         <router-link
           class="text-center mx-auto forgot-password"
           to="/passwordReset"
-        >Forgot password?</router-link>
+        >
+          Forgot password?
+        </router-link>
       </div>
     </div>
   </div>
@@ -73,12 +90,12 @@ import Slider from '../components/Slider';
 export default {
   name: 'Login',
 
-  props: {},
-
   components: {
     Banner,
     Slider,
   },
+
+  props: {},
 
   data: function() {
     return {
@@ -89,6 +106,17 @@ export default {
       remember: false,
       unameToolTipShow: false,
     };
+  },
+
+  mounted: function() {
+    if (window.localStorage.getItem('reginfo-dismissed') !== '1') {
+      this.$refs.banner.show(
+        'info',
+        'Not having an account? Simply register by typing in an unused username and the password you want to use.',
+        null,
+        true
+      );
+    }
   },
 
   methods: {
@@ -272,17 +300,6 @@ export default {
         window.localStorage.setItem('reginfo-dismissed', '1');
       }
     },
-  },
-
-  mounted: function() {
-    if (window.localStorage.getItem('reginfo-dismissed') !== '1') {
-      this.$refs.banner.show(
-        'info',
-        'Not having an account? Simply register by typing in an unused username and the password you want to use.',
-        null,
-        true
-      );
-    }
   },
 };
 </script>

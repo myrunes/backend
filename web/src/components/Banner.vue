@@ -8,11 +8,16 @@
     :style="{ width: width || '100%' }"
   >
     <div
-      class="close"
       v-if="internalClosable === null ? closable : internalClosable"
+      class="close"
       @click="hide(true)"
     ></div>
-    <p v-if="text" class="m-0">{{ text }}</p>
+    <p
+      v-if="text"
+      class="m-0"
+    >
+      {{ text }}
+    </p>
     <slot></slot>
   </div>
 </template>
@@ -39,6 +44,16 @@ export default {
     };
   },
 
+  computed: {
+    classObj: function() {
+      let type =
+        (this.internalType != null ? this.internalType : this.type) || 'info';
+      let o = {};
+      o[type] = true;
+      return o;
+    },
+  },
+
   methods: {
     emitClosing(active) {
       this.$emit('closing', !!active);
@@ -63,16 +78,6 @@ export default {
         this.internalVisible = false;
         this.emitClosing(active);
       }
-    },
-  },
-
-  computed: {
-    classObj: function() {
-      let type =
-        (this.internalType != null ? this.internalType : this.type) || 'info';
-      let o = {};
-      o[type] = true;
-      return o;
     },
   },
 };

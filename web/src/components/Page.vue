@@ -1,10 +1,15 @@
 <!-- @format -->
 
 <template>
-  <div class="page" @click="toPage(uid, $event)">
+  <div
+    class="page"
+    @click="toPage(uid, $event)"
+  >
     <div>
       <div class="headline">
-        <h3 class="mb-3 mr-3">{{ title }}</h3>
+        <h3 class="mb-3 mr-3">
+          {{ title }}
+        </h3>
         <div class="champs mt-2">
           <img
             v-for="c in champs.split(' ')"
@@ -15,8 +20,16 @@
           />
         </div>
       </div>
-      <div class="runes" :class="`tree-${primary}`">
-        <img :src="`/assets/rune-avis/${primary}.png`" class="mr-3" width="50" height="50" />
+      <div
+        class="runes"
+        :class="`tree-${primary}`"
+      >
+        <img
+          :src="`/assets/rune-avis/${primary}.png`"
+          class="mr-3"
+          width="50"
+          height="50"
+        />
         <img
           v-for="r in prows.split(' ')"
           :key="r"
@@ -25,8 +38,16 @@
           height="50"
         />
       </div>
-      <div class="runes" :class="`tree-${secondary}`">
-        <img :src="`/assets/rune-avis/${secondary}.png`" class="mr-3" width="50" height="50" />
+      <div
+        class="runes"
+        :class="`tree-${secondary}`"
+      >
+        <img
+          :src="`/assets/rune-avis/${secondary}.png`"
+          class="mr-3"
+          width="50"
+          height="50"
+        />
         <img
           v-for="r in srows.split(' ')"
           :key="r"
@@ -48,7 +69,12 @@
       </div>
     </div>
     <div>
-      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
+      <button
+        class="btn-slide btn-delete"
+        @click="deletePage"
+      >
+        {{ suredel ? 'SURE?' : 'DELETE' }}
+      </button>
     </div>
   </div>
 </template>

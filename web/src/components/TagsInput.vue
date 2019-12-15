@@ -3,11 +3,23 @@
 <template>
   <div>
     <div class="d-flex flex-wrap">
-      <div v-for="e in elements" :key="`element-${formatter(e)}`" class="element mb-2">
+      <div
+        v-for="e in elements"
+        :key="`element-${formatter(e)}`"
+        class="element mb-2"
+      >
         <p>{{ formatter(e) }}</p>
-        <a class="xbtn" @click="removeElement(e, true)">X</a>
+        <a
+          class="xbtn"
+          @click="removeElement(e, true)"
+        >X</a>
       </div>
-      <input type="text" class="tags-tb mb-2" ref="tbInput" @input="tbInput" />
+      <input
+        ref="tbInput"
+        type="text"
+        class="tags-tb mb-2"
+        @input="tbInput"
+      />
     </div>
     <div class="d-flex flex-wrap mt-3">
       <a

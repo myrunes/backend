@@ -1,9 +1,17 @@
 <!-- @format -->
 
 <template>
-  <div class="outer-container" :class="{ 'm-3': !loggedin }">
-    <div v-if="notfound" class="container-fluid d-flex">
-      <h1 class="mx-auto mt-5">This is not a shared page.&nbsp;&nbsp;:(</h1>
+  <div
+    class="outer-container"
+    :class="{ 'm-3': !loggedin }"
+  >
+    <div
+      v-if="notfound"
+      class="container-fluid d-flex"
+    >
+      <h1 class="mx-auto mt-5">
+        This is not a shared page.&nbsp;&nbsp;:(
+      </h1>
     </div>
 
     <div v-else>
@@ -21,7 +29,10 @@
         </div>
       </div>
       <h4>by {{ user.displayname }}</h4>
-      <div class="d-flex mt-4 bg-runes" :class="`tree-${page.primary.tree}`">
+      <div
+        class="d-flex mt-4 bg-runes"
+        :class="`tree-${page.primary.tree}`"
+      >
         <img
           :src="`/assets/rune-avis/${page.primary.tree}.png`"
           width="70"
@@ -37,7 +48,10 @@
           class="mr-2"
         />
       </div>
-      <div class="d-flex mt-4 bg-runes" :class="`tree-${page.secondary.tree}`">
+      <div
+        class="d-flex mt-4 bg-runes"
+        :class="`tree-${page.secondary.tree}`"
+      >
         <img
           :src="`/assets/rune-avis/${page.secondary.tree}.png`"
           width="70"
@@ -66,7 +80,12 @@
       </div>
 
       <div class="ctrl-btns">
-        <button class="btn-slide mr-3 shadow" @click="savePage">SAVE</button>
+        <button
+          class="btn-slide mr-3 shadow"
+          @click="savePage"
+        >
+          SAVE
+        </button>
       </div>
     </div>
   </div>
@@ -81,9 +100,9 @@ import EventBus from '../js/eventbus';
 export default {
   name: 'Share',
 
-  props: {},
-
   components: {},
+
+  props: {},
 
   data: function() {
     return {
@@ -113,6 +132,29 @@ export default {
     };
   },
 
+  created: function() {
+    this.ident = this.$route.params.ident;
+    Rest.getShare(this.ident)
+      .then((res) => {
+        if (res.body && res.body.share && res.body.page) {
+          this.share = res.body.share;
+          this.page = res.body.page;
+          this.user = res.body.user;
+        }
+      })
+      .catch((err) => {
+        if (err.code === 404) {
+          this.notfound = true;
+        } else {
+          console.error(err);
+        }
+      });
+
+    Rest.getMe()
+      .then(() => (this.loggedin = true))
+      .catch(() => {});
+  },
+
   methods: {
     savePage() {
       if (!this.loggedin) {
@@ -137,29 +179,6 @@ export default {
         })
         .catch(console.error);
     },
-  },
-
-  created: function() {
-    this.ident = this.$route.params.ident;
-    Rest.getShare(this.ident)
-      .then((res) => {
-        if (res.body && res.body.share && res.body.page) {
-          this.share = res.body.share;
-          this.page = res.body.page;
-          this.user = res.body.user;
-        }
-      })
-      .catch((err) => {
-        if (err.code === 404) {
-          this.notfound = true;
-        } else {
-          console.error(err);
-        }
-      });
-
-    Rest.getMe()
-      .then(() => (this.loggedin = true))
-      .catch(() => {});
   },
 };
 </script>
