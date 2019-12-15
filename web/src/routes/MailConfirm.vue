@@ -6,8 +6,12 @@
       <div class="logo mx-auto"></div>
       <Banner class="mx-auto mb-5" ref="banner"></Banner>
       <h2>Mail Address Confirmation</h2>
-      <p class="mt-4">Click the following button to confirm your Mail Address.</p>
-      <button class="btn-bubble mx-auto mt-4" @click="confirmClick">Confirm Mail Address</button>
+      <p class="mt-4">
+        Click the following button to confirm your Mail Address.
+      </p>
+      <button class="btn-bubble mx-auto mt-4" @click="confirmClick">
+        Confirm Mail Address
+      </button>
     </div>
   </div>
 </template>
@@ -16,7 +20,6 @@
 /** @format */
 
 import Rest from '../js/rest';
-import EventBus from '../js/eventbus';
 import Banner from '../components/Banner';
 
 export default {
