@@ -3,9 +3,9 @@ package main
 import (
 	"fmt"
 
-	"github.com/myrunes/myrunes/pkg/random"
+	"github.com/myrunes/myrunes/pkg/comparison"
 )
 
 func main() {
-	fmt.Println(random.String(16, "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"))
+	fmt.Println(comparison.Alphabetically("ac", "ab"))
 }
