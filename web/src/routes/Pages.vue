@@ -15,22 +15,11 @@
       @dragleave="onHoverDetectorLeave(false)"
     ></div>
 
-    <SearchBar
-      v-if="search"
-      class="searchbar"
-      @close="search = false"
-      @input="onSearchInput"
-    >
+    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy('custom')">
-          Custom
-        </b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')">
-          Created Date
-        </b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('title')">
-          Title
-        </b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
     </SearchBar>
 
@@ -41,13 +30,11 @@
       </p>
     </InfoBubble>
 
-    <div
-      class="page-container"
-      :style="{ 'padding-top': search ? '75px' : '0' }"
-    >
-      <h3 v-if="pages !== null && pages.length < 1" class="no-pages">
-        You have not created any pages yet. : (
-      </h3>
+    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+      <h3
+        v-if="pages !== null && pages.length < 1"
+        class="no-pages"
+      >You have not created any pages yet. : (</h3>
 
       <draggable
         :list="pages"
@@ -62,12 +49,12 @@
           :key="p.uid"
           :uid="p.uid"
           :title="p.title"
-          :champs="p.champions.join(' ')"
+          :champs="p.champions"
           :primary="p.primary.tree"
           :secondary="p.secondary.tree"
-          :prows="p.primary.rows.join(' ')"
-          :srows="p.secondary.rows.join(' ')"
-          :perks="p.perks.rows.join(' ')"
+          :prows="p.primary.rows"
+          :srows="p.secondary.rows"
+          :perks="p.perks.rows"
           @delete="deleted"
         />
       </draggable>
@@ -77,9 +64,7 @@
       <button
         class="btn-slide btn-new"
         @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >
-        +
-      </button>
+      >+</button>
     </div>
   </div>
 </template>

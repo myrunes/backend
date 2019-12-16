@@ -1,18 +1,13 @@
 <!-- @format -->
 
 <template>
-  <div
-    class="page"
-    @click="toPage(uid, $event)"
-  >
+  <div class="page" @click="toPage(uid, $event)">
     <div>
       <div class="headline">
-        <h3 class="mb-3 mr-3">
-          {{ title }}
-        </h3>
+        <h3 class="mb-3 mr-3">{{ title }}</h3>
         <div class="champs mt-2">
           <img
-            v-for="c in champs.split(' ')"
+            v-for="c in champs"
             :key="c"
             :src="`/assets/champ-avis/${c}.png`"
             width="20"
@@ -20,36 +15,20 @@
           />
         </div>
       </div>
-      <div
-        class="runes"
-        :class="`tree-${primary}`"
-      >
+      <div class="runes" :class="`tree-${primary}`">
+        <img :src="`/assets/rune-avis/${primary}.png`" class="mr-3" width="50" height="50" />
         <img
-          :src="`/assets/rune-avis/${primary}.png`"
-          class="mr-3"
-          width="50"
-          height="50"
-        />
-        <img
-          v-for="r in prows.split(' ')"
+          v-for="r in prows"
           :key="r"
           :src="`/assets/rune-avis/${primary}/${r}.png`"
           width="50"
           height="50"
         />
       </div>
-      <div
-        class="runes"
-        :class="`tree-${secondary}`"
-      >
+      <div class="runes" :class="`tree-${secondary}`">
+        <img :src="`/assets/rune-avis/${secondary}.png`" class="mr-3" width="50" height="50" />
         <img
-          :src="`/assets/rune-avis/${secondary}.png`"
-          class="mr-3"
-          width="50"
-          height="50"
-        />
-        <img
-          v-for="r in srows.split(' ')"
+          v-for="r in srows"
           :key="r"
           :src="`/assets/rune-avis/${secondary}/${r}.png`"
           width="50"
@@ -58,7 +37,7 @@
       </div>
       <div class="runes perks">
         <img
-          v-for="(r, i) in perks.split(' ')"
+          v-for="(r, i) in perks"
           :key="`perk-${r}-${i}`"
           :src="`/assets/rune-avis/perks/${r}.png`"
           width="30"
@@ -69,12 +48,7 @@
       </div>
     </div>
     <div>
-      <button
-        class="btn-slide btn-delete"
-        @click="deletePage"
-      >
-        {{ suredel ? 'SURE?' : 'DELETE' }}
-      </button>
+      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
     </div>
   </div>
 </template>
@@ -90,12 +64,12 @@ export default {
   props: {
     uid: String,
     title: String,
-    champs: String,
+    champs: Array,
     primary: String,
     secondary: String,
-    prows: String,
-    srows: String,
-    perks: String,
+    prows: Array,
+    srows: Array,
+    perks: Array,
   },
 
   data: function() {

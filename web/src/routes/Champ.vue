@@ -15,22 +15,11 @@
       @dragleave="onHoverDetectorLeave(false)"
     ></div>
 
-    <SearchBar
-      v-if="search"
-      class="searchbar"
-      @close="search = false"
-      @input="onSearchInput"
-    >
+    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy('custom')">
-          Custom
-        </b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')">
-          Created Date
-        </b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('title')">
-          Title
-        </b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
     </SearchBar>
 
@@ -41,22 +30,16 @@
       </p>
     </InfoBubble>
 
-    <div
-      v-if="champ"
-      class="champ-header mb-4"
-      :style="{ 'padding-top': search ? '20px' : '0' }"
-    >
+    <div v-if="champ" class="champ-header mb-4" :style="{ 'padding-top': search ? '20px' : '0' }">
       <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champData.name.toUpperCase() }}</h2>
     </div>
 
-    <div
-      class="page-container"
-      :style="{ 'padding-top': search ? '75px' : '0' }"
-    >
-      <h3 v-if="pages !== null && pages.length < 1" class="no-pages">
-        There are no pages belonging to this champion. : (
-      </h3>
+    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+      <h3
+        v-if="pages !== null && pages.length < 1"
+        class="no-pages"
+      >There are no pages belonging to this champion. : (</h3>
 
       <draggable
         :list="pages"
@@ -71,12 +54,12 @@
           :key="p.uid"
           :uid="p.uid"
           :title="p.title"
-          :champs="p.champions.join(' ')"
+          :champs="p.champions"
           :primary="p.primary.tree"
           :secondary="p.secondary.tree"
-          :prows="p.primary.rows.join(' ')"
-          :srows="p.secondary.rows.join(' ')"
-          :perks="p.perks.rows.join(' ')"
+          :prows="p.primary.rows"
+          :srows="p.secondary.rows"
+          :perks="p.perks.rows"
           @delete="deleted"
         />
       </draggable>
@@ -206,10 +189,7 @@ export default {
       this.sortBy = 'custom';
       window.localStorage.setItem('sort-pages-by', this.sortBy);
       console.log(this.pages.map((p) => p.uid));
-      Rest.setPageOrder(
-        this.pages.map((p) => p.uid),
-        this.champ
-      );
+      Rest.setPageOrder(this.pages.map((p) => p.uid), this.champ);
     },
 
     deleted() {
