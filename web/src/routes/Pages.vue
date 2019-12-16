@@ -21,10 +21,7 @@
       @close="search = false"
       @input="onSearchInput"
     >
-      <b-dropdown
-        :text="`Sorted by: ${sortByText}`"
-        class="my-auto mr-3"
-      >
+      <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
         <b-dropdown-item @click="onSortBy('custom')">
           Custom
         </b-dropdown-item>
@@ -36,20 +33,22 @@
         </b-dropdown-item>
       </b-dropdown>
     </SearchBar>
-    <InfoBubble
-      ref="info"
-      color="orange"
-      @hides="onInfoClose"
-    >
+
+    <InfoBubble ref="info" color="orange" @hides="onInfoClose">
       <p>
         Searching for a specific page? Press
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
+
     <div
       class="page-container"
       :style="{ 'padding-top': search ? '75px' : '0' }"
     >
+      <h3 v-if="pages !== null && pages.length < 1" class="no-pages">
+        You have not created any pages yet. : (
+      </h3>
+
       <draggable
         :list="pages"
         :disabled="search"
@@ -73,6 +72,7 @@
         />
       </draggable>
     </div>
+
     <div class="ctrl-btns">
       <button
         class="btn-slide btn-new"
@@ -107,7 +107,7 @@ export default {
 
   data: function() {
     return {
-      pages: [],
+      pages: null,
       pagesVisible: [],
       search: false,
       sortBy: 'created',
@@ -265,5 +265,11 @@ export default {
   right: 20px;
   z-index: 5;
   transition: all 0.25s ease-in-out;
+}
+
+.no-pages {
+  font-style: italic;
+  text-align: center;
+  margin-top: 30vh;
 }
 </style>

@@ -21,10 +21,7 @@
       @close="search = false"
       @input="onSearchInput"
     >
-      <b-dropdown
-        :text="`Sorted by: ${sortByText}`"
-        class="my-auto mr-3"
-      >
+      <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
         <b-dropdown-item @click="onSortBy('custom')">
           Custom
         </b-dropdown-item>
@@ -36,32 +33,31 @@
         </b-dropdown-item>
       </b-dropdown>
     </SearchBar>
-    <InfoBubble
-      ref="info"
-      color="orange"
-      @hides="onInfoClose"
-    >
+
+    <InfoBubble ref="info" color="orange" @hides="onInfoClose">
       <p>
         Searching for a specific page? Press
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
+
     <div
       v-if="champ"
       class="champ-header mb-4"
       :style="{ 'padding-top': search ? '20px' : '0' }"
     >
-      <img
-        :src="`/assets/champ-avis/${champ}.png`"
-        width="42"
-        height="42"
-      />
+      <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champData.name.toUpperCase() }}</h2>
     </div>
+
     <div
       class="page-container"
       :style="{ 'padding-top': search ? '75px' : '0' }"
     >
+      <h3 v-if="pages !== null && pages.length < 1" class="no-pages">
+        There are no pages belonging to this champion. : (
+      </h3>
+
       <draggable
         :list="pages"
         :disabled="search"
@@ -85,6 +81,7 @@
         />
       </draggable>
     </div>
+
     <div class="ctrl-btns">
       <button
         class="btn-slide btn-new favorite"
@@ -132,7 +129,7 @@ export default {
       champ: null,
       favorite: false,
       favorites: [],
-      pages: [],
+      pages: null,
       pagesVisible: [],
       search: false,
       sortBy: 'created',
@@ -209,7 +206,10 @@ export default {
       this.sortBy = 'custom';
       window.localStorage.setItem('sort-pages-by', this.sortBy);
       console.log(this.pages.map((p) => p.uid));
-      Rest.setPageOrder(this.pages.map((p) => p.uid), this.champ);
+      Rest.setPageOrder(
+        this.pages.map((p) => p.uid),
+        this.champ
+      );
     },
 
     deleted() {
@@ -312,5 +312,11 @@ export default {
 
 .active::after {
   background-image: url('/assets/fav-active.svg');
+}
+
+.no-pages {
+  font-style: italic;
+  text-align: center;
+  margin-top: 30vh;
 }
 </style>
