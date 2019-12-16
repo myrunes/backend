@@ -14,7 +14,7 @@
       >
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/myrunes/myrunes">GITHUB REPOSITORY</a>
-      &nbsp;&nbsp;|&nbsp;&nbsp; CONTACT: contact[at]zekro.de
+      &nbsp;&nbsp;|&nbsp;&nbsp; CONTACT: contact[at]myrunes.de
     </p>
   </footer>
 </template>
