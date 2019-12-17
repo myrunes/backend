@@ -4,11 +4,12 @@
   <div>
     <div class="outer-container">
       <div class="searchbar mx-auto position-relative">
+        <img class="search-icon" src="/assets/search.svg" />
         <input
           type="text"
           class="tb tb-champ"
           autocomplete="off"
-          :placeholder="searchBarPlaceholder"
+          placeholder="Search for a champion"
           @input="searchAndDisplay"
         />
         <span class="tb tb-champ"></span>
@@ -69,7 +70,6 @@ export default {
       pages: {},
       favorites: [],
       displayFavs: false,
-      searchBarPlaceholder: '',
     };
   },
 
@@ -159,7 +159,16 @@ export default {
 }
 
 .searchbar {
+  position: relative;
   margin-top: 20vh;
+}
+
+.search-icon {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: 10px;
+  opacity: 0.8;
 }
 
 span.tb-champ {
