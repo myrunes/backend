@@ -8,18 +8,24 @@
           type="text"
           class="tb tb-champ"
           autocomplete="off"
+          :placeholder="searchBarPlaceholder"
           @input="searchAndDisplay"
         />
         <span class="tb tb-champ"></span>
       </div>
     </div>
-    <h3
-      v-if="displayFavs"
-      class="mx-auto my-5 text-center"
-    >
-      YOUR FAVORITES
-    </h3>
+
+    <h3 v-if="displayFavs" class="mx-auto my-5 text-center">YOUR FAVORITES</h3>
+
     <div class="container mt-5 champs-container">
+      <div v-if="!displayedChamps || displayedChamps.length < 1" class="favorites-hint">
+        <img src="/assets/fav.svg" />
+        <span>
+          <h4>Did you know?</h4>
+          <p>You can favorite champions which then are displayed here.</p>
+        </span>
+      </div>
+
       <a
         v-for="c in displayedChamps"
         :key="c"
@@ -27,11 +33,7 @@
         :class="{ 'no-pages': !pages[c] }"
         @click="openChamp(c)"
       >
-        <img
-          :src="`/assets/champ-avis/${c}.png`"
-          width="100"
-          height="100"
-        />
+        <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100" />
         <p>{{ pages[c] }}</p>
       </a>
     </div>
@@ -67,6 +69,7 @@ export default {
       pages: {},
       favorites: [],
       displayFavs: false,
+      searchBarPlaceholder: '',
     };
   },
 
@@ -132,6 +135,18 @@ export default {
 <style scoped>
 /** @format */
 
+@keyframes favorites-hint-in {
+  0% {
+    opacity: 0;
+  }
+  33% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.75;
+  }
+}
+
 .outer-container {
   display: flex;
   width: 100%;
@@ -195,5 +210,21 @@ a:hover {
   cursor: pointer;
   opacity: 1;
   filter: none;
+}
+
+.favorites-hint {
+  display: flex;
+  max-width: 400px;
+  opacity: 0.75;
+
+  animation: favorites-hint-in 3s ease;
+}
+
+.favorites-hint > img {
+  width: 85px;
+  height: 85px;
+  border: dashed 3px white;
+  padding: 15px;
+  margin-right: 30px;
 }
 </style>

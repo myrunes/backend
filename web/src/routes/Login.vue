@@ -331,6 +331,7 @@ button {
 .forgot-password {
   text-decoration: underline !important;
   font-size: 14px;
+  color: white;
   opacity: 0.8;
   transition: all 0.25s ease;
 }
