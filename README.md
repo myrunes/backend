@@ -23,8 +23,9 @@ Of course, if you don't trust us, you can download the source code and build the
 
 # To Do & Future Goals
 
+To get an overview about current goals and milestones for the next release version, take a look into the [**Projects**](https://github.com/myrunes/myrunes/projects) page.
 
-To see a list of current goals, ideas and bugs, please take a look to the MYRUNES [**Trello Board**](http://todo.myrunes.com).
+ A list of open issues and ideas is availabe with the [**issue tracker**](https://github.com/myrunes/myrunes/issues) of this repository.
 
 ---
 
