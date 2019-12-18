@@ -88,6 +88,7 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 
 	ok, err := m.get(m.collections.users, bson.M{"$or": bson.A{
 		bson.M{"username": username},
+		bson.M{"mailaddress": username},
 		bson.M{"uid": uid},
 	}}, user)
 
@@ -137,6 +138,14 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 
 	if user.PageOrder != nil {
 		oldUser.PageOrder = user.PageOrder
+	}
+
+	if user.MailAddress != "" {
+		if user.MailAddress == "__RESET__" {
+			oldUser.MailAddress = ""
+		} else {
+			oldUser.MailAddress = user.MailAddress
+		}
 	}
 
 	return true, m.insertOrUpdate(m.collections.users,

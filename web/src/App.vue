@@ -29,6 +29,8 @@ import Footer from './components/Footer';
 import CookieInfo from './components/CookieInfo';
 import InfoBubble from './components/InfoBubble';
 
+const NO_LOGIN_ROUTES = ['Share', 'MailConfirm', 'PasswordReset'];
+
 export default {
   name: 'app',
 
@@ -53,7 +55,7 @@ export default {
     Rest.getVersion().then((res) => {
       if (
         res.body.release !== 'TRUE' &&
-        window.sessionStorage.getItem('beta-info-accepted') !== '1'
+        window.localStorage.getItem('beta-info-accepted') !== '1'
       ) {
         setTimeout(() => this.$refs.betawarn.show(), 1000);
       }
@@ -75,14 +77,14 @@ export default {
           this.loggedIn = true;
         })
         .catch((err) => {
-          if (this.$route.name !== 'Share') {
+          if (!NO_LOGIN_ROUTES.includes(this.$route.name)) {
             this.$router.replace('/login');
           }
         });
     },
 
     onBetaWarnHides() {
-      window.sessionStorage.setItem('beta-info-accepted', '1');
+      window.localStorage.setItem('beta-info-accepted', '1');
     },
   },
 };

@@ -9,13 +9,22 @@
         </button>
       </router-link>
       <router-link to="/pages">
-        <button class="btn-slide h-100">MY PAGES</button>
+        <button class="btn-slide h-100">
+          MY PAGES
+        </button>
       </router-link>
       <router-link to="/settings">
-        <button class="btn-slide h-100">MY SETTINGS</button>
+        <button class="btn-slide h-100">
+          MY SETTINGS
+        </button>
       </router-link>
     </div>
-    <button class="btn-slide btn-logout" @click="logout">LOGOUT</button>
+    <button
+      class="btn-slide btn-logout"
+      @click="logout"
+    >
+      LOGOUT
+    </button>
   </div>
 </template>
 

@@ -9,10 +9,10 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/valyala/fasthttp"
 
-	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/myrunes/myrunes/internal/database"
 	"github.com/myrunes/myrunes/internal/objects"
 	"github.com/myrunes/myrunes/pkg/random"
+	routing "github.com/qiangxue/fasthttp-routing"
 	"golang.org/x/crypto/bcrypt"
 )
 
@@ -62,7 +62,7 @@ func (auth *Authorization) CheckHash(hash, pass []byte) bool {
 }
 
 func (auth *Authorization) CreateSessionKey() (string, error) {
-	return random.GetRandBase64Str(sessionKeyLength)
+	return random.Base64(sessionKeyLength)
 }
 
 func (auth *Authorization) Login(ctx *routing.Context) bool {

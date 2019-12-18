@@ -4,14 +4,13 @@
   <footer>
     <p>
       © 2019 MYRUNES [{{ version }}] &nbsp;&nbsp;|&nbsp;&nbsp;
-      <a href="https://github.com/myrunes/myrunes/blob/master/docs/imprint.txt"
-        >IMPRINT</a
-      >
+      <a
+        href="https://github.com/myrunes/myrunes/blob/master/docs/imprint.txt"
+      >IMPRINT</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a
         href="https://github.com/myrunes/myrunes/blob/master/docs/cookie-usage.md"
-        >COOKIE USAGE</a
-      >
+      >COOKIE USAGE</a>
       &nbsp;&nbsp;|&nbsp;&nbsp;
       <a href="https://github.com/myrunes/myrunes">GITHUB REPOSITORY</a>
       &nbsp;&nbsp;|&nbsp;&nbsp; CONTACT: contact[at]myrunes.com

@@ -1,9 +1,18 @@
 <!-- @format -->
 
 <template>
-  <div class="slider" @click="update">
-    <span class="bar" :class="{ enabled: state }"></span>
-    <span class="dot" :class="{ enabled: state }"></span>
+  <div
+    class="slider"
+    @click="update"
+  >
+    <span
+      class="bar"
+      :class="{ enabled: state }"
+    ></span>
+    <span
+      class="dot"
+      :class="{ enabled: state }"
+    ></span>
     <slot></slot>
   </div>
 </template>

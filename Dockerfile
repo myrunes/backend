@@ -23,6 +23,9 @@ RUN cd ./web &&\
 
 
 FROM debian:stretch-slim AS final
+RUN apt-get update &&\
+    apt-get install -y ca-certificates &&\
+    update-ca-certificates
 WORKDIR /app
 COPY --from=build /app .
 

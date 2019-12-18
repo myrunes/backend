@@ -143,6 +143,19 @@ span.tb {
   transform: translate(-50%, -50%) scale(19);
 }
 
+.btn-bubble:disabled {
+  background-color: rgb(71, 71, 71);
+}
+
+.btn-bubble:disabled::before {
+  display: none;
+}
+
+.btn-bubble:disabled:hover {
+  cursor: not-allowed;
+  color: white;
+}
+
 .btn-slide {
   z-index: 1;
   position: relative;

@@ -4,18 +4,35 @@
   <div>
     <div class="outer-container">
       <div class="searchbar mx-auto position-relative">
-        <input type="text" class="tb tb-champ" autocomplete="off" @input="searchAndDisplay" />
+        <img class="search-icon" src="/assets/search.svg" />
+        <input
+          type="text"
+          class="tb tb-champ"
+          autocomplete="off"
+          placeholder="Search for a champion"
+          @input="searchAndDisplay"
+        />
         <span class="tb tb-champ"></span>
       </div>
     </div>
-    <h3 class="mx-auto my-5 text-center" v-if="displayFavs">YOUR FAVORITES</h3>
+
+    <h3 v-if="displayFavs" class="mx-auto my-5 text-center">YOUR FAVORITES</h3>
+
     <div class="container mt-5 champs-container">
+      <div v-if="!displayedChamps || displayedChamps.length < 1" class="favorites-hint">
+        <img src="/assets/fav.svg" />
+        <span>
+          <h4>Did you know?</h4>
+          <p>You can favorite champions which then are displayed here.</p>
+        </span>
+      </div>
+
       <a
         v-for="c in displayedChamps"
         :key="c"
-        @click="openChamp(c)"
         class="champ-tile"
         :class="{ 'no-pages': !pages[c] }"
+        @click="openChamp(c)"
       >
         <img :src="`/assets/champ-avis/${c}.png`" width="100" height="100" />
         <p>{{ pages[c] }}</p>
@@ -29,13 +46,22 @@
 
 import EventBus from '../js/eventbus';
 import Rest from '../js/rest';
+import ChampData from '../data/champs.json';
+
+const SHORTS = {
+  mf: 'miss-fortune',
+  ww: 'warwick',
+  lb: 'leblanc',
+  tf: 'twisted-fate',
+  gp: 'gankplank',
+};
 
 export default {
   name: 'Main',
 
-  props: {},
-
   components: {},
+
+  props: {},
 
   data: function() {
     return {
@@ -47,33 +73,8 @@ export default {
     };
   },
 
-  methods: {
-    searchAndDisplay(e) {
-      if (!e.target || e.target.value === undefined) return;
-      let val = e.target.value.toLowerCase();
-      if (val === '') {
-        this.displayedChamps = this.favorites || [];
-        this.displayFavs = this.favorites && this.favorites.length != 0;
-      } else {
-        console.log(this.champs.filter((c) => c.includes(val)));
-        this.displayedChamps = this.champs.filter((c) => c.includes(val));
-        this.displayFavs = false;
-      }
-    },
-
-    openChamp(champ) {
-      this.$router.push({ name: 'Champ', params: { champ } });
-    },
-  },
-
   created: function() {
-    Rest.getChamps()
-      .then((r) => {
-        if (r.body && r.body.data) {
-          this.champs = r.body.data;
-        }
-      })
-      .catch(console.error);
+    this.champs = ChampData;
 
     Rest.getFavorites()
       .then((r) => {
@@ -93,11 +94,58 @@ export default {
       })
       .catch(console.error);
   },
+
+  methods: {
+    searchAndDisplay(e) {
+      if (!e.target || e.target.value === undefined) return;
+      let val = e.target.value.toLowerCase();
+      if (val === '') {
+        this.displayedChamps = this.favorites || [];
+        this.displayFavs = this.favorites && this.favorites.length != 0;
+      } else {
+        this.displayedChamps = this.champs
+          .filter((c) => this.searchFilter(c, val))
+          .map((c) => c.id);
+        this.displayFavs = false;
+      }
+    },
+
+    searchFilter(c, val) {
+      const name = c.name.toLowerCase();
+      const nameStripped = c.id.replace('-', ' ');
+      const nameConcat = c.id.replace('-', '');
+
+      val = val.toLowerCase();
+
+      return (
+        name.includes(val) ||
+        nameStripped.includes(val) ||
+        nameConcat.includes(val) ||
+        SHORTS[val] === c.id
+      );
+    },
+
+    openChamp(champ) {
+      this.$router.push({ name: 'Champ', params: { champ } });
+    },
+  },
 };
 </script>
 
 <style scoped>
 /** @format */
+
+@keyframes favorites-hint-in {
+  0% {
+    opacity: 0;
+  }
+  33% {
+    opacity: 0;
+  }
+  100% {
+    opacity: 0.75;
+  }
+}
 
 .outer-container {
   display: flex;
@@ -111,7 +159,16 @@ export default {
 }
 
 .searchbar {
+  position: relative;
   margin-top: 20vh;
+}
+
+.search-icon {
+  position: absolute;
+  height: 30px;
+  width: 30px;
+  top: 10px;
+  opacity: 0.8;
 }
 
 span.tb-champ {
@@ -162,5 +219,21 @@ a:hover {
   cursor: pointer;
   opacity: 1;
   filter: none;
+}
+
+.favorites-hint {
+  display: flex;
+  max-width: 400px;
+  opacity: 0.75;
+
+  animation: favorites-hint-in 3s ease;
+}
+
+.favorites-hint > img {
+  width: 85px;
+  height: 85px;
+  border: dashed 3px white;
+  padding: 15px;
+  margin-right: 30px;
 }
 </style>

@@ -4,15 +4,15 @@
   <div>
     <div
       v-if="isDragging"
+      class="hover-detector top"
       @dragenter="onHoverDetectorEnter(true)"
       @dragleave="onHoverDetectorLeave(true)"
-      class="hover-detector top"
     ></div>
     <div
       v-if="isDragging"
+      class="hover-detector bottom"
       @dragenter="onHoverDetectorEnter(false)"
       @dragleave="onHoverDetectorLeave(false)"
-      class="hover-detector bottom"
     ></div>
 
     <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
@@ -22,17 +22,24 @@
         <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
       </b-dropdown>
     </SearchBar>
+
     <InfoBubble ref="info" color="orange" @hides="onInfoClose">
       <p>
         Searching for a specific page? Press
         <b>CTRL + F</b>!
       </p>
     </InfoBubble>
+
     <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+      <h3
+        v-if="pages !== null && pages.length < 1"
+        class="no-pages"
+      >You have not created any pages yet. : (</h3>
+
       <draggable
         :list="pages"
         :disabled="search"
-        chosenClass="chosen"
+        chosen-class="chosen"
         @start="isDragging = true"
         @end="isDragging = false"
         @update="onUpdate"
@@ -42,16 +49,17 @@
           :key="p.uid"
           :uid="p.uid"
           :title="p.title"
-          :champs="p.champions.join(' ')"
+          :champs="p.champions"
           :primary="p.primary.tree"
           :secondary="p.secondary.tree"
-          :prows="p.primary.rows.join(' ')"
-          :srows="p.secondary.rows.join(' ')"
-          :perks="p.perks.rows.join(' ')"
+          :prows="p.primary.rows"
+          :srows="p.secondary.rows"
+          :perks="p.perks.rows"
           @delete="deleted"
         />
       </draggable>
     </div>
+
     <div class="ctrl-btns">
       <button
         class="btn-slide btn-new"
@@ -84,7 +92,7 @@ export default {
 
   data: function() {
     return {
-      pages: [],
+      pages: null,
       pagesVisible: [],
       search: false,
       sortBy: 'created',
@@ -104,7 +112,33 @@ export default {
         case 'title':
           return 'Title';
       }
+
+      return 'Default';
     },
+  },
+
+  created: function() {
+    this.sortBy = this.$route.query.sortBy;
+
+    if (!this.sortBy) {
+      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
+    }
+
+    this.reload();
+
+    Utils.setWindowListener('keydown', this.onSearchPress);
+    Utils.setWindowListener('keydown', this.onEscapePress);
+  },
+
+  destroyed: function() {
+    Utils.removeWindowListener('keydown', this.onSearchPress);
+    Utils.removeWindowListener('keydown', this.onEscapePress);
+  },
+
+  mounted() {
+    if (!window.localStorage['info-page-search']) {
+      setTimeout(this.$refs.info.show, 3000);
+    }
   },
 
   methods: {
@@ -191,30 +225,6 @@ export default {
       clearInterval(this.scrollTimer);
     },
   },
-
-  created: function() {
-    this.sortBy = this.$route.query.sortBy;
-
-    if (!this.sortBy) {
-      this.sortBy = window.localStorage.getItem('sort-pages-by') || 'created';
-    }
-
-    this.reload();
-
-    Utils.setWindowListener('keydown', this.onSearchPress);
-    Utils.setWindowListener('keydown', this.onEscapePress);
-  },
-
-  destroyed: function() {
-    Utils.removeWindowListener('keydown', this.onSearchPress);
-    Utils.removeWindowListener('keydown', this.onEscapePress);
-  },
-
-  mounted() {
-    if (!window.localStorage['info-page-search']) {
-      setTimeout(this.$refs.info.show, 3000);
-    }
-  },
 };
 </script>
 
@@ -240,5 +250,11 @@ export default {
   right: 20px;
   z-index: 5;
   transition: all 0.25s ease-in-out;
+}
+
+.no-pages {
+  font-style: italic;
+  text-align: center;
+  margin-top: 30vh;
 }
 </style>

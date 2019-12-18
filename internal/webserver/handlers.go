@@ -9,11 +9,11 @@ import (
 	"github.com/myrunes/myrunes/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	routing "github.com/qiangxue/fasthttp-routing"
-	"github.com/valyala/fasthttp"
 	"github.com/myrunes/myrunes/internal/database"
 	"github.com/myrunes/myrunes/internal/objects"
 	"github.com/myrunes/myrunes/internal/static"
+	routing "github.com/qiangxue/fasthttp-routing"
+	"github.com/valyala/fasthttp"
 )
 
 func (ws *WebServer) handlerFiles(ctx *routing.Context) error {
@@ -45,7 +45,7 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if data.UserName == "" || data.Password == "" {
+	if data.UserName == "" || data.Password == "" || len(data.Password) < 8 {
 		return jsonError(ctx, errInvalidArguments, fasthttp.StatusBadRequest)
 	}
 
@@ -115,6 +115,9 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	if reqUser.NewPassword != "" {
+		if len(reqUser.NewPassword) < 8 {
+			return jsonError(ctx, fmt.Errorf("invalid new password"), fasthttp.StatusBadRequest)
+		}
 		newUser.PassHash, err = ws.auth.CreateHash([]byte(reqUser.NewPassword))
 		if err != nil {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
@@ -618,7 +621,7 @@ func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
 	var err error
 	token := new(objects.APIToken)
 
-	if token.Token, err = random.GetRandBase64Str(apiTokenLength); err != nil {
+	if token.Token, err = random.Base64(apiTokenLength); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -678,6 +681,177 @@ func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
 
 	user.PageOrder[champion] = pageOrder.PageOrder
 	if _, err := ws.db.EditUser(user, false); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	mail := new(setMailRequest)
+	if err := parseJSONBody(ctx, mail); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if mail.Reset {
+		_, err := ws.db.EditUser(&objects.User{
+			UID:         user.UID,
+			MailAddress: "__RESET__",
+		}, false)
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token, err := random.String(16, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	mailText := fmt.Sprintf(
+		"Please open the following link to confirm your E-Mail address:\n"+
+			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
+
+	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	ws.mailConfirmation.Set(token, &mailConfirmationData{
+		MailAddress: mail.MailAddress,
+		UserID:      user.UID,
+	}, 12*time.Hour)
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
+	token := new(confirmMail)
+	if err := parseJSONBody(ctx, token); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.mailConfirmation.Contains(token.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	data, ok := ws.mailConfirmation.GetValue(token.Token).(*mailConfirmationData)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	ws.mailConfirmation.Remove(token.Token)
+
+	_, err := ws.db.EditUser(&objects.User{
+		UID:         data.UserID,
+		MailAddress: data.MailAddress,
+	}, false)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, err, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
+	reset := new(passwordReset)
+	if err := parseJSONBody(ctx, reset); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	user, err := ws.db.GetUser(-1, reset.MailAddress)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user == nil || user.MailAddress == "" {
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token, err := random.String(24, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	mailText := fmt.Sprintf("Please follow the link below to reset your accounts password:\n"+
+		"%s/passwordReset?token=%s", ws.config.PublicAddr, token)
+	err = ws.ms.SendMailFromDef(user.MailAddress, "Password reset | myrunes", mailText, "text/plain")
+	if err == nil {
+		ws.pwReset.Set(token, user.UID, 10*time.Minute)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
+	data := new(confirmPasswordReset)
+	if err := parseJSONBody(ctx, data); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if data.NewPassword == "" || len(data.NewPassword) < 8 {
+		return jsonError(ctx, fmt.Errorf("invalid password length"), fasthttp.StatusBadRequest)
+	}
+
+	if !ws.pwReset.Contains(data.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	uID, ok := ws.pwReset.GetValue(data.Token).(snowflake.ID)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	user, err := ws.db.GetUser(uID, "")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user == nil {
+		return jsonError(ctx, fmt.Errorf("unknown user"), fasthttp.StatusBadRequest)
+	}
+
+	errCheckFailed := fmt.Errorf("security check failed")
+	if len(data.PageNames) < 3 || data.PageNames[0] == "" || data.PageNames[1] == "" || data.PageNames[2] == "" {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	pages, err := ws.db.GetPages(uID, "", nil)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	var guessed int
+
+	for _, page := range pages {
+		for _, guess := range data.PageNames {
+			if checkPageName(page.Title, guess, 0.2) {
+				guessed++
+			}
+		}
+	}
+
+	if guessed < 3 {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	newUser := &objects.User{
+		UID: user.UID,
+	}
+
+	newUser.PassHash, err = ws.auth.CreateHash([]byte(data.NewPassword))
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	_, err = ws.db.EditUser(newUser, false)
+	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 

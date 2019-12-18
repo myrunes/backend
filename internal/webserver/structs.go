@@ -44,3 +44,22 @@ type sessionsResponse struct {
 type pageOrderRequest struct {
 	PageOrder []snowflake.ID `json:"pageorder"`
 }
+
+type setMailRequest struct {
+	MailAddress string `json:"mailaddress"`
+	Reset       bool   `json:"reset"`
+}
+
+type confirmMail struct {
+	Token string `json:"token"`
+}
+
+type passwordReset struct {
+	MailAddress string `json:"mailaddress"`
+}
+
+type confirmPasswordReset struct {
+	Token       string   `json:"token"`
+	NewPassword string   `json:"new_password"`
+	PageNames   []string `json:"page_names"`
+}
