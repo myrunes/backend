@@ -10,6 +10,7 @@ import (
 
 	"github.com/myrunes/myrunes/internal/config"
 	"github.com/myrunes/myrunes/internal/database"
+	"github.com/myrunes/myrunes/internal/ddragon"
 	"github.com/myrunes/myrunes/internal/logger"
 	"github.com/myrunes/myrunes/internal/mailserver"
 	"github.com/myrunes/myrunes/internal/webserver"
@@ -63,6 +64,12 @@ func main() {
 	if v := os.Getenv("TLS_CERT"); v != "" {
 		cfg.WebServer.TLS.Cert = v
 	}
+
+	logger.Info("DDRAGON :: initialization")
+	if ddragon.DDragonInstance, err = ddragon.Poll("latest"); err != nil {
+		logger.Fatal("DDRAGON :: failed polling data from ddragon: %s", err.Error())
+	}
+	logger.Info("DDRAGON :: initialized")
 
 	db := new(database.MongoDB)
 	logger.Info("DATABASE :: initialization")
