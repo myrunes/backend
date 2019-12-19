@@ -132,7 +132,7 @@ func NewEmptyPage() *Page {
 
 func (p *Page) Validate() error {
 	// Check for Title
-	if p.Title == "" {
+	if p.Title == "" || len(p.Title) > 1024 {
 		return errInvalidTitle
 	}
 
