@@ -87,6 +87,7 @@ func getChampions(v string) ([]*Champion, error) {
 	for _, c := range champs {
 		c.UID = championUIDFormatter(c.Name)
 		fChamps[i] = c
+		i++
 	}
 
 	return fChamps, nil

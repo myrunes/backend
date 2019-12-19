@@ -2,62 +2,35 @@
 
 <template>
   <div>
-    <b-modal
-      id="modalShare"
-      title="Share Page"
-      @ok="shareOk"
-    >
-      <p v-if="!share.uid">
-        This page has not been shared yet. Create a share link below.
-      </p>
+    <b-modal id="modalShare" title="Share Page" @ok="shareOk">
+      <p v-if="!share.uid">This page has not been shared yet. Create a share link below.</p>
       <div v-else>
-        <p class="m-0">
-          Share link:
-        </p>
-        <p class="bg-ident">
-          {{ `${getWindowLocation()}/p/${share.ident}` }}
-        </p>
+        <p class="m-0">Share link:</p>
+        <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
         <p>
           Visited
           <b>{{ share.accesses }}</b> times.
         </p>
       </div>
 
-      <h5 class="mt-4">
-        Max Uses
-      </h5>
+      <h5 class="mt-4">Max Uses</h5>
       <i>
         Number of times the link can be accessed. Set to -1 to set this
         infinite.
       </i>
-      <b-form-input
-        v-model="share.maxaccesses"
-        type="number"
-        min="-1"
-        value="0"
-      ></b-form-input>
+      <b-form-input v-model="share.maxaccesses" type="number" min="-1" value="0"></b-form-input>
 
-      <h5 class="mt-4">
-        Expires
-      </h5>
+      <h5 class="mt-4">Expires</h5>
       <i>
         Time at which the link will expire. Leave empty to set to never
         expire.
       </i>
       <b-row>
         <b-col>
-          <b-form-input
-            ref="shareDate"
-            v-model="share._expires.date"
-            type="date"
-          ></b-form-input>
+          <b-form-input ref="shareDate" v-model="share._expires.date" type="date"></b-form-input>
         </b-col>
         <b-col>
-          <b-form-input
-            ref="shareTime"
-            v-model="share._expires.time"
-            type="time"
-          ></b-form-input>
+          <b-form-input ref="shareTime" v-model="share._expires.time" type="time"></b-form-input>
         </b-col>
       </b-row>
 
@@ -66,15 +39,10 @@
         variant="danger"
         class="w-100 mt-3 text-white"
         @click="resetShare"
-      >
-        RESET SHARE
-      </b-button>
+      >RESET SHARE</b-button>
     </b-modal>
 
-    <Banner
-      ref="banner"
-      class="mb-3"
-    ></Banner>
+    <Banner ref="banner" class="mb-3"></Banner>
 
     <div>
       <div class="position-relative mb-3">
@@ -100,17 +68,17 @@
     <div class="my-4 mx-2">
       <a
         v-for="tree in runes.trees"
-        :key="`tree-${tree}`"
+        :key="`tree-${tree.uid}`"
         class="mr-2 bordered"
         :class="{
           disabled: !(
-            page.primary.tree === tree || page.secondary.tree === tree
+            page.primary.tree === tree.uid || page.secondary.tree === tree.uid
           ),
         }"
         :name="changes.trees"
         @click="treeClick(tree)"
       >
-        <img :src="`/assets/rune-avis/${tree}.png`" />
+        <img :src="`/assets/rune-avis/${tree.uid}.png`" />
       </a>
     </div>
 
@@ -120,20 +88,20 @@
       <div class="col bg mr-4">
         <h3>PRIMARY TREE</h3>
         <div
-          v-for="(row, rowIndex) in runes.primary[page.primary.tree]"
+          v-for="(row, rowIndex) in getTree(page.primary.tree).slots"
           :key="`row-${rowIndex}`"
           :name="changes.primary"
           class="mb-3"
         >
           <a
-            v-for="rune in row"
-            :key="`rune-${rune}`"
+            v-for="rune in row.runes"
+            :key="`rune-${rune.uid}`"
             class="mr-2 bordered"
-            :class="{ disabled: page.primary.rows[rowIndex] !== rune }"
+            :class="false /*{ disabled: page.primary.rows[rowIndex] !== rune }*/"
             @click="primaryClick(rowIndex, rune)"
           >
             <img
-              :src="`/assets/rune-avis/${page.primary.tree}/${rune}.png`"
+              :src="`/assets/rune-avis/${page.primary.tree}/${rune.uid}.png`"
               width="60"
               height="60"
             />
@@ -144,20 +112,20 @@
       <div class="col bg">
         <h3>SECONDARY TREE</h3>
         <div
-          v-for="(row, rowIndex) in runes.secondary[page.secondary.tree]"
+          v-for="(row, rowIndex) in getTree(page.secondary.tree).slots"
           :key="`row-${rowIndex}`"
           :name="changes.secondary"
           class="mb-3"
         >
           <a
-            v-for="rune in row"
-            :key="`rune-${rune}`"
+            v-for="rune in row.runes"
+            :key="`rune-${rune.uid}`"
             class="mr-2 bordered"
-            :class="{ disabled: !page.secondary.rows.includes(rune) }"
+            :class="false /*{ disabled: !page.secondary.rows.includes(rune) }*/"
             @click="secondaryClick(rowIndex, rune)"
           >
             <img
-              :src="`/assets/rune-avis/${page.secondary.tree}/${rune}.png`"
+              :src="`/assets/rune-avis/${page.secondary.tree}/${rune.uid}.png`"
               width="60"
               height="60"
             />
@@ -194,25 +162,9 @@
     </div>
 
     <div class="ctrl-btns">
-      <button
-        v-if="created"
-        class="btn-slide mr-3 shadow"
-        @click="shareOpen"
-      >
-        SHARE
-      </button>
-      <button
-        class="btn-slide mr-3 btn-cancel shadow"
-        @click="$router.back()"
-      >
-        CANCEL
-      </button>
-      <button
-        class="btn-slide btn-save shadow"
-        @click="save"
-      >
-        SAVE
-      </button>
+      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">SHARE</button>
+      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">CANCEL</button>
+      <button class="btn-slide btn-save shadow" @click="save">SAVE</button>
     </div>
   </div>
 </template>
@@ -223,7 +175,6 @@
 import Rest from '../js/rest';
 import Banner from '../components/Banner';
 import TagsInput from '../components/TagsInput';
-import ChampData from '../data/champs.json';
 
 export default {
   name: 'Edit',
@@ -243,8 +194,6 @@ export default {
       runes: {
         trees: [],
         perks: [],
-        primary: {},
-        secondary: {},
       },
 
       page: {
@@ -280,7 +229,11 @@ export default {
   created: function() {
     this.uid = this.$route.params.uid;
 
-    this.champs = ChampData;
+    Rest.getChamps()
+      .then((res) => {
+        this.champs = res.body.data;
+      })
+      .catch(console.error);
 
     Rest.getRunes()
       .then((res) => {
@@ -294,7 +247,7 @@ export default {
               this.created = true;
               this.page = res.body;
               this.page.champions
-                .map((c) => ChampData.find((cd) => cd.id === c))
+                .map((c) => this.champs.find((cd) => cd.uid === c))
                 .forEach((c) => this.$refs.tagChamps.append(c));
             })
             .catch(console.error);
@@ -330,106 +283,102 @@ export default {
     },
 
     champsChanged(champs) {
-      this.page.champions = champs.map((c) => c.id);
+      this.page.champions = champs.map((c) => c.uid);
+    },
+
+    getTree(uid) {
+      return this.runes.trees.find((t) => t.uid === uid) || { slots: [] };
     },
 
     treeClick(tree) {
-      this.changes.trees++;
-
-      if (this.page.secondary.tree) {
-        if (tree === this.page.secondary.tree) {
-          this.page.secondary.tree = null;
-          this.page.secondary.rows = [];
-        } else if (tree !== this.page.primary.tree) {
-          this.page.secondary.tree = tree;
-        }
-        return;
-      }
-
-      if (tree === this.page.primary.tree) {
-        this.page.primary.tree = null;
-        this.page.primary.rows = [];
-        return;
-      }
-
-      if (this.page.primary.tree) {
-        this.page.secondary.tree = tree;
-        this.page.secondary.rows = [];
-        return;
-      }
-
-      this.page.primary.tree = tree;
-      this.page.primary.rows = [];
+      // this.changes.trees++;
+      // if (this.page.secondary.tree) {
+      //   if (tree === this.page.secondary.tree) {
+      //     this.page.secondary.tree = null;
+      //     this.page.secondary.rows = [];
+      //   } else if (tree !== this.page.primary.tree) {
+      //     this.page.secondary.tree = tree;
+      //   }
+      //   return;
+      // }
+      // if (tree === this.page.primary.tree) {
+      //   this.page.primary.tree = null;
+      //   this.page.primary.rows = [];
+      //   return;
+      // }
+      // if (this.page.primary.tree) {
+      //   this.page.secondary.tree = tree;
+      //   this.page.secondary.rows = [];
+      //   return;
+      // }
+      // this.page.primary.tree = tree;
+      // this.page.primary.rows = [];
     },
 
     primaryClick(rowIndex, rune) {
-      this.page.primary.rows[rowIndex] = rune;
-      this.changes.primary++;
+      // this.page.primary.rows[rowIndex] = rune;
+      // this.changes.primary++;
     },
 
     secondaryClick(rowIndex, rune) {
-      this.changes.secondary++;
-
-      if (
-        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])
-      ) {
-        this.page.secondary.rows[0] = rune;
-        return;
-      }
-
-      if (
-        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])
-      ) {
-        this.page.secondary.rows[1] = rune;
-        return;
-      }
-
-      if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
-        this.page.secondary.rows[1] = this.page.secondary.rows[0];
-        this.page.secondary.rows[0] = rune;
-      } else if (this.page.secondary.rows[0]) {
-        this.page.secondary.rows[1] = rune;
-      } else {
-        this.page.secondary.rows[0] = rune;
-      }
+      // this.changes.secondary++;
+      // if (
+      //   this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])
+      // ) {
+      //   this.page.secondary.rows[0] = rune;
+      //   return;
+      // }
+      // if (
+      //   this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])
+      // ) {
+      //   this.page.secondary.rows[1] = rune;
+      //   return;
+      // }
+      // if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
+      //   this.page.secondary.rows[1] = this.page.secondary.rows[0];
+      //   this.page.secondary.rows[0] = rune;
+      // } else if (this.page.secondary.rows[0]) {
+      //   this.page.secondary.rows[1] = rune;
+      // } else {
+      //   this.page.secondary.rows[0] = rune;
+      // }
     },
 
     perkClick(index, perk) {
-      this.page.perks.rows[index] = perk;
-      this.changes.perks++;
+      // this.page.perks.rows[index] = perk;
+      // this.changes.perks++;
     },
 
     save() {
-      var method;
-      if (this.uid === 'new') {
-        method = Rest.createPage(this.page);
-      } else {
-        method = Rest.updatePage(this.uid, this.page);
-      }
-
-      method
-        .then((res) => {
-          this.$refs.banner.show('success', 'Page saved!', 10000, true);
-          if (this.uid === 'new') {
-            this.uid = res.body.uid;
-            this.$router.replace({
-              name: 'RunePage',
-              params: { uid: this.uid },
-            });
-          }
-          this.created = true;
-          window.scrollTo(0, 0);
-        })
-        .catch((err) => {
-          this.$refs.banner.show(
-            'error',
-            `Error: ${err.message ? err.message : err}`,
-            10000,
-            true
-          );
-          window.scrollTo(0, 0);
-          console.error(err);
-        });
+      // var method;
+      // if (this.uid === 'new') {
+      //   method = Rest.createPage(this.page);
+      // } else {
+      //   method = Rest.updatePage(this.uid, this.page);
+      // }
+      // method
+      //   .then((res) => {
+      //     this.$refs.banner.show('success', 'Page saved!', 10000, true);
+      //     if (this.uid === 'new') {
+      //       this.uid = res.body.uid;
+      //       this.$router.replace({
+      //         name: 'RunePage',
+      //         params: { uid: this.uid },
+      //       });
+      //     }
+      //     this.created = true;
+      //     window.scrollTo(0, 0);
+      //   })
+      //   .catch((err) => {
+      //     this.$refs.banner.show(
+      //       'error',
+      //       `Error: ${err.message ? err.message : err}`,
+      //       10000,
+      //       true
+      //     );
+      //     window.scrollTo(0, 0);
+      //     console.error(err);
+      //   });
     },
 
     shareOpen() {
