@@ -43,11 +43,11 @@ var Champs = []string{
 }
 
 var RuneTrees = []string{
-	"precission", "domination", "sorcery", "resolve", "inspiration",
+	"precision", "domination", "sorcery", "resolve", "inspiration",
 }
 
 var RunesPrimary = map[string][][]string{
-	"precission": [][]string{
+	"precision": [][]string{
 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
 		[]string{"overheal", "triumph", "presence-of-mind"},
 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
@@ -80,7 +80,7 @@ var RunesPrimary = map[string][][]string{
 }
 
 var RunesSecondary = map[string][][]string{
-	"precission": [][]string{
+	"precision": [][]string{
 		[]string{"overheal", "triumph", "presence-of-mind"},
 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
 		[]string{"coup-de-grace", "cut-down", "last-stand"},
