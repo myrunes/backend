@@ -2,19 +2,22 @@
 
 <template>
   <div class="page" @click="toPage(uid, $event)">
-    <div>
-      <div class="headline">
-        <h3 class="mb-3 mr-3">{{ title }}</h3>
-        <div class="champs mt-2">
-          <img
-            v-for="c in champs"
-            :key="c"
-            :src="`/assets/champ-avis/${c}.png`"
-            width="20"
-            height="20"
-          />
-        </div>
+    <div class="headline">
+      <h3 class="mb-3 mr-3">{{ title }}</h3>
+      <div class="champs mt-1 mr-5">
+        <img
+          v-for="c in champs"
+          :key="c"
+          :src="`/assets/champ-avis/${c}.png`"
+          width="25"
+          height="25"
+        />
       </div>
+    </div>
+    <div>
+      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
+    </div>
+    <div class="runes-container">
       <div class="runes" :class="`tree-${primary}`">
         <img :src="`/assets/rune-avis/${primary}.png`" class="mr-3" width="50" height="50" />
         <img
@@ -46,9 +49,6 @@
           :class="`perk-${r}`"
         />
       </div>
-    </div>
-    <div>
-      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
     </div>
   </div>
 </template>
@@ -110,8 +110,10 @@ export default {
 }
 
 .page {
-  display: flex;
-  justify-content: space-between;
+  display: grid;
+  grid-template-columns: auto 100px;
+  width: 100%;
+  max-width: 100%;
 
   background-color: rgba(55, 71, 79, 0.726);
   margin-bottom: 10px;
@@ -142,6 +144,10 @@ export default {
   margin-right: 10px;
 }
 
+.runes-container {
+  width: fit-content;
+}
+
 .runes {
   display: flex;
   margin: 0px 0px 10px 0px;
@@ -155,6 +161,14 @@ export default {
 
 .headline {
   display: flex;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.headline > h3 {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  display: block;
 }
 
 .btn-delete::before {
