@@ -76,7 +76,7 @@
           ),
         }"
         :name="changes.trees"
-        @click="treeClick(tree)"
+        @click="treeClick(tree.uid)"
       >
         <img :src="`/assets/rune-avis/${tree.uid}.png`" />
       </a>
@@ -88,7 +88,7 @@
       <div class="col bg mr-4">
         <h3>PRIMARY TREE</h3>
         <div
-          v-for="(row, rowIndex) in getTree(page.primary.tree).slots"
+          v-for="(row, rowIndex) in getPrimaryTree(page.primary.tree)"
           :key="`row-${rowIndex}`"
           :name="changes.primary"
           class="mb-3"
@@ -97,8 +97,8 @@
             v-for="rune in row.runes"
             :key="`rune-${rune.uid}`"
             class="mr-2 bordered"
-            :class="false /*{ disabled: page.primary.rows[rowIndex] !== rune }*/"
-            @click="primaryClick(rowIndex, rune)"
+            :class="{ disabled: page.primary.rows[rowIndex] !== rune.uid }"
+            @click="primaryClick(rowIndex, rune.uid)"
           >
             <img
               :src="`/assets/rune-avis/${page.primary.tree}/${rune.uid}.png`"
@@ -112,7 +112,7 @@
       <div class="col bg">
         <h3>SECONDARY TREE</h3>
         <div
-          v-for="(row, rowIndex) in getTree(page.secondary.tree).slots"
+          v-for="(row, rowIndex) in getSecondaryTree(page.secondary.tree)"
           :key="`row-${rowIndex}`"
           :name="changes.secondary"
           class="mb-3"
@@ -121,8 +121,8 @@
             v-for="rune in row.runes"
             :key="`rune-${rune.uid}`"
             class="mr-2 bordered"
-            :class="false /*{ disabled: !page.secondary.rows.includes(rune) }*/"
-            @click="secondaryClick(rowIndex, rune)"
+            :class="{ disabled: !page.secondary.rows.includes(rune.uid) }"
+            @click="secondaryClick(rowIndex, rune.uid)"
           >
             <img
               :src="`/assets/rune-avis/${page.secondary.tree}/${rune.uid}.png`"
@@ -267,9 +267,11 @@ export default {
 
   methods: {
     getSecRow(rune) {
-      let t = this.runes.secondary[this.page.secondary.tree];
+      let t = this.runes.trees
+        .find((t) => t.uid === this.page.secondary.tree)
+        .slots.slice(1);
       for (let i in t) {
-        if (t[i].find((r) => r === rune)) return i;
+        if (t[i].runes.find((r) => r.uid === rune)) return i;
       }
       return -1;
     },
@@ -286,99 +288,110 @@ export default {
       this.page.champions = champs.map((c) => c.uid);
     },
 
-    getTree(uid) {
-      return this.runes.trees.find((t) => t.uid === uid) || { slots: [] };
+    getPrimaryTree(uid) {
+      const tree = this.runes.trees.find((t) => t.uid === uid);
+      if (!tree) return [];
+      return tree.slots;
+    },
+
+    getSecondaryTree(uid) {
+      const tree = this.runes.trees.find((t) => t.uid === uid);
+      if (!tree) return [];
+      return tree.slots.slice(1);
     },
 
     treeClick(tree) {
-      // this.changes.trees++;
-      // if (this.page.secondary.tree) {
-      //   if (tree === this.page.secondary.tree) {
-      //     this.page.secondary.tree = null;
-      //     this.page.secondary.rows = [];
-      //   } else if (tree !== this.page.primary.tree) {
-      //     this.page.secondary.tree = tree;
-      //   }
-      //   return;
-      // }
-      // if (tree === this.page.primary.tree) {
-      //   this.page.primary.tree = null;
-      //   this.page.primary.rows = [];
-      //   return;
-      // }
-      // if (this.page.primary.tree) {
-      //   this.page.secondary.tree = tree;
-      //   this.page.secondary.rows = [];
-      //   return;
-      // }
-      // this.page.primary.tree = tree;
-      // this.page.primary.rows = [];
+      this.changes.trees++;
+      if (this.page.secondary.tree) {
+        if (tree === this.page.secondary.tree) {
+          this.page.secondary.tree = null;
+          this.page.secondary.rows = [];
+        } else if (tree !== this.page.primary.tree) {
+          this.page.secondary.tree = tree;
+        }
+        return;
+      }
+      if (tree === this.page.primary.tree) {
+        this.page.primary.tree = null;
+        this.page.primary.rows = [];
+        return;
+      }
+      if (this.page.primary.tree) {
+        this.page.secondary.tree = tree;
+        this.page.secondary.rows = [];
+        return;
+      }
+      this.page.primary.tree = tree;
+      this.page.primary.rows = [];
     },
 
     primaryClick(rowIndex, rune) {
-      // this.page.primary.rows[rowIndex] = rune;
-      // this.changes.primary++;
+      this.page.primary.rows[rowIndex] = rune;
+      this.changes.primary++;
     },
 
     secondaryClick(rowIndex, rune) {
-      // this.changes.secondary++;
-      // if (
-      //   this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])
-      // ) {
-      //   this.page.secondary.rows[0] = rune;
-      //   return;
-      // }
-      // if (
-      //   this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])
-      // ) {
-      //   this.page.secondary.rows[1] = rune;
-      //   return;
-      // }
-      // if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
-      //   this.page.secondary.rows[1] = this.page.secondary.rows[0];
-      //   this.page.secondary.rows[0] = rune;
-      // } else if (this.page.secondary.rows[0]) {
-      //   this.page.secondary.rows[1] = rune;
-      // } else {
-      //   this.page.secondary.rows[0] = rune;
-      // }
+      this.changes.secondary++;
+
+      if (
+        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[0])
+      ) {
+        this.page.secondary.rows[0] = rune;
+        return;
+      }
+
+      if (
+        this.getSecRow(rune) === this.getSecRow(this.page.secondary.rows[1])
+      ) {
+        this.page.secondary.rows[1] = rune;
+        return;
+      }
+
+      if (this.page.secondary.rows[0] && this.page.secondary.rows[1]) {
+        this.page.secondary.rows[1] = this.page.secondary.rows[0];
+        this.page.secondary.rows[0] = rune;
+      } else if (this.page.secondary.rows[0]) {
+        this.page.secondary.rows[1] = rune;
+      } else {
+        this.page.secondary.rows[0] = rune;
+      }
     },
 
     perkClick(index, perk) {
-      // this.page.perks.rows[index] = perk;
-      // this.changes.perks++;
+      this.page.perks.rows[index] = perk;
+      this.changes.perks++;
     },
 
     save() {
-      // var method;
-      // if (this.uid === 'new') {
-      //   method = Rest.createPage(this.page);
-      // } else {
-      //   method = Rest.updatePage(this.uid, this.page);
-      // }
-      // method
-      //   .then((res) => {
-      //     this.$refs.banner.show('success', 'Page saved!', 10000, true);
-      //     if (this.uid === 'new') {
-      //       this.uid = res.body.uid;
-      //       this.$router.replace({
-      //         name: 'RunePage',
-      //         params: { uid: this.uid },
-      //       });
-      //     }
-      //     this.created = true;
-      //     window.scrollTo(0, 0);
-      //   })
-      //   .catch((err) => {
-      //     this.$refs.banner.show(
-      //       'error',
-      //       `Error: ${err.message ? err.message : err}`,
-      //       10000,
-      //       true
-      //     );
-      //     window.scrollTo(0, 0);
-      //     console.error(err);
-      //   });
+      var method;
+      if (this.uid === 'new') {
+        method = Rest.createPage(this.page);
+      } else {
+        method = Rest.updatePage(this.uid, this.page);
+      }
+      method
+        .then((res) => {
+          this.$refs.banner.show('success', 'Page saved!', 10000, true);
+          if (this.uid === 'new') {
+            this.uid = res.body.uid;
+            this.$router.replace({
+              name: 'RunePage',
+              params: { uid: this.uid },
+            });
+          }
+          this.created = true;
+          window.scrollTo(0, 0);
+        })
+        .catch((err) => {
+          this.$refs.banner.show(
+            'error',
+            `Error: ${err.message ? err.message : err}`,
+            10000,
+            true
+          );
+          window.scrollTo(0, 0);
+          console.error(err);
+        });
     },
 
     shareOpen() {

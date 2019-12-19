@@ -23,7 +23,7 @@ var (
 )
 
 // var RunesPrimary = map[string][][]string{
-// 	"precission": [][]string{
+// 	"precision": [][]string{
 // 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
 // 		[]string{"overheal", "triumph", "presence-of-mind"},
 // 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
@@ -56,7 +56,7 @@ var (
 // }
 
 // var RunesSecondary = map[string][][]string{
-// 	"precission": [][]string{
+// 	"precision": [][]string{
 // 		[]string{"overheal", "triumph", "presence-of-mind"},
 // 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
 // 		[]string{"coup-de-grace", "cut-down", "last-stand"},

@@ -22,6 +22,6 @@ type RuneSlot struct {
 type Rune struct {
 	UID       string `json:"uid"`
 	Name      string `json:"name"`
-	ShortDesc string `json:"short_desc"`
-	LongDesc  string `json:"long_desc"`
+	ShortDesc string `json:"shortDesc"`
+	LongDesc  string `json:"longDesc"`
 }

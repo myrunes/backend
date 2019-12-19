@@ -157,7 +157,7 @@ A full list featuring all available trees, runes and perks you can get py reques
 
 ```json
 {
-  "tree": "precission",
+  "tree": "precision",
   "rows": [
     "legend-bloodline",
     "cut-down"
@@ -330,7 +330,7 @@ The response will contain nested multidimensional arrays of runes available for 
     ...
   },
   "trees": [
-    "precission",
+    "precision",
     "domination",
     "sorcery",
     "resolve",
