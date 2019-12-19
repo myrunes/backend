@@ -93,7 +93,6 @@ import Utils from '../js/utils';
 import Page from '../components/Page';
 import SearchBar from '../components/SearchBar';
 import InfoBubble from '../components/InfoBubble';
-import ChampData from '../data/champs.json';
 
 import Draggable from 'vuedraggable';
 
@@ -151,7 +150,11 @@ export default {
     this.champ = this.$route.params.champ;
     this.reload();
 
-    this.champData = ChampData.find((c) => c.id === this.champ);
+    Rest.getChamps()
+      .then((res) => {
+        this.champData = res.body.data.find((c) => c.uid === this.champ);
+      })
+      .catch(console.error);
 
     Utils.setWindowListener('keydown', this.onSearchPress);
     Utils.setWindowListener('keydown', this.onEscapePress);

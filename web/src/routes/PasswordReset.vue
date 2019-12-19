@@ -4,20 +4,12 @@
   <div class="outer-container">
     <div class="mx-auto text-center">
       <div class="logo mx-auto"></div>
-      <Banner
-        ref="banner"
-        class="mx-auto mb-5"
-      ></Banner>
+      <Banner ref="banner" class="mx-auto mb-5"></Banner>
 
       <!-- PASSWORD RESET FORM -->
-      <div
-        v-if="token != null && token.length === 0"
-        class="mx-auto max-w-container"
-      >
+      <div v-if="token != null && token.length === 0" class="mx-auto max-w-container">
         <h2>Password Reset</h2>
-        <p class="mt-5">
-          Please enter your mail address to reset your password.
-        </p>
+        <p class="mt-5">Please enter your mail address to reset your password.</p>
         <p>Then, we will send you an E-Mail with the reset confirmation.</p>
         <input
           v-model="mailaddress"
@@ -30,28 +22,19 @@
           class="btn-bubble mx-auto mt-5"
           :disabled="mailDisabled()"
           @click="resetClick"
-        >
-          RESET PASSWORD
-        </button>
+        >RESET PASSWORD</button>
       </div>
 
       <!-- SSECURITY CHECK -->
-      <div
-        v-if="token != null && token.length > 0"
-        class="mx-auto mb-5 max-w-container"
-      >
+      <div v-if="token != null && token.length > 0" class="mx-auto mb-5 max-w-container">
         <h2>Password Reset Security Check</h2>
-        <p class="mt-4">
-          Please enter your new password
-        </p>
+        <p class="mt-4">Please enter your new password</p>
         <b-tooltip
           target="passwordInput"
           triggers
           boundary="passwordInput"
           :show="password.length > 0 && password.length < 8"
-        >
-          The password must have at least a length of 8 characters.
-        </b-tooltip>
+        >The password must have at least a length of 8 characters.</b-tooltip>
         <input
           id="passwordInput"
           v-model="password"
@@ -68,19 +51,12 @@
         />
         <p
           class="mt-5"
-        >
-          To ensure that you are really the owner of this account, please enter 3 names of rune pages you have created.
-        </p>
+        >To ensure that you are really the owner of this account, please enter 3 names of rune pages you have created.</p>
         <p class="smal-text">
           If you have less than 3 pages or if you can not remember their names and you
           really need your account back, please contact us via our contact mail address.
         </p>
-        <input
-          v-model="page_names[0]"
-          type="text"
-          class="tb text-center"
-          placeholder="Page Name 1"
-        />
+        <input v-model="page_names[0]" type="text" class="tb text-center" placeholder="Page Name 1" />
         <br />
         <input
           v-model="page_names[1]"
@@ -100,9 +76,7 @@
           class="btn-bubble mx-auto mt-5"
           :disabled="confirmDisabled()"
           @click="resetConfirmClick"
-        >
-          SET PASSWORD
-        </button>
+        >SET PASSWORD</button>
       </div>
     </div>
   </div>

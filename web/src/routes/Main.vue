@@ -46,7 +46,6 @@
 
 import EventBus from '../js/eventbus';
 import Rest from '../js/rest';
-import ChampData from '../data/champs.json';
 
 const SHORTS = {
   mf: 'miss-fortune',
@@ -74,7 +73,11 @@ export default {
   },
 
   created: function() {
-    this.champs = ChampData;
+    Rest.getChamps()
+      .then((res) => {
+        this.champs = res.body.data;
+      })
+      .catch(console.error);
 
     Rest.getFavorites()
       .then((r) => {
@@ -105,15 +108,15 @@ export default {
       } else {
         this.displayedChamps = this.champs
           .filter((c) => this.searchFilter(c, val))
-          .map((c) => c.id);
+          .map((c) => c.uid);
         this.displayFavs = false;
       }
     },
 
     searchFilter(c, val) {
       const name = c.name.toLowerCase();
-      const nameStripped = c.id.replace('-', ' ');
-      const nameConcat = c.id.replace('-', '');
+      const nameStripped = c.uid.replace('-', ' ');
+      const nameConcat = c.uid.replace('-', '');
 
       val = val.toLowerCase();
 
@@ -121,7 +124,7 @@ export default {
         name.includes(val) ||
         nameStripped.includes(val) ||
         nameConcat.includes(val) ||
-        SHORTS[val] === c.id
+        SHORTS[val] === c.uid
       );
     },
 

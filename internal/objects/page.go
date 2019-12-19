@@ -4,6 +4,8 @@ import (
 	"errors"
 	"time"
 
+	"github.com/myrunes/myrunes/internal/ddragon"
+
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/myrunes/internal/static"
 )
@@ -20,92 +22,66 @@ var (
 	errInvalidTitle   = errors.New("invalid title")
 )
 
-var Champs = []string{
-	"aatrox", "ahri", "akali", "alistar", "amumu", "anivia", "annie", "aphelios", "ashe",
-	"aurelion-sol", "azir", "bard", "blitzcrank", "brand", "braum", "caitlyn",
-	"camille", "cassiopeia", "chogath", "corki", "darius", "dr-mundo", "draven",
-	"ekko", "elise", "evelynn", "ezreal", "fiddlesticks", "fiora", "fizz", "galio",
-	"gangplank", "garen", "gnar", "gragas", "graves", "hecarim", "heimerdinger",
-	"illaoi", "irelia", "ivern", "janna", "jarvan-iv", "jax", "jayce", "jhin",
-	"jinx", "kaisa", "kalista", "karma", "karthus", "kassadin", "kayn", "kennen",
-	"khazix", "kindred", "kled", "kogmaw", "leblanc", "lee-sin", "leona", "lissandra",
-	"lucian", "lulu", "lux", "malphite", "malzahar", "maokai", "master-yi",
-	"miss-fortune", "mordekaiser", "morgana", "nami", "nasus", "nautilus", "neeko",
-	"nidalee", "nocturne", "nunu", "olaf", "orianna", "ornn", "pantheon", "poppy",
-	"pyke", "qiyana", "quinn", "rakan", "rammus", "reksai", "renekton", "rengar", "riven",
-	"rumble", "ryze", "sejuani", "senna", "shaco", "shen", "shyvana", "singed", "sion", "sivir",
-	"skarner", "sona", "swain", "sylas", "syndra", "tahm-kench", "taliyah", "talon",
-	"taric", "teemo", "thresh", "tristana", "trundle", "tryndamere", "twisted-fate",
-	"twitch", "udyr", "urgot", "varus", "vayne", "veigar", "velkoz", "vi", "viktor",
-	"vladimir", "volibear", "warwick", "wukong", "xayah", "xerath", "xin-zhao", "yasuo",
-	"yuumi", "zac", "zed", "ziggs", "zilean", "zoe", "zyra", "diana", "katarina",
-	"kayle", "soraka", "yorick",
-}
+// var RunesPrimary = map[string][][]string{
+// 	"precision": [][]string{
+// 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
+// 		[]string{"overheal", "triumph", "presence-of-mind"},
+// 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
+// 		[]string{"coup-de-grace", "cut-down", "last-stand"},
+// 	},
+// 	"domination": [][]string{
+// 		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
+// 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
+// 		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
+// 		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
+// 	},
+// 	"sorcery": [][]string{
+// 		[]string{"summon-aery", "arcane-comet", "phase-rush"},
+// 		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
+// 		[]string{"transcendence", "celerity", "absolute-focus"},
+// 		[]string{"scorch", "waterwalking", "gathering-storm"},
+// 	},
+// 	"resolve": [][]string{
+// 		[]string{"grasp-of-the-undying", "aftershock", "guardian"},
+// 		[]string{"demolish", "font-of-life", "shield-bash"},
+// 		[]string{"conditioning", "second-wind", "bone-plating"},
+// 		[]string{"overgrowth", "revitalize", "unflinching"},
+// 	},
+// 	"inspiration": [][]string{
+// 		[]string{"unsealed-spellbook", "glacial-augment", "prototype-omnistone"},
+// 		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
+// 		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
+// 		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
+// 	},
+// }
 
-var RuneTrees = []string{
-	"precision", "domination", "sorcery", "resolve", "inspiration",
-}
-
-var RunesPrimary = map[string][][]string{
-	"precision": [][]string{
-		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
-		[]string{"overheal", "triumph", "presence-of-mind"},
-		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
-		[]string{"coup-de-grace", "cut-down", "last-stand"},
-	},
-	"domination": [][]string{
-		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
-		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
-		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
-		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
-	},
-	"sorcery": [][]string{
-		[]string{"summon-aery", "arcane-comet", "phase-rush"},
-		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
-		[]string{"transcendence", "celerity", "absolute-focus"},
-		[]string{"scorch", "waterwalking", "gathering-storm"},
-	},
-	"resolve": [][]string{
-		[]string{"grasp-of-the-undying", "aftershock", "guardian"},
-		[]string{"demolish", "font-of-life", "shield-bash"},
-		[]string{"conditioning", "second-wind", "bone-plating"},
-		[]string{"overgrowth", "revitalize", "unflinching"},
-	},
-	"inspiration": [][]string{
-		[]string{"unsealed-spellbook", "glacial-augment", "prototype-omnistone"},
-		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-	},
-}
-
-var RunesSecondary = map[string][][]string{
-	"precision": [][]string{
-		[]string{"overheal", "triumph", "presence-of-mind"},
-		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
-		[]string{"coup-de-grace", "cut-down", "last-stand"},
-	},
-	"domination": [][]string{
-		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
-		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
-		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
-	},
-	"sorcery": [][]string{
-		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
-		[]string{"transcendence", "celerity", "absolute-focus"},
-		[]string{"scorch", "waterwalking", "gathering-storm"},
-	},
-	"resolve": [][]string{
-		[]string{"demolish", "font-of-life", "shield-bash"},
-		[]string{"conditioning", "second-wind", "bone-plating"},
-		[]string{"overgrowth", "revitalize", "unflinching"},
-	},
-	"inspiration": [][]string{
-		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-	},
-}
+// var RunesSecondary = map[string][][]string{
+// 	"precision": [][]string{
+// 		[]string{"overheal", "triumph", "presence-of-mind"},
+// 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
+// 		[]string{"coup-de-grace", "cut-down", "last-stand"},
+// 	},
+// 	"domination": [][]string{
+// 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
+// 		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
+// 		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
+// 	},
+// 	"sorcery": [][]string{
+// 		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
+// 		[]string{"transcendence", "celerity", "absolute-focus"},
+// 		[]string{"scorch", "waterwalking", "gathering-storm"},
+// 	},
+// 	"resolve": [][]string{
+// 		[]string{"demolish", "font-of-life", "shield-bash"},
+// 		[]string{"conditioning", "second-wind", "bone-plating"},
+// 		[]string{"overgrowth", "revitalize", "unflinching"},
+// 	},
+// 	"inspiration": [][]string{
+// 		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
+// 		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
+// 		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
+// 	},
+// }
 
 var PerksPool = [][]string{
 	[]string{"diamond", "axe", "time"},
@@ -155,28 +131,45 @@ func NewEmptyPage() *Page {
 }
 
 func (p *Page) Validate() error {
+	// Check for Title
 	if p.Title == "" {
 		return errInvalidTitle
 	}
 
-	primaryTree, ok := RunesPrimary[p.Primary.Tree]
-	if !ok {
-		return errInvalidTree
-	}
-
-	secondaryTree, ok := RunesSecondary[p.Secondary.Tree]
-	if !ok {
-		return errInvalidTree
-	}
-
+	// Check if primary and secondary tree are the same,
+	// which is not allowed
 	if p.Secondary.Tree == p.Primary.Tree {
 		return errInvalidTree
 	}
 
+	// Get Primary and Secondary Tree Objects From ddragon
+	// instance by rune tree UIDs
+	var primaryTree, secondaryTree *ddragon.RuneTree
+	for _, tree := range ddragon.DDragonInstance.Runes {
+		if tree.UID == p.Primary.Tree {
+			primaryTree = tree
+		} else if tree.UID == p.Secondary.Tree {
+			secondaryTree = tree
+		}
+	}
+
+	// If no passing trees could be matched, this
+	// is an invalid tree request
+	if primaryTree == nil || secondaryTree == nil {
+		return errInvalidTree
+	}
+
+	// Check if more rune rows are passed as possible
+	// rune slots are available
+	if len(p.Primary.Rows) > len(primaryTree.Slots) {
+		return errInvalidTree
+	}
+
+	// Check if primary selected runes exist by UID
 	for i, row := range p.Primary.Rows {
 		var exists bool
-		for _, r := range primaryTree[i] {
-			if r == row {
+		for _, r := range primaryTree.Slots[i].Runes {
+			if r.UID == row {
 				exists = true
 			}
 		}
@@ -185,16 +178,19 @@ func (p *Page) Validate() error {
 		}
 	}
 
+	// Check if secondary selected runes exist by
+	// UID and check if count is equal 2, else this
+	// rune tree is invalid.
 	sec := 0
-	for _, row := range secondaryTree {
-		for _, ru := range row {
-			var ex bool
+	for _, row := range secondaryTree.Slots {
+		for _, ru := range row.Runes {
+			var exists bool
 			for _, r := range p.Secondary.Rows {
-				if r == ru {
-					ex = true
+				if r == ru.UID {
+					exists = true
 				}
 			}
-			if ex {
+			if exists {
 				sec++
 				break
 			}
@@ -204,6 +200,7 @@ func (p *Page) Validate() error {
 		return errInvalidSecRune
 	}
 
+	// Check perks
 	for i, row := range p.Perks.Rows {
 		var exists bool
 		for _, p := range PerksPool[i] {
@@ -216,11 +213,13 @@ func (p *Page) Validate() error {
 		}
 	}
 
+	// Check if listed champions exists by their
+	// champion UIDs
 	champMap := map[string]interface{}{}
 	for _, champ := range p.Champions {
 		var exists bool
-		for _, c := range Champs {
-			if champ == c {
+		for _, c := range ddragon.DDragonInstance.Champions {
+			if champ == c.UID {
 				exists = true
 			}
 		}

@@ -5,6 +5,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/myrunes/myrunes/internal/ddragon"
+
 	"github.com/myrunes/myrunes/pkg/comparison"
 	"github.com/myrunes/myrunes/pkg/random"
 
@@ -315,15 +317,13 @@ func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 }
 
 func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
-	return jsonResponse(ctx, &listResponse{N: len(objects.Champs), Data: objects.Champs}, fasthttp.StatusOK)
+	return jsonResponse(ctx, &listResponse{N: len(ddragon.DDragonInstance.Champions), Data: ddragon.DDragonInstance.Champions}, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 	data := map[string]interface{}{
-		"trees":     objects.RuneTrees,
-		"primary":   objects.RunesPrimary,
-		"secondary": objects.RunesSecondary,
-		"perks":     objects.PerksPool,
+		"trees": ddragon.DDragonInstance.Runes,
+		"perks": objects.PerksPool,
 	}
 	return jsonResponse(ctx, data, fasthttp.StatusOK)
 }
@@ -398,8 +398,8 @@ func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 	}
 
 	champMap := make(map[string]interface{})
-	for _, c := range objects.Champs {
-		champMap[c] = nil
+	for _, c := range ddragon.DDragonInstance.Champions {
+		champMap[c.UID] = nil
 	}
 
 	for i, f := range favReq.Favorites {
