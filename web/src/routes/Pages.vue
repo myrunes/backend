@@ -23,7 +23,12 @@
     </InfoBubble>
 
     <div class="d-flex mb-2">
-      <SearchBar class="searchbar mb-2" ref="searchBar" @input="onSearchInput" />
+      <SearchBar
+        class="searchbar mb-2"
+        ref="searchBar"
+        placeholder="Search for page name or champion"
+        @input="onSearchInput"
+      />
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="drop-down" toggle-class="drop-down-btn">
         <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
@@ -95,7 +100,6 @@ export default {
     return {
       pages: null,
       pagesVisible: [],
-      search: false,
       sortBy: 'created',
 
       isDragging: false,

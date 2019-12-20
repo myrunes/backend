@@ -2,7 +2,14 @@
   <div class="searchbar">
     <img class="search-icon" src="/assets/search.svg" />
     <div>
-      <input type="text" ref="inpt" class="tb tb-bar text-left" autocomplete="off" @input="onInput" />
+      <input
+        type="text"
+        ref="inpt"
+        class="tb tb-bar text-left"
+        autocomplete="off"
+        :placeholder="placeholder"
+        @input="onInput"
+      />
       <span class="tb tb-bar"></span>
     </div>
   </div>
@@ -13,6 +20,10 @@
 
 export default {
   name: 'SearchBar',
+
+  props: {
+    placeholder: String,
+  },
 
   mounted() {
     this.$refs.inpt.focus();

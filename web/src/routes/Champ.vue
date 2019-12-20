@@ -22,13 +22,18 @@
       </p>
     </InfoBubble>
 
-    <div v-if="champ" class="champ-header mb-3" :style="{ 'padding-top': search ? '20px' : '0' }">
+    <div v-if="champ" class="champ-header mb-3">
       <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champData.name.toUpperCase() }}</h2>
     </div>
 
     <div class="d-flex mb-2">
-      <SearchBar class="searchbar mb-3" ref="searchBar" @input="onSearchInput" />
+      <SearchBar
+        class="searchbar mb-3"
+        ref="searchBar"
+        placeholder="Search for page name"
+        @input="onSearchInput"
+      />
       <b-dropdown :text="`Sorted by: ${sortByText}`" class="drop-down" toggle-class="drop-down-btn">
         <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
         <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
@@ -36,7 +41,7 @@
       </b-dropdown>
     </div>
 
-    <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
+    <div class="page-container">
       <h3
         v-if="pages !== null && pages.length < 1"
         class="no-pages"
@@ -114,7 +119,6 @@ export default {
       favorites: [],
       pages: null,
       pagesVisible: [],
-      search: false,
       sortBy: 'created',
       champData: {
         name: '',
