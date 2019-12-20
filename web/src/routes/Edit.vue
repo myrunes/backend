@@ -124,7 +124,13 @@
             <b-tooltip :target="`rune-${rune.uid}`" delay="500">
               <div class="rune-tool-tip">
                 <h5>{{ rune.name }}</h5>
-                <p>{{ formatRuneText(rune.shortDesc) }}</p>
+                <p>
+                  {{
+                    formatRuneText(
+                      showFullInfo ? rune.longDesc : rune.shortDesc
+                    )
+                  }}
+                </p>
               </div>
             </b-tooltip>
           </a>
@@ -156,7 +162,13 @@
             <b-tooltip :target="`rune-${rune.uid}`" delay="500">
               <div class="rune-tool-tip">
                 <h5>{{ rune.name }}</h5>
-                <p>{{ formatRuneText(rune.shortDesc) }}</p>
+                <p>
+                  {{
+                    formatRuneText(
+                      showFullInfo ? rune.longDesc : rune.shortDesc
+                    )
+                  }}
+                </p>
               </div>
             </b-tooltip>
           </a>
@@ -191,6 +203,14 @@
       </div>
     </div>
 
+    <Slider
+      ref="sliderFullInfo"
+      class="mt-3 ml-1"
+      v-model="showFullInfo"
+      @input="onFullInfoSliderInput"
+      >Show full rune info</Slider
+    >
+
     <div class="ctrl-btns">
       <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">
         SHARE
@@ -209,6 +229,7 @@
 import Rest from '../js/rest';
 import Banner from '../components/Banner';
 import TagsInput from '../components/TagsInput';
+import Slider from '../components/Slider';
 
 export default {
   name: 'Edit',
@@ -216,6 +237,7 @@ export default {
   components: {
     Banner,
     TagsInput,
+    Slider,
   },
 
   data: function() {
@@ -257,6 +279,8 @@ export default {
       },
 
       wasUpdated: false,
+
+      showFullInfo: false,
     };
   },
 
@@ -288,6 +312,13 @@ export default {
         }
       })
       .catch(console.error);
+  },
+
+  mounted() {
+    if (window.localStorage.getItem('show-full-rune-info') === '1') {
+      this.showFullInfo = true;
+      this.$refs.sliderFullInfo.set(true);
+    }
   },
 
   updated: function() {
@@ -533,6 +564,13 @@ export default {
 
     formatRuneText(txt) {
       return txt.replace(/<.*?>/gm, '');
+    },
+
+    onFullInfoSliderInput() {
+      window.localStorage.setItem(
+        'show-full-rune-info',
+        this.showFullInfo ? '1' : '0'
+      );
     },
   },
 };
