@@ -1,4 +1,4 @@
-name: Main CI
+name: Docker CD Master
 
 on:
   push:
