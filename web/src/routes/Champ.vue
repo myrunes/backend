@@ -15,14 +15,6 @@
       @dragleave="onHoverDetectorLeave(false)"
     ></div>
 
-    <SearchBar v-if="search" class="searchbar" @close="search = false" @input="onSearchInput">
-      <b-dropdown :text="`Sorted by: ${sortByText}`" class="my-auto mr-3">
-        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
-        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
-      </b-dropdown>
-    </SearchBar>
-
     <InfoBubble ref="info" color="orange" @hides="onInfoClose">
       <p>
         Searching for a specific page? Press
@@ -30,9 +22,18 @@
       </p>
     </InfoBubble>
 
-    <div v-if="champ" class="champ-header mb-4" :style="{ 'padding-top': search ? '20px' : '0' }">
+    <div v-if="champ" class="champ-header mb-3" :style="{ 'padding-top': search ? '20px' : '0' }">
       <img :src="`/assets/champ-avis/${champ}.png`" width="42" height="42" />
       <h2>{{ champData.name.toUpperCase() }}</h2>
+    </div>
+
+    <div class="d-flex mb-2">
+      <SearchBar class="searchbar mb-3" ref="searchBar" @input="onSearchInput" />
+      <b-dropdown :text="`Sorted by: ${sortByText}`" class="drop-down" toggle-class="drop-down-btn">
+        <b-dropdown-item @click="onSortBy('custom')">Custom</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('created')">Created Date</b-dropdown-item>
+        <b-dropdown-item @click="onSortBy('title')">Title</b-dropdown-item>
+      </b-dropdown>
     </div>
 
     <div class="page-container" :style="{ 'padding-top': search ? '75px' : '0' }">
@@ -43,7 +44,7 @@
 
       <draggable
         :list="pages"
-        :disabled="search"
+        :disabled="isSearch"
         chosen-class="chosen"
         @start="isDragging = true"
         @end="isDragging = false"
@@ -121,6 +122,7 @@ export default {
       },
 
       isDragging: false,
+      isSearch: false,
       scrollTimer: null,
     };
   },
@@ -157,18 +159,16 @@ export default {
       .catch(console.error);
 
     Utils.setWindowListener('keydown', this.onSearchPress);
-    Utils.setWindowListener('keydown', this.onEscapePress);
-  },
-
-  destroyed: function() {
-    Utils.removeWindowListener('keydown', this.onSearchPress);
-    Utils.removeWindowListener('keydown', this.onEscapePress);
   },
 
   mounted() {
     if (!window.localStorage['info-page-search']) {
       setTimeout(this.$refs.info.show, 3000);
     }
+  },
+
+  destroyed: function() {
+    Utils.removeWindowListener('keydown', this.onSearchPress);
   },
 
   methods: {
@@ -210,30 +210,24 @@ export default {
       Rest.setFavorites(this.favorites).catch(console.error);
     },
 
-    onSearchPress(event) {
-      if (event.keyCode == 114 || (event.ctrlKey && event.keyCode == 70)) {
-        this.search = true;
-        event.preventDefault();
-      }
-    },
-
-    onEscapePress(event) {
-      if (event.keyCode == 27) {
-        this.search = false;
-        this.pagesVisible = this.pages;
-        event.preventDefault();
-      }
-    },
-
     onSearchInput(e) {
       let txt = e.text.toLowerCase();
       if (txt.length === 0) {
         this.pagesVisible = this.pages;
+        this.isSearch = false;
         return;
       }
+      this.isSearch = true;
       this.pagesVisible = this.pages.filter((p) => {
         return p.title.toLowerCase().includes(txt);
       });
+    },
+
+    onSearchPress(event) {
+      if (event.keyCode == 114 || (event.ctrlKey && event.keyCode == 70)) {
+        this.$refs.searchBar.focus();
+        event.preventDefault();
+      }
     },
 
     onInfoClose(selfTriggered) {
@@ -301,5 +295,9 @@ export default {
   font-style: italic;
   text-align: center;
   margin-top: 30vh;
+}
+
+.drop-down {
+  margin: auto 0 auto 10px;
 }
 </style>

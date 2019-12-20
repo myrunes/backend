@@ -65,9 +65,7 @@
       <button
         class="btn-slide btn-new"
         @click="$router.push({ name: 'RunePage', params: { uid: 'new' } })"
-      >
-        +
-      </button>
+      >+</button>
     </div>
   </div>
 </template>
@@ -221,6 +219,10 @@ export default {
   font-family: 'Montserrat', sans-serif;
 }
 
+span.tb-champ {
+  width: 50vw;
+}
+
 .searchbar {
   position: relative;
   margin-top: 20vh;
@@ -233,10 +235,6 @@ export default {
   top: 10px;
   left: -40px;
   opacity: 0.8;
-}
-
-span.tb-champ {
-  width: 50vw;
 }
 
 .pages-container {

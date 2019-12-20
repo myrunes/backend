@@ -37,7 +37,7 @@ hr {
 }
 
 img {
-  user-drag: none !important; 
+  user-drag: none !important;
   user-select: none !important;
   -moz-user-select: none !important;
   -webkit-user-drag: none !important;
@@ -60,7 +60,7 @@ img {
   background: transparent;
 }
 
-.modal-header *, 
+.modal-header *,
 .modal-body * {
   color: black !important;
 }
@@ -103,6 +103,17 @@ span.tb {
 .tb:focus ~ span {
   transform-origin: bottom left;
   transform: scaleX(1);
+}
+
+.drop-down-btn {
+  background-color: rgba(0, 0, 0, 0.15) !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 1px 6px;
+}
+
+.drop-down-btn:hover {
+  background-color: rgba(0, 0, 0, 0.3) !important;
 }
 
 .btn-bubble {
@@ -219,7 +230,6 @@ span.tb {
   background-position: center;
 }
 
-
 .btn-cancel::before {
   background-color: rgb(229,57,53);
 }
@@ -297,7 +307,7 @@ span.tb {
 
 .text-embed {
   background-color: rgb(33, 33, 33);
-  padding: 4px 6px;  
+  padding: 4px 6px;
 }
 
 .w-fit-content {
