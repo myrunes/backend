@@ -3,7 +3,9 @@
 <template>
   <div>
     <b-modal id="modalShare" title="Share Page" @ok="shareOk">
-      <p v-if="!share.uid">This page has not been shared yet. Create a share link below.</p>
+      <p v-if="!share.uid">
+        This page has not been shared yet. Create a share link below.
+      </p>
       <div v-else>
         <p class="m-0">Share link:</p>
         <p class="bg-ident">{{ `${getWindowLocation()}/p/${share.ident}` }}</p>
@@ -18,19 +20,31 @@
         Number of times the link can be accessed. Set to -1 to set this
         infinite.
       </i>
-      <b-form-input v-model="share.maxaccesses" type="number" min="-1" value="0"></b-form-input>
+      <b-form-input
+        v-model="share.maxaccesses"
+        type="number"
+        min="-1"
+        value="0"
+      ></b-form-input>
 
       <h5 class="mt-4">Expires</h5>
       <i>
-        Time at which the link will expire. Leave empty to set to never
-        expire.
+        Time at which the link will expire. Leave empty to set to never expire.
       </i>
       <b-row>
         <b-col>
-          <b-form-input ref="shareDate" v-model="share._expires.date" type="date"></b-form-input>
+          <b-form-input
+            ref="shareDate"
+            v-model="share._expires.date"
+            type="date"
+          ></b-form-input>
         </b-col>
         <b-col>
-          <b-form-input ref="shareTime" v-model="share._expires.time" type="time"></b-form-input>
+          <b-form-input
+            ref="shareTime"
+            v-model="share._expires.time"
+            type="time"
+          ></b-form-input>
         </b-col>
       </b-row>
 
@@ -39,7 +53,8 @@
         variant="danger"
         class="w-100 mt-3 text-white"
         @click="resetShare"
-      >RESET SHARE</b-button>
+        >RESET SHARE</b-button
+      >
     </b-modal>
 
     <Banner ref="banner" class="mb-3"></Banner>
@@ -96,18 +111,26 @@
           <a
             v-for="rune in row.runes"
             :key="`rune-${rune.uid}`"
-            class="mr-2 bordered"
+            class="mr-2 bordered rune"
             :class="{ disabled: page.primary.rows[rowIndex] !== rune.uid }"
             @click="primaryClick(rowIndex, rune.uid)"
           >
             <img
+              :id="`rune-${rune.uid}`"
               :src="`/assets/rune-avis/${page.primary.tree}/${rune.uid}.png`"
               width="60"
               height="60"
             />
+            <b-tooltip :target="`rune-${rune.uid}`" delay="500">
+              <div class="rune-tool-tip">
+                <h5>{{ rune.name }}</h5>
+                <p>{{ formatRuneText(rune.shortDesc) }}</p>
+              </div>
+            </b-tooltip>
           </a>
         </div>
       </div>
+
       <!-- SECONDARY TREE -->
       <div class="col bg">
         <h3>SECONDARY TREE</h3>
@@ -125,10 +148,17 @@
             @click="secondaryClick(rowIndex, rune.uid)"
           >
             <img
+              :id="`rune-${rune.uid}`"
               :src="`/assets/rune-avis/${page.secondary.tree}/${rune.uid}.png`"
               width="60"
               height="60"
             />
+            <b-tooltip :target="`rune-${rune.uid}`" delay="500">
+              <div class="rune-tool-tip">
+                <h5>{{ rune.name }}</h5>
+                <p>{{ formatRuneText(rune.shortDesc) }}</p>
+              </div>
+            </b-tooltip>
           </a>
         </div>
       </div>
@@ -162,8 +192,12 @@
     </div>
 
     <div class="ctrl-btns">
-      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">SHARE</button>
-      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">CANCEL</button>
+      <button v-if="created" class="btn-slide mr-3 shadow" @click="shareOpen">
+        SHARE
+      </button>
+      <button class="btn-slide mr-3 btn-cancel shadow" @click="$router.back()">
+        CANCEL
+      </button>
       <button class="btn-slide btn-save shadow" @click="save">SAVE</button>
     </div>
   </div>
@@ -496,6 +530,10 @@ export default {
     champFilter(c, q) {
       return c.name.toLowerCase().includes(q.toLowerCase());
     },
+
+    formatRuneText(txt) {
+      return txt.replace(/<.*?>/gm, '');
+    },
   },
 };
 </script>
@@ -505,6 +543,10 @@ export default {
 
 a:hover {
   cursor: pointer;
+}
+
+.rune {
+  position: relative;
 }
 
 .tb-title {
@@ -537,5 +579,9 @@ a:hover {
   width: fit-content;
   padding: 5px 10px;
   border-radius: 5px;
+}
+
+.rune-tool-tip {
+  text-align: left;
 }
 </style>

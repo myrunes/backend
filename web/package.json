@@ -16,6 +16,7 @@
     "vue-async-computed": "^3.7.0",
     "vue-resource": "^1.5.1",
     "vue-router": "^3.0.6",
+    "vue-tooltipster": "^1.2.0",
     "vuedraggable": "^2.23.2"
   },
   "devDependencies": {
