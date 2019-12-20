@@ -1,0 +1,29 @@
+name: Main CI
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - dev
+
+jobs:
+
+  build_docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Build Docker Image
+        run: |
+          docker build . \
+            -t zekro/myrunes:canary \
+            --build-arg RELEASE=FALSE
+
+      - name: Publish Image
+        run: |
+          docker login -u zekro -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push zekro/myrunes:canary
