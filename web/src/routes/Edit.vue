@@ -323,7 +323,7 @@ export default {
 
   updated: function() {
     if (!this.wasUpdated && this.$route.query && this.$route.query.champ) {
-      let champ = this.$route.query.champ;
+      let champ = this.champs.find((c) => c.uid === this.$route.query.champ);
       this.page.champions.push(champ);
       this.$refs.tagChamps.append(champ);
       this.wasUpdated = true;
