@@ -168,12 +168,27 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 	return m.insert(m.collections.pages, page)
 }
 
-func (m *MongoDB) GetPages(uid snowflake.ID, champion string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
+func (m *MongoDB) GetPages(uid snowflake.ID, champion, filter string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
 	var query bson.M
 	if champion != "" && champion != "general" {
 		query = bson.M{"owner": uid, "champions": champion}
 	} else {
 		query = bson.M{"owner": uid}
+	}
+
+	if filter != "" {
+		query["$or"] = bson.A{
+			bson.M{
+				"title": bson.M{
+					"$regex": fmt.Sprintf("(?i).*%s.*", filter),
+				},
+			},
+			bson.M{
+				"champions": bson.M{
+					"$regex": fmt.Sprintf("(?i).*%s.*", filter),
+				},
+			},
+		}
 	}
 
 	count, err := m.count(m.collections.pages, query)

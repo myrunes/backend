@@ -183,6 +183,7 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	queryArgs := ctx.QueryArgs()
 
 	sortBy := string(queryArgs.Peek("sortBy"))
+	filter := string(queryArgs.Peek("filter"))
 	champion := string(queryArgs.Peek("champion"))
 	short := string(queryArgs.Peek("short"))
 
@@ -220,7 +221,7 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 		}
 	}
 
-	pages, err := ws.db.GetPages(user.UID, champion, sortFunc)
+	pages, err := ws.db.GetPages(user.UID, champion, filter, sortFunc)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -822,7 +823,7 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
 	}
 
-	pages, err := ws.db.GetPages(uID, "", nil)
+	pages, err := ws.db.GetPages(uID, "", "", nil)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
