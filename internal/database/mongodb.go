@@ -17,8 +17,6 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
 
-// mongodb://myDBReader:D1fficultP%40ssw0rd@mongodb0.example.com:27017/admin
-
 type MongoDB struct {
 	client      *mongo.Client
 	db          *mongo.Database

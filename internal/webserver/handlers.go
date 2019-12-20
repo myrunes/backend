@@ -828,12 +828,21 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
+	checkMap := make(map[string]interface{})
+	for _, guess := range data.PageNames {
+		if _, ok := checkMap[guess]; ok {
+			return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+		}
+		checkMap[guess] = nil
+	}
+
 	var guessed int
 
 	for _, page := range pages {
-		for _, guess := range data.PageNames {
+		for i, guess := range data.PageNames {
 			if checkPageName(page.Title, guess, 0.2) {
 				guessed++
+				data.PageNames[i] = ""
 			}
 		}
 	}
@@ -845,6 +854,8 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 	newUser := &objects.User{
 		UID: user.UID,
 	}
+
+	ws.pwReset.Remove(data.Token)
 
 	newUser.PassHash, err = ws.auth.CreateHash([]byte(data.NewPassword))
 	if err != nil {
