@@ -67,7 +67,7 @@ function getRunes() {
   });
 }
 
-function getPages(sortBy, champion, short) {
+function getPages(sortBy, champion, short, filter) {
   return _req({
     url: `${HOST}/api/pages`,
     method: 'GET',
@@ -75,6 +75,7 @@ function getPages(sortBy, champion, short) {
       sortBy,
       champion,
       short,
+      filter,
     },
   });
 }

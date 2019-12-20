@@ -14,12 +14,19 @@
         />
       </div>
     </div>
-    <div>
-      <button class="btn-slide btn-delete" @click="deletePage">{{ suredel ? 'SURE?' : 'DELETE' }}</button>
+    <div v-if="displayDelete">
+      <button class="btn-slide btn-delete" @click="deletePage">
+        {{ suredel ? 'SURE?' : 'DELETE' }}
+      </button>
     </div>
     <div class="runes-container">
       <div class="runes" :class="`tree-${primary}`">
-        <img :src="`/assets/rune-avis/${primary}.png`" class="mr-3" width="50" height="50" />
+        <img
+          :src="`/assets/rune-avis/${primary}.png`"
+          class="mr-3"
+          width="50"
+          height="50"
+        />
         <img
           v-for="r in prows"
           :key="r"
@@ -29,7 +36,12 @@
         />
       </div>
       <div class="runes" :class="`tree-${secondary}`">
-        <img :src="`/assets/rune-avis/${secondary}.png`" class="mr-3" width="50" height="50" />
+        <img
+          :src="`/assets/rune-avis/${secondary}.png`"
+          class="mr-3"
+          width="50"
+          height="50"
+        />
         <img
           v-for="r in srows"
           :key="r"
@@ -70,6 +82,10 @@ export default {
     prows: Array,
     srows: Array,
     perks: Array,
+    displayDelete: {
+      type: Boolean,
+      default: true,
+    },
   },
 
   data: function() {
@@ -146,6 +162,7 @@ export default {
 
 .runes-container {
   width: fit-content;
+  grid-row-start: 2;
 }
 
 .runes {

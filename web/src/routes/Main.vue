@@ -9,7 +9,9 @@
           type="text"
           class="tb tb-champ"
           autocomplete="off"
-          placeholder="Search for a champion"
+          :placeholder="searchBarOnFocus ? '' : 'Search for a champ or page'"
+          @focus="searchBarOnFocus = true"
+          @blur="searchBarOnFocus = false"
           @input="searchAndDisplay"
         />
         <span class="tb tb-champ"></span>
@@ -19,11 +21,14 @@
     <h3 v-if="displayFavs" class="mx-auto my-5 text-center">YOUR FAVORITES</h3>
 
     <div class="container mt-5 champs-container">
-      <div v-if="!displayedChamps || displayedChamps.length < 1" class="favorites-hint">
+      <div
+        v-if="(!displayedChamps || displayedChamps.length < 1) && !isSearch"
+        class="favorites-hint"
+      >
         <img src="/assets/fav.svg" />
         <span>
           <h4>Did you know?</h4>
-          <p>You can favorite champions which then are displayed here.</p>
+          <p>You can favorize champions which then are displayed here.</p>
         </span>
       </div>
 
@@ -38,6 +43,23 @@
         <p>{{ pages[c] }}</p>
       </a>
     </div>
+
+    <div v-if="searchedPages" class="pages-container mt-5">
+      <Page
+        v-for="p in searchedPages"
+        class="page-tile"
+        :key="p.uid"
+        :uid="p.uid"
+        :title="p.title"
+        :champs="p.champions"
+        :primary="p.primary.tree"
+        :secondary="p.secondary.tree"
+        :prows="p.primary.rows"
+        :srows="p.secondary.rows"
+        :perks="p.perks.rows"
+        :displayDelete="false"
+      />
+    </div>
   </div>
 </template>
 
@@ -46,6 +68,7 @@
 
 import EventBus from '../js/eventbus';
 import Rest from '../js/rest';
+import Page from '../components/Page';
 
 const SHORTS = {
   mf: 'miss-fortune',
@@ -58,9 +81,9 @@ const SHORTS = {
 export default {
   name: 'Main',
 
-  components: {},
-
-  props: {},
+  components: {
+    Page,
+  },
 
   data: function() {
     return {
@@ -69,6 +92,9 @@ export default {
       pages: {},
       favorites: [],
       displayFavs: false,
+      searchedPages: null,
+      isSearch: false,
+      searchBarOnFocus: false,
     };
   },
 
@@ -101,16 +127,41 @@ export default {
   methods: {
     searchAndDisplay(e) {
       if (!e.target || e.target.value === undefined) return;
+
       let val = e.target.value.toLowerCase();
+
       if (val === '') {
         this.displayedChamps = this.favorites || [];
         this.displayFavs = this.favorites && this.favorites.length != 0;
-      } else {
-        this.displayedChamps = this.champs
-          .filter((c) => this.searchFilter(c, val))
-          .map((c) => c.uid);
-        this.displayFavs = false;
+        this.searchedPages = null;
+        this.isSearch = false;
+        return;
       }
+
+      this.displayedChamps = this.champs
+        .filter((c) => this.searchFilter(c, val))
+        .map((c) => c.uid);
+      this.displayFavs = false;
+      this.isSearch = true;
+
+      setTimeout(
+        (v, t) => {
+          if (v === t.value) {
+            this.searchAndDisplayPages(v);
+          }
+        },
+        400,
+        val,
+        e.target
+      );
+    },
+
+    searchAndDisplayPages(filter) {
+      Rest.getPages('created', null, false, filter)
+        .then((res) => {
+          this.searchedPages = res.body.data;
+        })
+        .catch(console.error);
     },
 
     searchFilter(c, val) {
@@ -171,11 +222,26 @@ export default {
   height: 30px;
   width: 30px;
   top: 10px;
+  left: -40px;
   opacity: 0.8;
 }
 
 span.tb-champ {
   width: 50vw;
+}
+
+.pages-container {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.page-tile {
+  max-width: 370px;
+  width: 370px;
+  margin-right: 10px;
 }
 
 .champs-container {
