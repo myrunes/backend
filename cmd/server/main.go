@@ -19,7 +19,6 @@ import (
 
 var (
 	flagConfig = flag.String("c", "config.yml", "config file location")
-	flagAssets = flag.String("assets", "", "assets location")
 )
 
 func main() {
@@ -89,7 +88,7 @@ func main() {
 	logger.Info("MAILSERVER :: started")
 
 	logger.Info("WEBSERVER :: initialization")
-	ws := webserver.NewWebServer(db, ms, cfg.WebServer, *flagAssets)
+	ws := webserver.NewWebServer(db, ms, cfg.WebServer)
 	go func() {
 		if err := ws.ListenAndServeBlocking(); err != nil {
 			logger.Fatal("WEBSERVER :: failed starting web server: %s", err.Error())

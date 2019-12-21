@@ -18,29 +18,6 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
-func (ws *WebServer) handlerFiles(ctx *routing.Context) error {
-	path := string(ctx.Path())
-
-	if strings.HasPrefix(path, "/api") {
-		ctx.Next()
-		return nil
-	}
-
-	if strings.HasPrefix(path, "/assets") ||
-		strings.HasPrefix(path, "/css") ||
-		strings.HasPrefix(path, "/js") ||
-		strings.HasPrefix(path, "/favicon.ico") {
-
-		fileHandlerStatic.NewRequestHandler()(ctx.RequestCtx)
-		ctx.Abort()
-		return nil
-	}
-
-	ctx.SendFile("./web/dist/index.html")
-	ctx.Abort()
-	return nil
-}
-
 func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 	data := new(loginRequest)
 	if err := parseJSONBody(ctx, data); err != nil {
