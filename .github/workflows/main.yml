@@ -28,26 +28,3 @@ jobs:
     - name: Build Backend
       run: |
         go build -v ./cmd/server/*.go
-
-  build_frontend:
-    name: Build Front End
-    runs-on: ubuntu-latest
-    steps:
-
-    - name: Use Node.js 13.x
-      uses: actions/setup-node@v1
-      with:
-        node-version: 13.x
-
-    - name: Check out code
-      uses: actions/checkout@v1
-
-    - name: Get dependencies
-      working-directory: ./web
-      run: |
-        npm ci
-
-    - name: Build Front End Files
-      working-directory: ./web
-      run: |
-        npm run build

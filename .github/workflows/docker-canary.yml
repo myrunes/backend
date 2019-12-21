@@ -20,10 +20,10 @@ jobs:
       - name: Build Docker Image
         run: |
           docker build . \
-            -t zekro/myrunes:canary \
+            -t myrunes/backend:canary \
             --build-arg RELEASE=FALSE
 
       - name: Publish Image
         run: |
           docker login -u zekro -p ${{ secrets.DOCKER_PASSWORD }}
-          docker push zekro/myrunes:canary
+          docker push myrunes/backend:canary
