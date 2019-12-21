@@ -27,6 +27,7 @@ type Config struct {
 	PathPrefix string     `json:"pathprefix"`
 	TLS        *TLSConfig `json:"tls"`
 	PublicAddr string     `json:"publicaddress"`
+	EnableCors bool       `json:"enablecors"`
 }
 
 type TLSConfig struct {

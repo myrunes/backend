@@ -1,7 +1,5 @@
-LABEL maintainer="zekro <contact@zekro.de>"
-ARG RELEASE=TRUE
-
 FROM golang:1.13 as build
+ARG RELEASE=TRUE
 WORKDIR /var/myrunes
 ADD . .
 RUN go mod tidy
@@ -13,6 +11,7 @@ RUN go build \
         ./cmd/server/*.go
 
 FROM debian:stretch-slim AS final
+LABEL maintainer="zekro <contact@zekro.de>"
 RUN apt-get update &&\
     apt-get install -y ca-certificates &&\
     update-ca-certificates
