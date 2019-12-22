@@ -4,16 +4,12 @@ PACKAGE      = github.com/myrunes/myrunes
 LDPAKAGE     = internal/static
 CONFIG       = $(CURDIR)/config/private.config.yml
 BINPATH      = $(CURDIR)/bin
-PRETTIER_CFG = "$(CURDIR)/.prettierrc.yml"
 ###############################################
 
 ### EXECUTABLES ###############################
 GO     	 = go
-DEP    	 = dep
 GOLINT 	 = golint
 GREP   	 = grep
-NPM    	 = npm
-PRETTIER = prettier
 ###############################################
 
 # ---------------------------------------------
@@ -51,13 +47,11 @@ PHONY = _make
 _make: deps build fe cleanup
 
 PHONY += build
-build: $(BIN) 
+build: $(BIN)
 
 PHONY += deps
 deps:
 	$(DEP) ensure -v
-	cd ./web && \
-		$(NPM) install
 
 $(BIN):
 	$(GO) build  \
@@ -83,28 +77,6 @@ run:
 PHONY += cleanup
 cleanup:
 
-PHONY += fe
-fe:
-	cd $(CURDIR)/web && \
-		$(NPM) run build
-	mkdir -p $(CURDIR)/bin/web
-	cp -r $(CURDIR)/web/dist  $(CURDIR)/bin/web/dist
-
-PHONY += runfe
-runfe:
-	cd ./web && \
-		$(NPM) run serve
-
-PHONY += prettify
-prettify:
-	$(PRETTIER) \
-	    --config $(PRETTIER_CFG) \
-	    --write \
-	    	$(CURDIR)/web/src/**/*.js \
-	    	$(CURDIR)/web/src/**/**/*.js \
-	    	$(CURDIR)/web/src/**/*.vue \
-	    	$(CURDIR)/web/src/**/**/*.vue
-
 PHONY += help
 help:
 	@echo "Available targets:"
@@ -114,7 +86,6 @@ help:
 	@echo "  fe       - build font end files"
 	@echo "  lint     - run linters (golint)"
 	@echo "  run      - debug run app (go run) with test config"
-	@echo "  runfe    - debug run front end vue live-server"
 	@echo "  test     - run tests (go test)"
 	@echo ""
 	@echo "Cross Compiling:"

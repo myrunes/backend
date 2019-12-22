@@ -137,3 +137,5 @@ $ ./server -c /etc/myrunes/config.yml
 
 --- 
 
+© 2019-20 Ringo Hoffmann (zekro Development)  
+Covered by the MIT Licence.
