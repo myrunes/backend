@@ -589,8 +589,9 @@ func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
 	return jsonResponse(ctx, map[string]string{
-		"version": static.AppVersion,
-		"release": static.Release,
+		"version":    static.AppVersion,
+		"apiversion": static.APIVersion,
+		"release":    static.Release,
 	}, fasthttp.StatusOK)
 }
 
