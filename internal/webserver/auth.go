@@ -9,9 +9,9 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/valyala/fasthttp"
 
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/objects"
-	"github.com/myrunes/myrunes/pkg/random"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/objects"
+	"github.com/myrunes/backend/pkg/random"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"golang.org/x/crypto/bcrypt"
 )

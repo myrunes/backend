@@ -6,7 +6,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/static"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"

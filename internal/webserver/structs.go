@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/objects"
+	"github.com/myrunes/backend/internal/objects"
 )
 
 type listResponse struct {

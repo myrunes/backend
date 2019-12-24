@@ -1,4 +1,4 @@
-module github.com/myrunes/myrunes
+module github.com/myrunes/backend
 
 go 1.13
 

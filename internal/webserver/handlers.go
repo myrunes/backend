@@ -5,15 +5,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myrunes/myrunes/internal/ddragon"
+	"github.com/myrunes/backend/internal/ddragon"
 
-	"github.com/myrunes/myrunes/pkg/comparison"
-	"github.com/myrunes/myrunes/pkg/random"
+	"github.com/myrunes/backend/pkg/comparison"
+	"github.com/myrunes/backend/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/objects"
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/objects"
+	"github.com/myrunes/backend/internal/static"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )

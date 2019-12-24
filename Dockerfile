@@ -6,8 +6,8 @@ RUN go mod tidy
 RUN mkdir ./bin
 RUN go build \
         -v -o /app/myrunes -ldflags "\
-            -X github.com/myrunes/myrunes/internal/static.Release=${RELEASE} \
-            -X github.com/myrunes/myrunes/internal/static.AppVersion=$(git describe --tags)" \
+            -X github.com/myrunes/backend/internal/static.Release=${RELEASE} \
+            -X github.com/myrunes/backend/internal/static.AppVersion=$(git describe --tags)" \
         ./cmd/server/*.go
 
 FROM debian:stretch-slim AS final

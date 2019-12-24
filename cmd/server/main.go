@@ -8,13 +8,13 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/myrunes/myrunes/internal/config"
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/ddragon"
-	"github.com/myrunes/myrunes/internal/logger"
-	"github.com/myrunes/myrunes/internal/mailserver"
-	"github.com/myrunes/myrunes/internal/webserver"
-	"github.com/myrunes/myrunes/pkg/lifecycletimer"
+	"github.com/myrunes/backend/internal/config"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/ddragon"
+	"github.com/myrunes/backend/internal/logger"
+	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/webserver"
+	"github.com/myrunes/backend/pkg/lifecycletimer"
 )
 
 var (

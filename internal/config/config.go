@@ -7,9 +7,9 @@ import (
 	"path"
 
 	"github.com/ghodss/yaml"
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/mailserver"
-	"github.com/myrunes/myrunes/internal/webserver"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/webserver"
 )
 
 type Main struct {

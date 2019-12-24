@@ -7,8 +7,8 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/mailserver"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/mailserver"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"

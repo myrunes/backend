@@ -4,10 +4,10 @@ import (
 	"errors"
 	"time"
 
-	"github.com/myrunes/myrunes/internal/ddragon"
+	"github.com/myrunes/backend/internal/ddragon"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/static"
 )
 
 var pageIDCluster, _ = snowflake.NewNode(static.ClusterIDPages)

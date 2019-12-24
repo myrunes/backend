@@ -3,7 +3,7 @@ package main
 import (
 	"fmt"
 
-	"github.com/myrunes/myrunes/internal/ddragon"
+	"github.com/myrunes/backend/internal/ddragon"
 )
 
 func main() {

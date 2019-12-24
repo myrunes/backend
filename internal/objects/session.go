@@ -4,7 +4,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/static"
 )
 
 var sessionIDCluster, _ = snowflake.NewNode(static.ClusterIDSessions)

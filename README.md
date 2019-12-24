@@ -9,7 +9,7 @@
     <br/><br/>
     <a href="https://hub.docker.com/r/zekro/myrunes"><img src="https://img.shields.io/docker/cloud/automated/zekro/myrunes.svg?color=cyan&logo=docker&logoColor=cyan&style=for-the-badge" height="30"></a>&nbsp;
     <a href="https://travis-ci.org/myrunes/myrunes"><img src="https://img.shields.io/travis/myrunes/myrunes.svg?logo=travis&style=for-the-badge" height="30"></a>&nbsp;
-    <a href="https://github.com/myrunes/myrunes/actions"><img src="https://img.shields.io/github/workflow/status/myrunes/myrunes/CI?label=Actions&logo=github&style=for-the-badge" height="30"/></a>&nbsp;
+    <a href="https://github.com/myrunes/backend/actions"><img src="https://img.shields.io/github/workflow/status/myrunes/myrunes/CI?label=Actions&logo=github&style=for-the-badge" height="30"/></a>&nbsp;
 </div>
 
 ---
@@ -23,9 +23,9 @@ Of course, if you don't trust us, you can download the source code and build the
 
 # To Do & Future Goals
 
-To get an overview about current goals and milestones for the next release version, take a look into the [**Projects**](https://github.com/myrunes/myrunes/projects) page.
+To get an overview about current goals and milestones for the next release version, take a look into the [**Projects**](https://github.com/myrunes/backend/projects) page.
 
- A list of open issues and ideas is availabe with the [**issue tracker**](https://github.com/myrunes/myrunes/issues) of this repository.
+ A list of open issues and ideas is availabe with the [**issue tracker**](https://github.com/myrunes/backend/issues) of this repository.
 
 ---
 
@@ -116,8 +116,8 @@ Also, it is highly recommended to install **[GNU make](https://www.gnu.org/softw
 
 2. Clone the repository into your GOPATH:  
    ```
-   $ git clone https://github.com/myrunes/myrunes $GOPATH/src/github.com/myrunes/myrunes
-   $ cd $GOPATH/src/github.com/myrunes/myrunes
+   $ git clone https://github.com/myrunes/backend $GOPATH/src/github.com/myrunes/backend
+   $ cd $GOPATH/src/github.com/myrunes/backend
    ```
 
 3. Build binaries and assets using the `Makefile`:  

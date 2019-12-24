@@ -3,10 +3,10 @@ package objects
 import (
 	"time"
 
-	"github.com/myrunes/myrunes/pkg/random"
+	"github.com/myrunes/backend/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/static"
 )
 
 var shareIDCLuster, _ = snowflake.NewNode(static.ClusterIDShares)
