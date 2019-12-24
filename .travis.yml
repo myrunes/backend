@@ -17,10 +17,10 @@ jobs:
     #   if: branch = master OR branch = dev
     #   script: bash ./ci/docker-deploy.sh
 
-    - stage: docker-deploy-tag
-      name: Docker Deploy Tag
-      if: tag IS present
-      script: |
-        docker build . -t zekro/myrunes:${TRAVIS_TAG}
-        docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
-        docker push zekro/myrunes:${TRAVIS_TAG}
+    # - stage: docker-deploy-tag
+    #   name: Docker Deploy Tag
+    #   if: tag IS present
+    #   script: |
+    #     docker build . -t zekro/myrunes:${TRAVIS_TAG}
+    #     docker login -u ${DOCKER_USERNAME} -p ${DOCKER_PASSWORD}
+    #     docker push zekro/myrunes:${TRAVIS_TAG}
