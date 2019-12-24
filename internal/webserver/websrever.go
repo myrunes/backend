@@ -7,8 +7,8 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/mailserver"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/mailserver"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -22,22 +22,12 @@ var (
 	errNoAccess         = errors.New("access denied")
 )
 
-// Static File Handlers
-var (
-	fileHandlerStatic = fasthttp.FS{
-		Root:       "./web/dist",
-		IndexNames: []string{"index.html"},
-		Compress:   true,
-		// PathRewrite: func(ctx *fasthttp.RequestCtx) []byte {
-		// 	return ctx.Path()[7:]
-		// },
-	}
-)
-
 type Config struct {
 	Addr       string     `json:"addr"`
+	PathPrefix string     `json:"pathprefix"`
 	TLS        *TLSConfig `json:"tls"`
 	PublicAddr string     `json:"publicaddress"`
+	EnableCors bool       `json:"enablecors"`
 }
 
 type TLSConfig struct {
@@ -66,12 +56,8 @@ type mailConfirmationData struct {
 	MailAddress string
 }
 
-func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config, assets string) (ws *WebServer) {
+func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer) {
 	ws = new(WebServer)
-
-	if assets != "" {
-		fileHandlerStatic.Root = assets
-	}
 
 	ws.config = config
 	ws.db = db
@@ -98,9 +84,9 @@ func (ws *WebServer) registerHandlers() {
 	rlPostMail := ws.rlm.GetHandler(60*time.Second, 3)
 	rlPwReset := ws.rlm.GetHandler(60*time.Second, 3)
 
-	ws.router.Use(ws.handlerFiles, ws.addHeaders, rlGlobal)
+	ws.router.Use(ws.addHeaders, rlGlobal)
 
-	api := ws.router.Group("/api")
+	api := ws.router.Group(ws.config.PathPrefix)
 	api.
 		Post("/login", ws.handlerLogin)
 	api.

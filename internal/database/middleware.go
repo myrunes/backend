@@ -5,7 +5,7 @@ import (
 	"time"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/objects"
+	"github.com/myrunes/backend/internal/objects"
 )
 
 var (
@@ -27,7 +27,7 @@ type Middleware interface {
 	DeleteUser(uid snowflake.ID) error
 
 	CreatePage(page *objects.Page) error
-	GetPages(uid snowflake.ID, champion string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
+	GetPages(uid snowflake.ID, champion, filter string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
 	GetPage(uid snowflake.ID) (*objects.Page, error)
 	EditPage(page *objects.Page) (*objects.Page, error)
 	DeletePage(uid snowflake.ID) error

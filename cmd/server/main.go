@@ -8,17 +8,17 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/myrunes/myrunes/internal/config"
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/logger"
-	"github.com/myrunes/myrunes/internal/mailserver"
-	"github.com/myrunes/myrunes/internal/webserver"
-	"github.com/myrunes/myrunes/pkg/lifecycletimer"
+	"github.com/myrunes/backend/internal/config"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/ddragon"
+	"github.com/myrunes/backend/internal/logger"
+	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/webserver"
+	"github.com/myrunes/backend/pkg/lifecycletimer"
 )
 
 var (
 	flagConfig = flag.String("c", "config.yml", "config file location")
-	flagAssets = flag.String("assets", "", "assets location")
 )
 
 func main() {
@@ -64,6 +64,12 @@ func main() {
 		cfg.WebServer.TLS.Cert = v
 	}
 
+	logger.Info("DDRAGON :: initialization")
+	if ddragon.DDragonInstance, err = ddragon.Poll("latest"); err != nil {
+		logger.Fatal("DDRAGON :: failed polling data from ddragon: %s", err.Error())
+	}
+	logger.Info("DDRAGON :: initialized")
+
 	db := new(database.MongoDB)
 	logger.Info("DATABASE :: initialization")
 	if err = db.Connect(cfg.MongoDB); err != nil {
@@ -82,7 +88,7 @@ func main() {
 	logger.Info("MAILSERVER :: started")
 
 	logger.Info("WEBSERVER :: initialization")
-	ws := webserver.NewWebServer(db, ms, cfg.WebServer, *flagAssets)
+	ws := webserver.NewWebServer(db, ms, cfg.WebServer)
 	go func() {
 		if err := ws.ListenAndServeBlocking(); err != nil {
 			logger.Fatal("WEBSERVER :: failed starting web server: %s", err.Error())

@@ -1,0 +1,29 @@
+name: Docker CD Master
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - master
+
+jobs:
+
+  build_docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Build Docker Image
+        run: |
+          docker build . \
+            -t myrunes/backend:latest \
+            --build-arg RELEASE=TRUE
+
+      - name: Publish Image
+        run: |
+          docker login -u zekro -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push myrunes/backend:latest

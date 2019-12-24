@@ -7,16 +7,16 @@ go:
 
 jobs:
   include:
-    
+
     - stage: build
       name: Build
       script: time bash ./ci/travis.sh
 
-    - stage: docker-deploy
-      name: Docker Deploy Branch
-      if: branch = master OR branch = dev
-      script: bash ./ci/docker-deploy.sh
-        
+    # - stage: docker-deploy
+    #   name: Docker Deploy Branch
+    #   if: branch = master OR branch = dev
+    #   script: bash ./ci/docker-deploy.sh
+
     - stage: docker-deploy-tag
       name: Docker Deploy Tag
       if: tag IS present

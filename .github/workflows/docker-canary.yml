@@ -1,0 +1,29 @@
+name: Docker CD Canary
+
+on:
+  push:
+    paths-ignore:
+      - '**.md'
+    branches:
+      - dev
+
+jobs:
+
+  build_docker:
+    name: Build Docker Image
+    runs-on: ubuntu-latest
+    steps:
+
+      - name: Check out code
+        uses: actions/checkout@v1
+
+      - name: Build Docker Image
+        run: |
+          docker build . \
+            -t myrunes/backend:canary \
+            --build-arg RELEASE=FALSE
+
+      - name: Publish Image
+        run: |
+          docker login -u zekro -p ${{ secrets.DOCKER_PASSWORD }}
+          docker push myrunes/backend:canary

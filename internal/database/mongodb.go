@@ -9,15 +9,13 @@ import (
 
 	"go.mongodb.org/mongo-driver/bson"
 
-	"github.com/myrunes/myrunes/internal/objects"
+	"github.com/myrunes/backend/internal/objects"
 
 	"github.com/bwmarrin/snowflake"
 	"go.mongodb.org/mongo-driver/mongo"
 	"go.mongodb.org/mongo-driver/mongo/options"
 	"go.mongodb.org/mongo-driver/mongo/readpref"
 )
-
-// mongodb://myDBReader:D1fficultP%40ssw0rd@mongodb0.example.com:27017/admin
 
 type MongoDB struct {
 	client      *mongo.Client
@@ -54,11 +52,17 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 		return
 	}
 
-	if err = m.client.Connect(ctxTimeout(10 * time.Second)); err != nil {
+	ctxConnect, cancelConnect := ctxTimeout(5 * time.Second)
+	defer cancelConnect()
+
+	if err = m.client.Connect(ctxConnect); err != nil {
 		return
 	}
 
-	if err = m.client.Ping(ctxTimeout(2*time.Second), readpref.Primary()); err != nil {
+	ctxPing, cancelPing := ctxTimeout(5 * time.Second)
+	defer cancelPing()
+
+	if err = m.client.Ping(ctxPing, readpref.Primary()); err != nil {
 		return err
 	}
 
@@ -76,7 +80,10 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 }
 
 func (m *MongoDB) Close() {
-	m.client.Disconnect(ctxTimeout(5 * time.Second))
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	m.client.Disconnect(ctx)
 }
 
 func (m *MongoDB) CreateUser(user *objects.User) error {
@@ -153,12 +160,18 @@ func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
 }
 
 func (m *MongoDB) DeleteUser(uid snowflake.ID) error {
-	_, err := m.collections.users.DeleteOne(ctxTimeout(5*time.Second), bson.M{"uid": uid})
+	ctxDelOne, cancelDelOne := ctxTimeout(5 * time.Second)
+	defer cancelDelOne()
+
+	_, err := m.collections.users.DeleteOne(ctxDelOne, bson.M{"uid": uid})
 	if err != nil {
 		return err
 	}
 
-	_, err = m.collections.pages.DeleteMany(ctxTimeout(5*time.Second),
+	ctxDelMany, cancelDelMany := ctxTimeout(5 * time.Second)
+	defer cancelDelMany()
+
+	_, err = m.collections.pages.DeleteMany(ctxDelMany,
 		bson.M{"owner": uid})
 
 	return err
@@ -168,12 +181,27 @@ func (m *MongoDB) CreatePage(page *objects.Page) error {
 	return m.insert(m.collections.pages, page)
 }
 
-func (m *MongoDB) GetPages(uid snowflake.ID, champion string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
+func (m *MongoDB) GetPages(uid snowflake.ID, champion, filter string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error) {
 	var query bson.M
 	if champion != "" && champion != "general" {
 		query = bson.M{"owner": uid, "champions": champion}
 	} else {
 		query = bson.M{"owner": uid}
+	}
+
+	if filter != "" {
+		query["$or"] = bson.A{
+			bson.M{
+				"title": bson.M{
+					"$regex": fmt.Sprintf("(?i).*%s.*", filter),
+				},
+			},
+			bson.M{
+				"champions": bson.M{
+					"$regex": fmt.Sprintf("(?i).*%s.*", filter),
+				},
+			},
+		}
 	}
 
 	count, err := m.count(m.collections.pages, query)
@@ -187,13 +215,19 @@ func (m *MongoDB) GetPages(uid snowflake.ID, champion string, sortLess func(i, j
 		return pages, nil
 	}
 
-	res, err := m.collections.pages.Find(ctxTimeout(5*time.Second), query)
+	ctxFind, cancelFind := ctxTimeout(5 * time.Second)
+	defer cancelFind()
+
+	res, err := m.collections.pages.Find(ctxFind, query)
 	if err != nil {
 		return nil, err
 	}
 
+	ctxNext, cancelNext := ctxTimeout(5 * time.Second)
+	defer cancelNext()
+
 	i := 0
-	for res.Next(ctxTimeout(2 * time.Second)) {
+	for res.Next(ctxNext) {
 		page := new(objects.Page)
 		err = res.Decode(page)
 		if err != nil {
@@ -243,7 +277,10 @@ func (m *MongoDB) EditPage(page *objects.Page) (*objects.Page, error) {
 }
 
 func (m *MongoDB) DeletePage(uid snowflake.ID) error {
-	_, err := m.collections.pages.DeleteOne(ctxTimeout(5*time.Second), bson.M{"uid": uid})
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.pages.DeleteOne(ctx, bson.M{"uid": uid})
 	return err
 }
 
@@ -296,13 +333,19 @@ func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
 		return sessions, nil
 	}
 
-	res, err := m.collections.sessions.Find(ctxTimeout(5*time.Second), bson.M{"uid": uID})
+	ctxFind, cancelFind := ctxTimeout(5 * time.Second)
+	defer cancelFind()
+
+	res, err := m.collections.sessions.Find(ctxFind, bson.M{"uid": uID})
 	if err != nil {
 		return nil, err
 	}
 
+	ctxNext, cancelNext := ctxTimeout(5 * time.Second)
+	defer cancelNext()
+
 	i := 0
-	for res.Next(ctxTimeout(5 * time.Second)) {
+	for res.Next(ctxNext) {
 		if int64(i) >= count {
 			break
 		}
@@ -323,7 +366,10 @@ func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
 }
 
 func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
-	_, err := m.collections.sessions.DeleteOne(ctxTimeout(5*time.Second),
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.sessions.DeleteOne(ctx,
 		bson.M{"$or": bson.A{
 			bson.M{"key": key},
 			bson.M{"sessionid": sessionID},
@@ -332,7 +378,10 @@ func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
 }
 
 func (m *MongoDB) CleanupExpiredSessions() error {
-	_, err := m.collections.sessions.DeleteMany(ctxTimeout(5*time.Second),
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.sessions.DeleteMany(ctx,
 		bson.M{
 			"expires": bson.M{
 				"$lte": time.Now(),
@@ -356,7 +405,10 @@ func (m *MongoDB) GetAPIToken(uID snowflake.ID) (*objects.APIToken, error) {
 }
 
 func (m *MongoDB) ResetAPIToken(uID snowflake.ID) error {
-	_, err := m.collections.apitokens.DeleteOne(ctxTimeout(5*time.Second), bson.M{"userid": uID})
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.apitokens.DeleteOne(ctx, bson.M{"userid": uID})
 	return err
 }
 
@@ -402,7 +454,10 @@ func (m *MongoDB) GetShare(ident string, uid, pageID snowflake.ID) (*objects.Sha
 }
 
 func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
-	_, err := m.collections.shares.DeleteOne(ctxTimeout(5*time.Second), bson.M{
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.shares.DeleteOne(ctx, bson.M{
 		"$or": bson.A{
 			bson.M{"ident": ident},
 			bson.M{"uid": uid},
@@ -416,13 +471,19 @@ func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
 // --- HELPERS ------------------------------------------------------------------
 
 func (m *MongoDB) insert(collection *mongo.Collection, v interface{}) error {
-	_, err := collection.InsertOne(ctxTimeout(5*time.Second), v)
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := collection.InsertOne(ctx, v)
 	return err
 }
 
 func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, obj interface{}) error {
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
 	res, err := collection.UpdateOne(
-		ctxTimeout(5*time.Second),
+		ctx,
 		filter, bson.M{
 			"$set": obj,
 		})
@@ -439,7 +500,9 @@ func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, obj inter
 }
 
 func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interface{}) (bool, error) {
-	ctx := ctxTimeout(5 * time.Second)
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
 	res := collection.FindOne(ctx, filter)
 
 	if res == nil {
@@ -455,10 +518,12 @@ func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interf
 }
 
 func (M *MongoDB) count(collection *mongo.Collection, filter interface{}) (int64, error) {
-	return collection.CountDocuments(ctxTimeout(5*time.Second), filter)
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+	return collection.CountDocuments(ctx, filter)
 }
 
-func ctxTimeout(d time.Duration) context.Context {
-	ctx, _ := context.WithTimeout(context.Background(), d)
-	return ctx
+func ctxTimeout(d time.Duration) (context.Context, context.CancelFunc) {
+	ctx, cancel := context.WithTimeout(context.Background(), d)
+	return ctx, cancel
 }

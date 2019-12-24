@@ -5,39 +5,18 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myrunes/myrunes/pkg/comparison"
-	"github.com/myrunes/myrunes/pkg/random"
+	"github.com/myrunes/backend/internal/ddragon"
+
+	"github.com/myrunes/backend/pkg/comparison"
+	"github.com/myrunes/backend/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/myrunes/internal/database"
-	"github.com/myrunes/myrunes/internal/objects"
-	"github.com/myrunes/myrunes/internal/static"
+	"github.com/myrunes/backend/internal/database"
+	"github.com/myrunes/backend/internal/objects"
+	"github.com/myrunes/backend/internal/static"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
-
-func (ws *WebServer) handlerFiles(ctx *routing.Context) error {
-	path := string(ctx.Path())
-
-	if strings.HasPrefix(path, "/api") {
-		ctx.Next()
-		return nil
-	}
-
-	if strings.HasPrefix(path, "/assets") ||
-		strings.HasPrefix(path, "/css") ||
-		strings.HasPrefix(path, "/js") ||
-		strings.HasPrefix(path, "/favicon.ico") {
-
-		fileHandlerStatic.NewRequestHandler()(ctx.RequestCtx)
-		ctx.Abort()
-		return nil
-	}
-
-	ctx.SendFile("./web/dist/index.html")
-	ctx.Abort()
-	return nil
-}
 
 func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 	data := new(loginRequest)
@@ -181,6 +160,7 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	queryArgs := ctx.QueryArgs()
 
 	sortBy := string(queryArgs.Peek("sortBy"))
+	filter := string(queryArgs.Peek("filter"))
 	champion := string(queryArgs.Peek("champion"))
 	short := string(queryArgs.Peek("short"))
 
@@ -218,7 +198,7 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 		}
 	}
 
-	pages, err := ws.db.GetPages(user.UID, champion, sortFunc)
+	pages, err := ws.db.GetPages(user.UID, champion, filter, sortFunc)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -315,15 +295,13 @@ func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 }
 
 func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
-	return jsonResponse(ctx, &listResponse{N: len(objects.Champs), Data: objects.Champs}, fasthttp.StatusOK)
+	return jsonResponse(ctx, &listResponse{N: len(ddragon.DDragonInstance.Champions), Data: ddragon.DDragonInstance.Champions}, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 	data := map[string]interface{}{
-		"trees":     objects.RuneTrees,
-		"primary":   objects.RunesPrimary,
-		"secondary": objects.RunesSecondary,
-		"perks":     objects.PerksPool,
+		"trees": ddragon.DDragonInstance.Runes,
+		"perks": objects.PerksPool,
 	}
 	return jsonResponse(ctx, data, fasthttp.StatusOK)
 }
@@ -398,8 +376,8 @@ func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 	}
 
 	champMap := make(map[string]interface{})
-	for _, c := range objects.Champs {
-		champMap[c] = nil
+	for _, c := range ddragon.DDragonInstance.Champions {
+		champMap[c.UID] = nil
 	}
 
 	for i, f := range favReq.Favorites {
@@ -611,8 +589,9 @@ func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
 	return jsonResponse(ctx, map[string]string{
-		"version": static.AppVersion,
-		"release": static.Release,
+		"version":    static.AppVersion,
+		"apiversion": static.APIVersion,
+		"release":    static.Release,
 	}, fasthttp.StatusOK)
 }
 
@@ -822,17 +801,26 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
 	}
 
-	pages, err := ws.db.GetPages(uID, "", nil)
+	pages, err := ws.db.GetPages(uID, "", "", nil)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	checkMap := make(map[string]interface{})
+	for _, guess := range data.PageNames {
+		if _, ok := checkMap[guess]; ok {
+			return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+		}
+		checkMap[guess] = nil
 	}
 
 	var guessed int
 
 	for _, page := range pages {
-		for _, guess := range data.PageNames {
+		for i, guess := range data.PageNames {
 			if checkPageName(page.Title, guess, 0.2) {
 				guessed++
+				data.PageNames[i] = ""
 			}
 		}
 	}
@@ -844,6 +832,8 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 	newUser := &objects.User{
 		UID: user.UID,
 	}
+
+	ws.pwReset.Remove(data.Token)
 
 	newUser.PassHash, err = ws.auth.CreateHash([]byte(data.NewPassword))
 	if err != nil {

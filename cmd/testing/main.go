@@ -3,9 +3,10 @@ package main
 import (
 	"fmt"
 
-	"github.com/myrunes/myrunes/pkg/comparison"
+	"github.com/myrunes/backend/internal/ddragon"
 )
 
 func main() {
-	fmt.Println(comparison.Alphabetically("ac", "ab"))
+	d, _ := ddragon.Poll("latest")
+	fmt.Printf(d.Runes[0].Slots[1].Runes[1].UID)
 }
