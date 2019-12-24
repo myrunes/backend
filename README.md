@@ -1,5 +1,5 @@
 <div align="center">
-    <img src="https://raw.githubusercontent.com/myrunes/assets/master/logo/rendered/dark/logo-1000-237-colored-dark.png" width="400"/>
+    <img src="https://raw.githubusercontent.com/myrunes/assets/master/logo/rendered/dark/logo-1000-237-colored-dark.png" width="500"/>
     <br/>
     <strong>Save your League of Legends rune pages without wasting money.</strong><br><br>
     <img src="https://forthebadge.com/images/badges/made-with-go.svg" height="30" />&nbsp;
