@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -322,44 +323,14 @@ func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, status)
 }
 
+// TODO: DEPRECATED -- REMOVE
 func (ws *WebServer) handlerGetSessions(ctx *routing.Context) error {
-	user := ctx.Get("user").(*objects.User)
-	sessionKey := ctx.Get("sessionkey").(string)
-
-	sessions, err := ws.db.GetSessions(user.UID)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	var currentSession *objects.Session
-	for _, s := range sessions {
-		if sessionKey == s.Key {
-			currentSession = s
-		}
-		s.Key = fmt.Sprintf("%s...%s", s.Key[:3], s.Key[len(s.Key)-3:])
-	}
-
-	return jsonResponse(ctx, sessionsResponse{
-		listResponse: listResponse{
-			N:    len(sessions),
-			Data: sessions,
-		},
-		CurrentlyConnectedID: currentSession.SessionID.String(),
-	}, fasthttp.StatusOK)
+	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
 }
 
+// TODO: DEPRECATED -- REMOVE
 func (ws *WebServer) handlerDeleteSession(ctx *routing.Context) error {
-	_id := ctx.Param("uid")
-	id, err := snowflake.ParseString(_id)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	if err = ws.db.DeleteSession("", id); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
 }
 
 func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {

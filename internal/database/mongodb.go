@@ -35,7 +35,6 @@ type MongoConfig struct {
 type collections struct {
 	users,
 	pages,
-	sessions,
 	apitokens,
 	shares *mongo.Collection
 }
@@ -71,7 +70,6 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 	m.collections = &collections{
 		users:     m.db.Collection("users"),
 		pages:     m.db.Collection("pages"),
-		sessions:  m.db.Collection("sessions"),
 		shares:    m.db.Collection("shares"),
 		apitokens: m.db.Collection("apitokens"),
 	}
@@ -281,113 +279,6 @@ func (m *MongoDB) DeletePage(uid snowflake.ID) error {
 	defer cancel()
 
 	_, err := m.collections.pages.DeleteOne(ctx, bson.M{"uid": uid})
-	return err
-}
-
-func (m *MongoDB) CreateSession(key string, uID snowflake.ID, expires time.Time, addr string) error {
-	session := objects.NewSession(key, uID, expires, addr)
-
-	return m.insert(m.collections.sessions, session)
-}
-
-func (m *MongoDB) GetSession(key string, addr string) (*objects.User, error) {
-	session := new(objects.Session)
-	ok, err := m.get(m.collections.sessions, bson.M{"key": key}, session)
-	if err != nil {
-		return nil, err
-	}
-	if !ok {
-		return nil, nil
-	}
-
-	if time.Now().After(session.Expires) {
-		return nil, m.DeleteSession("", session.SessionID)
-	}
-
-	user := new(objects.User)
-	ok, err = m.get(m.collections.users, bson.M{"uid": session.UID}, user)
-	if err != nil {
-		return nil, err
-	}
-
-	if !ok {
-		return nil, nil
-	}
-
-	session.LastAccess = time.Now()
-	session.LastAccessIP = addr
-	err = m.insertOrUpdate(m.collections.sessions, bson.M{"sessionid": session.SessionID}, session)
-
-	return user, err
-}
-
-func (m *MongoDB) GetSessions(uID snowflake.ID) ([]*objects.Session, error) {
-	count, err := m.count(m.collections.sessions, bson.M{"uid": uID})
-	if err != nil {
-		return nil, err
-	}
-
-	sessions := make([]*objects.Session, count)
-
-	if count == 0 {
-		return sessions, nil
-	}
-
-	ctxFind, cancelFind := ctxTimeout(5 * time.Second)
-	defer cancelFind()
-
-	res, err := m.collections.sessions.Find(ctxFind, bson.M{"uid": uID})
-	if err != nil {
-		return nil, err
-	}
-
-	ctxNext, cancelNext := ctxTimeout(5 * time.Second)
-	defer cancelNext()
-
-	i := 0
-	for res.Next(ctxNext) {
-		if int64(i) >= count {
-			break
-		}
-
-		s := new(objects.Session)
-		if err = res.Decode(s); err != nil {
-			return nil, err
-		}
-		if time.Now().Before(s.Expires) {
-			sessions[i] = s
-			i++
-		} else {
-			// m.DeleteSession("", s.SessionID)
-		}
-	}
-
-	return sessions[:i], nil
-}
-
-func (m *MongoDB) DeleteSession(key string, sessionID snowflake.ID) error {
-	ctx, cancel := ctxTimeout(5 * time.Second)
-	defer cancel()
-
-	_, err := m.collections.sessions.DeleteOne(ctx,
-		bson.M{"$or": bson.A{
-			bson.M{"key": key},
-			bson.M{"sessionid": sessionID},
-		}})
-	return err
-}
-
-func (m *MongoDB) CleanupExpiredSessions() error {
-	ctx, cancel := ctxTimeout(5 * time.Second)
-	defer cancel()
-
-	_, err := m.collections.sessions.DeleteMany(ctx,
-		bson.M{
-			"expires": bson.M{
-				"$lte": time.Now(),
-			},
-		})
-
 	return err
 }
 

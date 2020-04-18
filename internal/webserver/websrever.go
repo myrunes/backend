@@ -28,6 +28,7 @@ type Config struct {
 	TLS        *TLSConfig `json:"tls"`
 	PublicAddr string     `json:"publicaddress"`
 	EnableCors bool       `json:"enablecors"`
+	JWTKey     string     `json:"jwtkey"`
 }
 
 type TLSConfig struct {
@@ -56,17 +57,20 @@ type mailConfirmationData struct {
 	MailAddress string
 }
 
-func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer) {
+func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
 	ws.config = config
 	ws.db = db
 	ws.ms = ms
 	ws.rlm = NewRateLimitManager()
-	ws.auth = NewAuthorization(db, ws.rlm)
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
+	}
+
+	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, ws.rlm); err != nil {
+		return
 	}
 
 	ws.mailConfirmation = timedmap.New(1 * time.Hour)
