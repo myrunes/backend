@@ -1,12 +1,12 @@
 package config
 
 import (
-	"fmt"
 	"io/ioutil"
 	"os"
 	"path"
 
 	"github.com/ghodss/yaml"
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
 	"github.com/myrunes/backend/internal/webserver"
@@ -14,6 +14,7 @@ import (
 
 type Main struct {
 	MongoDB    *database.MongoConfig `json:"mongodb"`
+	Redis      *caching.RedisConfig  `json:"redis"`
 	WebServer  *webserver.Config     `json:"webserver"`
 	MailServer *mailserver.Config    `json:"mailserver"`
 }
@@ -42,6 +43,11 @@ func cretaeDefault(loc string) error {
 			AuthDB:   "lol-runes",
 			DataDB:   "lol-runes",
 		},
+		Redis: &caching.RedisConfig{
+			Enabled: false,
+			Addr:    "localhost:6379",
+			DB:      0,
+		},
 		WebServer: &webserver.Config{
 			Addr:       ":443",
 			PublicAddr: "https://myrunes.com",
@@ -57,7 +63,6 @@ func cretaeDefault(loc string) error {
 	data, err := yaml.Marshal(def)
 
 	basePath := path.Dir(loc)
-	fmt.Println(basePath)
 	if _, err = os.Stat(basePath); os.IsNotExist(err) {
 		err = os.MkdirAll(basePath, 0750)
 		if err != nil {

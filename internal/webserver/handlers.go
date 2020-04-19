@@ -7,6 +7,7 @@ import (
 	"time"
 
 	"github.com/myrunes/backend/internal/ddragon"
+	"github.com/myrunes/backend/internal/shared"
 
 	"github.com/myrunes/backend/pkg/comparison"
 	"github.com/myrunes/backend/pkg/random"
@@ -490,12 +491,12 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
-	owner, err := ws.db.GetUser(page.Owner, "")
+	owner, err := ws.cache.GetUserByID(page.Owner)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	reqAddr := getIPAddr(ctx)
+	reqAddr := shared.GetIPAddr(ctx)
 	validReqAddr := !strings.HasPrefix(reqAddr, "192.168") &&
 		!strings.HasPrefix(reqAddr, "10.23") &&
 		!(static.Release == "TRUE" && reqAddr == "127.0.0.1") &&

@@ -15,8 +15,7 @@ import (
 var emptyResponseBody = []byte("{}")
 
 var (
-	headerXForwardedFor = []byte("X-Forwarded-For")
-	headerUserAgent     = []byte("User-Agent")
+	headerUserAgent = []byte("User-Agent")
 )
 
 var defStatusBoddies = map[int][]byte{
@@ -100,15 +99,6 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 	}
 
 	return nil
-}
-
-func getIPAddr(ctx *routing.Context) string {
-	forwardedfor := ctx.Request.Header.PeekBytes(headerXForwardedFor)
-	if forwardedfor != nil && len(forwardedfor) > 0 {
-		return string(forwardedfor)
-	}
-
-	return ctx.RemoteIP().String()
 }
 
 func checkPageName(pageName, guess string, tollerance float64) bool {

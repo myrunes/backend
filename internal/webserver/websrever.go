@@ -7,8 +7,10 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/ratelimit"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -41,10 +43,11 @@ type WebServer struct {
 	server *fasthttp.Server
 	router *routing.Router
 
-	db   database.Middleware
-	ms   *mailserver.MailServer
-	auth *Authorization
-	rlm  *RateLimitManager
+	db    database.Middleware
+	cache caching.Middleware
+	ms    *mailserver.MailServer
+	auth  *Authorization
+	rlm   *ratelimit.RateLimitManager
 
 	mailConfirmation *timedmap.TimedMap
 	pwReset          *timedmap.TimedMap
@@ -57,19 +60,20 @@ type mailConfirmationData struct {
 	MailAddress string
 }
 
-func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
+func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
 	ws.config = config
 	ws.db = db
+	ws.cache = cache
 	ws.ms = ms
-	ws.rlm = NewRateLimitManager()
+	ws.rlm = ratelimit.New()
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
 	}
 
-	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, ws.rlm); err != nil {
+	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, cache, ws.rlm); err != nil {
 		return
 	}
 

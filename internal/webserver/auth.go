@@ -11,8 +11,11 @@ import (
 	"github.com/dgrijalva/jwt-go"
 	"github.com/valyala/fasthttp"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/objects"
+	"github.com/myrunes/backend/internal/ratelimit"
+	"github.com/myrunes/backend/internal/shared"
 	"github.com/myrunes/backend/internal/static"
 	"github.com/myrunes/backend/pkg/random"
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -51,13 +54,15 @@ type loginRequest struct {
 type Authorization struct {
 	jwtKey []byte
 
-	db  database.Middleware
-	rlm *RateLimitManager
+	db    database.Middleware
+	cache caching.Middleware
+	rlm   *ratelimit.RateLimitManager
 }
 
-func NewAuthorization(jwtKey []byte, db database.Middleware, rlm *RateLimitManager) (auth *Authorization, err error) {
+func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.Middleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
 	auth = new(Authorization)
 	auth.db = db
+	auth.cache = cache
 	auth.rlm = rlm
 
 	if jwtKey == nil || len(jwtKey) == 0 {
@@ -92,7 +97,7 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		return jsonError(ctx, errBadRequest, fasthttp.StatusBadRequest) != nil
 	}
 
-	limiter := auth.rlm.GetLimiter(fmt.Sprintf("loginAttempt#%s", getIPAddr(ctx)), attemptLimit, attemptBurst)
+	limiter := auth.rlm.GetLimiter(fmt.Sprintf("loginAttempt#%s", shared.GetIPAddr(ctx)), attemptLimit, attemptBurst)
 
 	if limiter.Tokens() <= 0 {
 		return jsonError(ctx, errRateLimited, fasthttp.StatusTooManyRequests) != nil
@@ -107,17 +112,22 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 
+	// Querrying user in cache to set cache entry
+	auth.cache.GetUserByID(user.UID)
+
 	if !auth.CheckHash(user.PassHash, []byte(login.Password)) {
 		limiter.Allow()
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 
-	auth.CreateSession(ctx, user.UID, login.Remember)
+	if token, err := auth.CreateSession(ctx, user.UID, login.Remember); err != nil {
+		auth.cache.SetUserByJWT(token, user)
+	}
 
 	return true
 }
 
-func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) error {
+func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error) {
 	expires := time.Now()
 	if remember {
 		expires = expires.Add(sessionExpireRemember)
@@ -132,11 +142,11 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 	}).SignedString(auth.jwtKey)
 
 	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	if _, err = auth.db.EditUser(&objects.User{UID: uid}, true); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
 	secureCookie := ""
@@ -148,7 +158,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 		jwtCookieName, token, expires.Format(time.RFC1123), secureCookie)
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
 
-	return nil
+	return token, nil
 }
 
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
@@ -171,23 +181,31 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 		}
 
-		jwtToken, err := jwt.Parse(string(key), func(t *jwt.Token) (interface{}, error) {
-			return auth.jwtKey, nil
-		})
-		if err != nil || !jwtToken.Valid {
-			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		strKey := string(key)
+
+		var ok bool
+		if user, ok = auth.cache.GetUserByJWT(strKey); !ok {
+			jwtToken, err := jwt.Parse(strKey, func(t *jwt.Token) (interface{}, error) {
+				return auth.jwtKey, nil
+			})
+			if err != nil || !jwtToken.Valid {
+				return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+			}
+
+			claimsMap, ok := jwtToken.Claims.(jwt.MapClaims)
+			if !ok {
+				return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+			}
+
+			claims := jwt.StandardClaims{}
+			claims.Subject, _ = claimsMap["sub"].(string)
+
+			userID, _ := snowflake.ParseString(claims.Subject)
+			user, err = auth.cache.GetUserByID(userID)
+
+			auth.cache.SetUserByJWT(strKey, user)
 		}
 
-		claimsMap, ok := jwtToken.Claims.(jwt.MapClaims)
-		if !ok {
-			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
-		}
-
-		claims := jwt.StandardClaims{}
-		claims.Subject, _ = claimsMap["sub"].(string)
-
-		userID, _ := snowflake.ParseString(claims.Subject)
-		user, err = auth.db.GetUser(userID, "")
 	}
 
 	if err != nil {

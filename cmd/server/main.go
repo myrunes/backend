@@ -7,6 +7,7 @@ import (
 	"strings"
 	"syscall"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/config"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/ddragon"
@@ -85,8 +86,16 @@ func main() {
 	}
 	logger.Info("MAILSERVER :: started")
 
+	var cache caching.Middleware
+	if cfg.Redis != nil && cfg.Redis.Enabled {
+		cache = caching.NewRedis(cfg.Redis)
+	} else {
+		cache = caching.NewInternal()
+	}
+	cache.SetDatabase(db)
+
 	logger.Info("WEBSERVER :: initialization")
-	ws, err := webserver.NewWebServer(db, ms, cfg.WebServer)
+	ws, err := webserver.NewWebServer(db, cache, ms, cfg.WebServer)
 	if err != nil {
 		logger.Fatal("WEBSERVER :: failed creating web server: %s", err.Error())
 	}
