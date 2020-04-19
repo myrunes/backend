@@ -26,16 +26,22 @@ func (c *Internal) SetDatabase(db database.Middleware) {
 }
 
 func (c *Internal) GetUserByID(id snowflake.ID) (*objects.User, error) {
+	var err error
 	user, ok := c.m.GetValue(id).(*objects.User)
 	if !ok {
-		user, err := c.db.GetUser(id, "")
+		user, err = c.db.GetUser(id, "")
 		if err != nil {
 			return nil, err
 		}
-		c.m.Set(id, user, expireDef)
+		c.SetUserByID(id, user)
 	}
 
 	return user, nil
+}
+
+func (c *Internal) SetUserByID(id snowflake.ID, user *objects.User) error {
+	c.m.Set(id, user, expireDef)
+	return nil
 }
 
 func (c *Internal) GetUserByJWT(rawJWT string) (*objects.User, bool) {

@@ -164,6 +164,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	var user *objects.User
 	var err error
+	var jwtTokenStr string
 	var apiToken string
 
 	apiTokenB := ctx.Request.Header.PeekBytes(authorizationHeader)
@@ -181,11 +182,11 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 		}
 
-		strKey := string(key)
+		jwtTokenStr = string(key)
 
 		var ok bool
-		if user, ok = auth.cache.GetUserByJWT(strKey); !ok {
-			jwtToken, err := jwt.Parse(strKey, func(t *jwt.Token) (interface{}, error) {
+		if user, ok = auth.cache.GetUserByJWT(jwtTokenStr); !ok {
+			jwtToken, err := jwt.Parse(jwtTokenStr, func(t *jwt.Token) (interface{}, error) {
 				return auth.jwtKey, nil
 			})
 			if err != nil || !jwtToken.Valid {
@@ -203,7 +204,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 			userID, _ := snowflake.ParseString(claims.Subject)
 			user, err = auth.cache.GetUserByID(userID)
 
-			auth.cache.SetUserByJWT(strKey, user)
+			auth.cache.SetUserByJWT(jwtTokenStr, user)
 		}
 
 	}
@@ -217,6 +218,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 
 	ctx.Set("user", user)
 	ctx.Set("apitoken", apiToken)
+	ctx.Set("jwt", jwtTokenStr)
 
 	return nil
 }

@@ -68,8 +68,9 @@ func (ws *WebServer) handlerLogin(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
-	user.PassHash = nil
-	return jsonResponse(ctx, user, fasthttp.StatusOK)
+	userOut := *user
+	userOut.PassHash = nil
+	return jsonResponse(ctx, userOut, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
@@ -110,6 +111,11 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 			return jsonError(ctx, err, fasthttp.StatusBadRequest)
 		}
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	ws.cache.SetUserByID(newUser.UID, newUser)
+	if jwtToken, ok := ctx.Get("jwt").(string); ok {
+		ws.cache.SetUserByJWT(jwtToken, newUser)
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)

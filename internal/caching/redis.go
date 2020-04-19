@@ -54,10 +54,17 @@ func (c *Redis) GetUserByID(id snowflake.ID) (*objects.User, error) {
 		if err != nil {
 			return nil, err
 		}
-		c.set(key, user, expireDef)
+		c.SetUserByID(id, user)
 	}
 
 	return user, nil
+}
+
+func (c *Redis) SetUserByID(id snowflake.ID, user *objects.User) error {
+	key := fmt.Sprintf("%s:%d", keyUserByID, id)
+
+	c.set(key, user, expireDef)
+	return nil
 }
 
 func (c *Redis) GetUserByJWT(rawJWT string) (*objects.User, bool) {

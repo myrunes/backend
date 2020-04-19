@@ -16,6 +16,8 @@ type Middleware interface {
 	SetDatabase(db database.Middleware)
 
 	GetUserByID(id snowflake.ID) (*objects.User, error)
+	SetUserByID(id snowflake.ID, user *objects.User) error
+
 	GetUserByJWT(rawJWT string) (*objects.User, bool)
 	SetUserByJWT(rawJWT string, user *objects.User) error
 }

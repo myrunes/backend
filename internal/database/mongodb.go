@@ -404,6 +404,9 @@ func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interf
 	if err == mongo.ErrNoDocuments {
 		return false, nil
 	}
+	if err != nil {
+		return false, err
+	}
 
 	return true, nil
 }
