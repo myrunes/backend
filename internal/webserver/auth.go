@@ -222,7 +222,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 }
 
 func (auth *Authorization) LogOut(ctx *routing.Context) error {
-	key := ctx.Request.Header.Cookie("__session")
+	key := ctx.Request.Header.Cookie(jwtCookieName)
 	if key == nil || len(key) == 0 {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
