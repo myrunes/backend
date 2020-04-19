@@ -2,34 +2,74 @@
 # All values given are default values
 # which are automatically set on creation.
 
-# MongoDB database configuration
+# MongoDB config
 mongodb:
-  # The host address of the database
-  # server
-  host:    'localhost'
-  # The port of the database server
-  port:    '27017'
-  # User which will be used to execute
-  # database commands
-  username: 'lol-runes'
-  # Password for the given user account
-  password: ''
-  # Database to be used to authenticate
-  # the given user against
-  auth_db: 'lol-runes'
-  # Database where the data is stored
-  data_db: 'lol-runes'
+  # Authorization database name
+  auth_db: lol-runes
+  # Data database name
+  data_db: lol-runes
+  # Host address of the database server
+  host: localhost
+  # Port of the database server
+  # Default MongoDB port is 27017
+  port: "27017"
+  # Username to be authenticated against
+  # authorization database
+  username: lol-runes
+  # Password to be used for authentication
+  password: ""
 
-# Exposing web server configuration
+# Redis config
+redis:
+  # Enable or disable redis caching
+  enabled: false
+  # Address and port of the redis server
+  addr: localhost:6379
+  # Database to be selected
+  db: 0
+  # Password of the redis server
+  password: ""
+
+# Webserver config
 webserver:
-  # The address the web server will
-  # expose to
-  addr:    ':443'
-  # TLS / SSL configuration
+  # Address of the web server
+  # Defaultly hostname:443
+  addr: localhost:443
+  # Enable attachment of CORS headers.
+  # to allow cross origin requests to
+  # this API.
+  enablecors: false
+  # The JWT secret key to be used to
+  # sign JWTs. If this is unset, a random
+  # key will be generated on each startup.
+  jwtkey: ""
+  # The path prefix to the API
+  # For example, if this is set to '/api',
+  # then requests will be grouped as
+  # localhost:443/api/...
+  pathprefix: ""
+  # The public URL this API is available
+  # online. This is important for generating
+  # confirmation URLs which are sent via
+  # Email on registration and password reset.
+  publicaddress: https://myrunes.com
+  # TLS/SSL config
   tls:
-    # Enable / Disable TLS
-    enabled:  true
-    # Path to the SSL cert file
-    certfile: ''
-    # Path to the SSL key file
-    keyfile:  ''
+    # Enabel or disable TLS
+    enabled: true
+    # TLS certificate PEM file
+    certfile: "/etc/cert/cert.pem"
+    # TLS key PEM file
+    keyfile: "/etc/cert/key.pem"
+
+# Mail server config
+mailserver:
+  # SMTP address of the mail server
+  host: "smtp.example.com"
+  # SMTP port
+  # Default is 465
+  port: 465
+  # Login username
+  username: ""
+  # Login password
+  password: ""
