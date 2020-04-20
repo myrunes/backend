@@ -21,7 +21,7 @@ jobs:
         run: |
           docker build . \
             -t myrunes/backend:canary \
-            --build-arg RELEASE=FALSE
+            --build-arg RELEASE=TRUE
 
       - name: Publish Image
         run: |
