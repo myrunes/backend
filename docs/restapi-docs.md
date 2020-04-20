@@ -241,6 +241,8 @@ The actual page object is built like follwing:
 
 ### Session Object
 
+> **ATTENTION: Sessions are deprecated since main version 1.7.**
+
 > Information around a session key bound to a user to authenticate their requests.
 
 | Key | Type |  Description |
@@ -815,34 +817,17 @@ X-Ratelimit-Reset: 0
 
 ### Sessions
 
+> **ATTENTION: Sessions are deprecated since main version 1.7. These endpoints are disabled and will be removed in following versions.**
+
 #### Get Sessions
 
 > `GET /api/sessions`
 
-**Parameters**
-
-*No parameters necessary.*
-
-**Response**
-
-```
-HTTP/1.1 200 OK
-Content-Length: 1065
-Content-Type: application/json
-Date: Fri, 26 Jul 2019 13:36:09 GMT
-Server: MYRUNES v.DEBUG_BUILD
-X-Ratelimit-Limit: 50
-X-Ratelimit-Remaining: 46
-X-Ratelimit-Reset: 0
-```
+Because this endpoint is deprecated, an `410 Gone` error will be returned on request:
 ```json
 {
-  "n": 4,
-  "data": [
-    { Session Object },
-    { Session Object },
-    ...
-  ]
+  "code": 410,
+  "message": "dreprecated"
 }
 ```
 
@@ -850,28 +835,11 @@ X-Ratelimit-Reset: 0
 
 > `DELETE /api/sessions/:SESSIONID`
 
-**Parameters**
-
-| Name | Type | Via | Default | Description |
-|------|------|-----|---------|-------------|
-| `SESSIONID` | string | Path | | The UID of the session |
-
-**Response**
-
-```
-HTTP/1.1 200 OK
-Content-Length: 36
-Content-Type: application/json
-Date: Fri, 26 Jul 2019 13:38:00 GMT
-Server: MYRUNES v.DEBUG_BUILD
-X-Ratelimit-Limit: 50
-X-Ratelimit-Remaining: 48
-X-Ratelimit-Reset: 0
-```
+Because this endpoint is deprecated, an `410 Gone` error will be returned on request:
 ```json
 {
-  "code": 200,
-  "message": "ok"
+  "code": 410,
+  "message": "dreprecated"
 }
 ```
 
