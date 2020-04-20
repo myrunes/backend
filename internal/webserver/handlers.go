@@ -83,7 +83,7 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
+	if !ws.auth.CheckHash(string(user.PassHash), reqUser.CurrentPassword) {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
@@ -101,10 +101,12 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 		if len(reqUser.NewPassword) < 8 {
 			return jsonError(ctx, fmt.Errorf("invalid new password"), fasthttp.StatusBadRequest)
 		}
-		newUser.PassHash, err = ws.auth.CreateHash([]byte(reqUser.NewPassword))
+		var passStr string
+		passStr, err = ws.auth.CreateHash(reqUser.NewPassword)
 		if err != nil {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 		}
+		newUser.PassHash = []byte(passStr)
 	}
 
 	if _, err = ws.db.EditUser(newUser, false); err != nil {
@@ -131,7 +133,7 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if !ws.auth.CheckHash(user.PassHash, []byte(reqUser.CurrentPassword)) {
+	if !ws.auth.CheckHash(string(user.PassHash), reqUser.CurrentPassword) {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
@@ -658,7 +660,7 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if !ws.auth.CheckHash(user.PassHash, []byte(mail.CurrentPassword)) {
+	if !ws.auth.CheckHash(string(user.PassHash), mail.CurrentPassword) {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
@@ -823,10 +825,12 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 
 	ws.pwReset.Remove(data.Token)
 
-	newUser.PassHash, err = ws.auth.CreateHash([]byte(data.NewPassword))
+	var passStr string
+	passStr, err = ws.auth.CreateHash(data.NewPassword)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
+	newUser.PassHash = []byte(passStr)
 
 	_, err = ws.db.EditUser(newUser, false)
 	if err != nil {

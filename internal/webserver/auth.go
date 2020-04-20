@@ -4,9 +4,11 @@ import (
 	"crypto/rand"
 	"errors"
 	"fmt"
+	"runtime"
 	"strings"
 	"time"
 
+	"github.com/alexedwards/argon2id"
 	"github.com/bwmarrin/snowflake"
 	"github.com/dgrijalva/jwt-go"
 	"github.com/valyala/fasthttp"
@@ -43,6 +45,8 @@ var (
 	authorizationHeader = []byte("Authorization")
 
 	jwtGenerationMethod = jwt.SigningMethodHS256
+
+	argon2Params = getArgon2Params()
 )
 
 type loginRequest struct {
@@ -79,12 +83,21 @@ func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.Middl
 	return
 }
 
-func (auth *Authorization) CreateHash(pass []byte) ([]byte, error) {
-	return bcrypt.GenerateFromPassword(pass, defCost)
+func (auth *Authorization) CreateHash(pass string) (string, error) {
+	return argon2id.CreateHash(pass, argon2Params)
 }
 
-func (auth *Authorization) CheckHash(hash, pass []byte) bool {
-	return bcrypt.CompareHashAndPassword(hash, pass) == nil
+func (auth *Authorization) CheckHash(hash, pass string) bool {
+	if strings.HasPrefix(hash, "$2a") {
+		return bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass)) == nil
+	}
+
+	if strings.HasPrefix(hash, "$argon2id") {
+		ok, err := argon2id.ComparePasswordAndHash(pass, hash)
+		return ok && err == nil
+	}
+
+	return false
 }
 
 func (auth *Authorization) CreateSessionKey() (string, error) {
@@ -115,7 +128,7 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 	// Querrying user in cache to set cache entry
 	auth.cache.GetUserByID(user.UID)
 
-	if !auth.CheckHash(user.PassHash, []byte(login.Password)) {
+	if !auth.CheckHash(string(user.PassHash), login.Password) {
 		limiter.Allow()
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
@@ -239,4 +252,16 @@ func generateJWTKey() (key []byte, err error) {
 	key = make([]byte, 32)
 	_, err = rand.Read(key)
 	return
+}
+
+func getArgon2Params() *argon2id.Params {
+	cpus := runtime.NumCPU()
+
+	return &argon2id.Params{
+		Memory:      128 * 1024,
+		Iterations:  4,
+		Parallelism: uint8(cpus),
+		SaltLength:  16,
+		KeyLength:   32,
+	}
 }

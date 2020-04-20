@@ -34,7 +34,7 @@ type User struct {
 
 func NewUser(username, password string, authMiddleware auth.Middleware) (*User, error) {
 	now := time.Now()
-	passHash, err := authMiddleware.CreateHash([]byte(password))
+	passHash, err := authMiddleware.CreateHash(password)
 	if err != nil {
 		return nil, err
 	}
@@ -42,7 +42,7 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 	user := &User{
 		Created:     now,
 		LastLogin:   now,
-		PassHash:    passHash,
+		PassHash:    []byte(passHash),
 		UID:         userIDCLuster.Generate(),
 		Username:    strings.ToLower(username),
 		DisplayName: username,

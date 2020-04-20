@@ -3,6 +3,7 @@ module github.com/myrunes/backend
 go 1.13
 
 require (
+	github.com/alexedwards/argon2id v0.0.0-20200420065805-90c52fcb498a
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ghodss/yaml v1.0.0
@@ -24,7 +25,7 @@ require (
 	github.com/zekroTJA/ratelimit v0.0.0-20190321090824-219ca33049a5
 	github.com/zekroTJA/timedmap v0.0.0-20191029102728-85f9d45635d7
 	go.mongodb.org/mongo-driver v1.1.3
-	golang.org/x/crypto v0.0.0-20191119213627-4f8c1d86b1ba
+	golang.org/x/crypto v0.0.0-20200414173820-0848c9571904
 	golang.org/x/sync v0.0.0-20190911185100-cd5d95a43a6e // indirect
 	golang.org/x/tools v0.0.0-20191213221258-04c2e8eff935 // indirect
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect

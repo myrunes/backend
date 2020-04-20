@@ -6,8 +6,8 @@ import (
 )
 
 type Middleware interface {
-	CreateHash(pass []byte) ([]byte, error)
-	CheckHash(hash, pass []byte) bool
+	CreateHash(pass string) (string, error)
+	CheckHash(hash, pass string) bool
 	CreateSessionKey() (string, error)
 	CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error)
 	Login(ctx *routing.Context) bool
