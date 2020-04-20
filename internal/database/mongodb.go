@@ -92,8 +92,8 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 	user := new(objects.User)
 
 	ok, err := m.get(m.collections.users, bson.M{"$or": bson.A{
-		bson.M{"username": username},
-		bson.M{"mailaddress": username},
+		bson.M{"username": isAndNotEmpty(username)},
+		bson.M{"mailaddress": isAndNotEmpty(username)},
 		bson.M{"uid": uid},
 	}}, user)
 
@@ -327,7 +327,7 @@ func (m *MongoDB) GetShare(ident string, uid, pageID snowflake.ID) (*objects.Sha
 
 	ok, err := m.get(m.collections.shares, bson.M{
 		"$or": bson.A{
-			bson.M{"ident": ident},
+			bson.M{"ident": isAndNotEmpty(ident)},
 			bson.M{"uid": uid},
 			bson.M{"pageid": pageID},
 		},
@@ -350,7 +350,7 @@ func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
 
 	_, err := m.collections.shares.DeleteOne(ctx, bson.M{
 		"$or": bson.A{
-			bson.M{"ident": ident},
+			bson.M{"ident": isAndNotEmpty(ident)},
 			bson.M{"uid": uid},
 			bson.M{"pageid": pageID},
 		},
@@ -420,4 +420,11 @@ func (M *MongoDB) count(collection *mongo.Collection, filter interface{}) (int64
 func ctxTimeout(d time.Duration) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), d)
 	return ctx, cancel
+}
+
+func isAndNotEmpty(v string) bson.M {
+	return bson.M{
+		"$eq": v,
+		"$ne": "",
+	}
 }

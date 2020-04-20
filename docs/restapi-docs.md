@@ -41,12 +41,12 @@ There are two ways to authenticate against the API:
   Authorization: Basic 5lTGAsTFwCKG...
   ```
 
-- **Session Cookies**  
-  This method uses session cookies provided by the API which must be saved and delivered on **each request** inside a **`Cookie`** header:  
+- **JWT Session Cookies**  
+  This method generates a JWT which must then be stored as cookie and delivered on each following request in the **`Cookie`** header: 
   ```
-  Cookie: __session=tmdV5JEYIB4SzbRmY...
+  Cookie: jwt_token=eyJhbGciOiJIUzI1NiIs...
   ```
-  To get a session key, request the **[login](#login)** endpoint passing username and password in the JSON body of the request and the server will respond with a **`Set-Cookie`** header containing the session identification after the `__session` key. Keep in mind that you must maintain the expiration of the Cookie because the session will eventually become invalid after this time and must be refreshed. Session are defaultly valid for 2 hours. This value can be extended to a maximum expire duration of 30 days.
+  To get a JWT, request the **[login](#login)** endpoint passing username and password in the JSON body of the request and the server will respond with a **`Set-Cookie`** header containing the JWT after the `jwt_token` key. Keep in mind, that you must maintain the expiration of the Cookie because the session will eventually become invalid after a certain time and must be refreshed. Session are defaultly valid for 2 hours. This value can be extended to a maximum expire duration of 30 days when `remember` is set to `true` in the login request payload.
 
 
 ## Body Content Type

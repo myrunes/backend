@@ -51,11 +51,12 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	newUser.PassHash = nil
-
 	ws.auth.CreateSession(ctx, newUser.UID, data.Remember)
 
-	return jsonResponse(ctx, newUser, fasthttp.StatusCreated)
+	outUser := *newUser
+	outUser.PassHash = nil
+
+	return jsonResponse(ctx, outUser, fasthttp.StatusCreated)
 }
 
 func (ws *WebServer) handlerLogin(ctx *routing.Context) error {
@@ -138,7 +139,12 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	ws.cache.SetUserByID(user.UID, nil)
+	if jwtToken, ok := ctx.Get("jwt").(string); ok {
+		ws.cache.SetUserByJWT(jwtToken, nil)
+	}
+
+	return ws.auth.LogOut(ctx)
 }
 
 func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {

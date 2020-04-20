@@ -83,6 +83,10 @@ func (c *Redis) SetUserByJWT(rawJWT string, user *objects.User) error {
 }
 
 func (c *Redis) set(key string, v interface{}, expiration time.Duration) error {
+	if v == nil {
+		return c.client.Del(key).Err()
+	}
+
 	d, err := json.Marshal(v)
 	if err != nil {
 		return err
