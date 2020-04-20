@@ -652,6 +652,10 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
+	if !ws.auth.CheckHash(user.PassHash, []byte(mail.CurrentPassword)) {
+		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
 	if mail.Reset {
 		_, err := ws.db.EditUser(&objects.User{
 			UID:         user.UID,
