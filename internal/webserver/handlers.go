@@ -119,7 +119,7 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 
 	ws.cache.SetUserByID(newUser.UID, newUser)
 	if jwtToken, ok := ctx.Get("jwt").(string); ok {
-		ws.cache.SetUserByJWT(jwtToken, newUser)
+		ws.cache.SetUserByToken(jwtToken, newUser)
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
@@ -144,7 +144,7 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 
 	ws.cache.SetUserByID(user.UID, nil)
 	if jwtToken, ok := ctx.Get("jwt").(string); ok {
-		ws.cache.SetUserByJWT(jwtToken, nil)
+		ws.cache.SetUserByToken(jwtToken, nil)
 	}
 
 	return ws.auth.LogOut(ctx)
@@ -600,6 +600,7 @@ func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
 	if err = ws.db.SetAPIToken(token); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
+	ws.cache.SetUserByToken(token.Token, user)
 
 	return jsonResponse(ctx, token, fasthttp.StatusOK)
 }
@@ -621,6 +622,15 @@ func (ws *WebServer) handlerGetAPIToken(ctx *routing.Context) error {
 
 func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
+
+	token, err := ws.db.GetAPIToken(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if token != nil {
+		ws.cache.SetUserByToken(token.Token, nil)
+	}
 
 	if err := ws.db.ResetAPIToken(user.UID); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)

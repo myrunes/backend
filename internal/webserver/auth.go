@@ -134,7 +134,7 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 	}
 
 	if token, err := auth.CreateSession(ctx, user.UID, login.Remember); err != nil {
-		auth.cache.SetUserByJWT(token, user)
+		auth.cache.SetUserByToken(token, user)
 	}
 
 	return true
@@ -188,7 +188,12 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 		}
 
 		apiToken = apiToken[6:]
-		user, err = auth.db.VerifyAPIToken(apiToken)
+		var ok bool
+		if user, ok = auth.cache.GetUserByToken(apiToken); !ok {
+			if user, err = auth.db.VerifyAPIToken(apiToken); err == nil {
+				auth.cache.SetUserByToken(apiToken, user)
+			}
+		}
 	} else {
 		key := ctx.Request.Header.Cookie(jwtCookieName)
 		if key == nil || len(key) == 0 {
@@ -198,7 +203,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 		jwtTokenStr = string(key)
 
 		var ok bool
-		if user, ok = auth.cache.GetUserByJWT(jwtTokenStr); !ok {
+		if user, ok = auth.cache.GetUserByToken(jwtTokenStr); !ok {
 			jwtToken, err := jwt.Parse(jwtTokenStr, func(t *jwt.Token) (interface{}, error) {
 				return auth.jwtKey, nil
 			})
@@ -217,7 +222,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 			userID, _ := snowflake.ParseString(claims.Subject)
 			user, err = auth.cache.GetUserByID(userID)
 
-			auth.cache.SetUserByJWT(jwtTokenStr, user)
+			auth.cache.SetUserByToken(jwtTokenStr, user)
 		}
 
 	}
@@ -244,6 +249,10 @@ func (auth *Authorization) LogOut(ctx *routing.Context) error {
 
 	cookie := fmt.Sprintf("%s=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly", jwtCookieName)
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
+
+	if jwt, ok := ctx.Get("jwt").(string); ok {
+		auth.cache.SetUserByToken(jwt, nil)
+	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

@@ -58,16 +58,16 @@ func (c *Internal) SetUserByID(id snowflake.ID, user *objects.User) error {
 	return nil
 }
 
-func (c *Internal) GetUserByJWT(rawJWT string) (*objects.User, bool) {
-	val, ok := c.users.GetValue(rawJWT).(*objects.User)
+func (c *Internal) GetUserByToken(token string) (*objects.User, bool) {
+	val, ok := c.users.GetValue(token).(*objects.User)
 	return val, ok && val != nil
 }
 
-func (c *Internal) SetUserByJWT(rawJWT string, user *objects.User) error {
+func (c *Internal) SetUserByToken(token string, user *objects.User) error {
 	if user == nil {
-		c.users.Remove(rawJWT)
+		c.users.Remove(token)
 	} else {
-		c.users.Set(rawJWT, user, expireDef)
+		c.users.Set(token, user, expireDef)
 	}
 	return nil
 }

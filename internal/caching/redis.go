@@ -12,9 +12,9 @@ import (
 )
 
 const (
-	keyUserByID  = "USER:ID"
-	keyUserByJWT = "USER:JWT"
-	keyPageByID  = "PAGE:ID"
+	keyUserByID    = "USER:ID"
+	keyUserByToken = "USER:TK"
+	keyPageByID    = "PAGE:ID"
 )
 
 type RedisConfig struct {
@@ -64,12 +64,14 @@ func (c *Redis) GetUserByID(id snowflake.ID) (*objects.User, error) {
 func (c *Redis) SetUserByID(id snowflake.ID, user *objects.User) error {
 	key := fmt.Sprintf("%s:%d", keyUserByID, id)
 
-	c.set(key, user, expireDef)
-	return nil
+	if user == nil {
+		return c.set(key, nil, expireDef)
+	}
+	return c.set(key, user, expireDef)
 }
 
-func (c *Redis) GetUserByJWT(rawJWT string) (*objects.User, bool) {
-	key := fmt.Sprintf("%s:%s", keyUserByID, rawJWT)
+func (c *Redis) GetUserByToken(token string) (*objects.User, bool) {
+	key := fmt.Sprintf("%s:%s", keyUserByToken, token)
 
 	var user *objects.User
 	err := c.get(key, user)
@@ -77,9 +79,12 @@ func (c *Redis) GetUserByJWT(rawJWT string) (*objects.User, bool) {
 	return user, err == nil && user != nil
 }
 
-func (c *Redis) SetUserByJWT(rawJWT string, user *objects.User) error {
-	key := fmt.Sprintf("%s:%s", keyUserByID, rawJWT)
+func (c *Redis) SetUserByToken(token string, user *objects.User) error {
+	key := fmt.Sprintf("%s:%s", keyUserByToken, token)
 
+	if user == nil {
+		return c.set(key, nil, expireDef)
+	}
 	return c.set(key, user, expireDef)
 }
 
@@ -102,8 +107,10 @@ func (c *Redis) GetPageByID(id snowflake.ID) (*objects.Page, error) {
 func (c *Redis) SetPageByID(id snowflake.ID, page *objects.Page) error {
 	key := fmt.Sprintf("%s:%d", keyPageByID, id)
 
-	c.set(key, page, expireDef)
-	return nil
+	if page == nil {
+		return c.set(key, nil, expireDef)
+	}
+	return c.set(key, page, expireDef)
 }
 
 func (c *Redis) set(key string, v interface{}, expiration time.Duration) error {

@@ -17,8 +17,8 @@ type Middleware interface {
 
 	GetUserByID(id snowflake.ID) (*objects.User, error)
 	SetUserByID(id snowflake.ID, user *objects.User) error
-	GetUserByJWT(rawJWT string) (*objects.User, bool)
-	SetUserByJWT(rawJWT string, user *objects.User) error
+	GetUserByToken(token string) (*objects.User, bool)
+	SetUserByToken(token string, user *objects.User) error
 
 	GetPageByID(id snowflake.ID) (*objects.Page, error)
 	SetPageByID(id snowflake.ID, page *objects.Page) error
