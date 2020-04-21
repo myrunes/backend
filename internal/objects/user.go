@@ -21,15 +21,16 @@ var (
 )
 
 type User struct {
-	UID         snowflake.ID              `json:"uid"`
-	Username    string                    `json:"username"`
-	MailAddress string                    `json:"mailaddress"`
-	DisplayName string                    `json:"displayname"`
-	PassHash    []byte                    `json:"passhash,omitempty"`
-	LastLogin   time.Time                 `json:"lastlogin"`
-	Created     time.Time                 `json:"created"`
-	Favorites   []string                  `json:"favorites"`
-	PageOrder   map[string][]snowflake.ID `json:"pageorder"`
+	UID            snowflake.ID              `json:"uid"`
+	Username       string                    `json:"username"`
+	MailAddress    string                    `json:"mailaddress"`
+	DisplayName    string                    `json:"displayname"`
+	PassHash       []byte                    `json:"passhash,omitempty"`
+	LastLogin      time.Time                 `json:"lastlogin"`
+	Created        time.Time                 `json:"created"`
+	Favorites      []string                  `json:"favorites"`
+	PageOrder      map[string][]snowflake.ID `json:"pageorder"`
+	HasOldPassword bool                      `json:"hasoldpw,omitempty"`
 }
 
 func NewUser(username, password string, authMiddleware auth.Middleware) (*User, error) {

@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"bytes"
 	"crypto/sha1"
 	"encoding/json"
 	"fmt"
@@ -21,6 +22,8 @@ var (
 	headerETag         = []byte("ETag")
 
 	headerCacheControlValue = []byte("max-age=2592000; must-revalidate; proxy-revalidate;  public")
+
+	bcryptPrefix = []byte("$2a")
 )
 
 var defStatusBoddies = map[int][]byte{
@@ -169,4 +172,8 @@ func getETag(body []byte, weak bool) string {
 	tag := fmt.Sprintf("%s\"%x\"", weakTag, hash)
 
 	return tag
+}
+
+func isOldPasswordHash(hash []byte) bool {
+	return bytes.HasPrefix(hash, bcryptPrefix)
 }

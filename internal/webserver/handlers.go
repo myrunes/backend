@@ -71,6 +71,7 @@ func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	userOut := *user
 	userOut.PassHash = nil
+	userOut.HasOldPassword = isOldPasswordHash(user.PassHash)
 	return jsonResponse(ctx, userOut, fasthttp.StatusOK)
 }
 
