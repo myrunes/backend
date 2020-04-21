@@ -14,6 +14,7 @@ import (
 const (
 	keyUserByID  = "USER:ID"
 	keyUserByJWT = "USER:JWT"
+	keyPageByID  = "PAGE:ID"
 )
 
 type RedisConfig struct {
@@ -80,6 +81,29 @@ func (c *Redis) SetUserByJWT(rawJWT string, user *objects.User) error {
 	key := fmt.Sprintf("%s:%s", keyUserByID, rawJWT)
 
 	return c.set(key, user, expireDef)
+}
+
+func (c *Redis) GetPageByID(id snowflake.ID) (*objects.Page, error) {
+	key := fmt.Sprintf("%s:%d", keyPageByID, id)
+
+	var page *objects.Page
+	err := c.get(key, page)
+	if err != nil || page == nil {
+		page, err = c.db.GetPage(id)
+		if err != nil {
+			return nil, err
+		}
+		c.SetPageByID(id, page)
+	}
+
+	return page, nil
+}
+
+func (c *Redis) SetPageByID(id snowflake.ID, page *objects.Page) error {
+	key := fmt.Sprintf("%s:%d", keyPageByID, id)
+
+	c.set(key, page, expireDef)
+	return nil
 }
 
 func (c *Redis) set(key string, v interface{}, expiration time.Duration) error {

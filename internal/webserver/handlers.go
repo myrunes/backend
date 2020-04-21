@@ -167,6 +167,7 @@ func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
 	if err = ws.db.CreatePage(page); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
+	ws.cache.SetPageByID(page.UID, page)
 
 	return jsonResponse(ctx, page, fasthttp.StatusCreated)
 }
@@ -245,7 +246,7 @@ func (ws *WebServer) handlerGetPage(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	page, err := ws.db.GetPage(uid)
+	page, err := ws.cache.GetPageByID(uid)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -265,7 +266,7 @@ func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	page, err := ws.db.GetPage(uid)
+	page, err := ws.cache.GetPageByID(uid)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -282,6 +283,7 @@ func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
+	ws.cache.SetPageByID(newPage.UID, newPage)
 
 	return jsonResponse(ctx, newPage, fasthttp.StatusOK)
 }
@@ -294,7 +296,7 @@ func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	page, err := ws.db.GetPage(uid)
+	page, err := ws.cache.GetPageByID(uid)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -306,12 +308,13 @@ func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 	if err = ws.db.DeletePage(page.UID); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
+	ws.cache.SetPageByID(page.UID, nil)
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
-	return jsonResponse(ctx, &listResponse{N: len(ddragon.DDragonInstance.Champions), Data: ddragon.DDragonInstance.Champions}, fasthttp.StatusOK)
+	return jsonCachableResponse(ctx, &listResponse{N: len(ddragon.DDragonInstance.Champions), Data: ddragon.DDragonInstance.Champions}, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
@@ -319,7 +322,7 @@ func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 		"trees": ddragon.DDragonInstance.Runes,
 		"perks": objects.PerksPool,
 	}
-	return jsonResponse(ctx, data, fasthttp.StatusOK)
+	return jsonCachableResponse(ctx, data, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
@@ -410,7 +413,7 @@ func (ws *WebServer) handlerCreateShare(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if page, err := ws.db.GetPage(pageID); err != nil {
+	if page, err := ws.cache.GetPageByID(pageID); err != nil {
 		return jsonResponse(ctx, err, fasthttp.StatusInternalServerError)
 	} else if page == nil || page.Owner != user.UID {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
@@ -497,7 +500,7 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
-	page, err := ws.db.GetPage(share.PageID)
+	page, err := ws.cache.GetPageByID(share.PageID)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
@@ -574,7 +577,7 @@ func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 }
 
 func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
-	return jsonResponse(ctx, map[string]string{
+	return jsonCachableResponse(ctx, map[string]string{
 		"version":    static.AppVersion,
 		"apiversion": static.APIVersion,
 		"release":    static.Release,

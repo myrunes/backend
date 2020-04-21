@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,7 +16,11 @@ import (
 var emptyResponseBody = []byte("{}")
 
 var (
-	headerUserAgent = []byte("User-Agent")
+	headerUserAgent    = []byte("User-Agent")
+	headerCacheControl = []byte("Cache-Control")
+	headerETag         = []byte("ETag")
+
+	headerCacheControlValue = []byte("max-age=2592000; must-revalidate; proxy-revalidate;  public")
 )
 
 var defStatusBoddies = map[int][]byte{
@@ -74,6 +79,34 @@ func jsonResponse(ctx *routing.Context, v interface{}, status int) error {
 	return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 }
 
+func jsonCachableResponse(ctx *routing.Context, v interface{}, status int) error {
+	var err error
+	data := emptyResponseBody
+
+	if v == nil {
+		if d, ok := defStatusBoddies[status]; ok {
+			data = d
+		}
+	} else {
+		if static.Release != "TRUE" {
+			data, err = json.MarshalIndent(v, "", "  ")
+		} else {
+			data, err = json.Marshal(v)
+		}
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+	}
+
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetBytesKV(headerCacheControl, headerCacheControlValue)
+	ctx.Response.Header.SetBytesK(headerETag, getETag(data, true))
+	ctx.SetStatusCode(status)
+	_, err = ctx.Write(data)
+
+	return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+}
+
 // parseJSONBody tries to parse a requests JSON
 // body to the passed object pointer. If the
 // parsing fails, this will result in a jsonError
@@ -123,4 +156,17 @@ func checkPageName(pageName, guess string, tollerance float64) bool {
 
 	return float64(matchedChars)/lenPageName >= (1-tollerance) &&
 		float64(matchedChars)/lenGuesses >= (1-tollerance)
+}
+
+func getETag(body []byte, weak bool) string {
+	hash := sha1.Sum(body)
+
+	weakTag := ""
+	if weak {
+		weakTag = "W/"
+	}
+
+	tag := fmt.Sprintf("%s\"%x\"", weakTag, hash)
+
+	return tag
 }

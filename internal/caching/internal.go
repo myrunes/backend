@@ -9,15 +9,25 @@ import (
 	"github.com/zekroTJA/timedmap"
 )
 
+const (
+	secUsers = iota
+	secPages
+)
+
 type Internal struct {
 	db database.Middleware
 
-	m *timedmap.TimedMap
+	m     *timedmap.TimedMap
+	users timedmap.Section
+	pages timedmap.Section
 }
 
 func NewInternal() *Internal {
+	tm := timedmap.New(15 * time.Minute)
 	return &Internal{
-		m: timedmap.New(15 * time.Minute),
+		m:     tm,
+		users: tm.Section(secUsers),
+		pages: tm.Section(secPages),
 	}
 }
 
@@ -27,7 +37,7 @@ func (c *Internal) SetDatabase(db database.Middleware) {
 
 func (c *Internal) GetUserByID(id snowflake.ID) (*objects.User, error) {
 	var err error
-	user, ok := c.m.GetValue(id).(*objects.User)
+	user, ok := c.users.GetValue(id).(*objects.User)
 	if !ok || user == nil {
 		user, err = c.db.GetUser(id, "")
 		if err != nil {
@@ -41,23 +51,46 @@ func (c *Internal) GetUserByID(id snowflake.ID) (*objects.User, error) {
 
 func (c *Internal) SetUserByID(id snowflake.ID, user *objects.User) error {
 	if user == nil {
-		c.m.Remove(id)
+		c.users.Remove(id)
 	} else {
-		c.m.Set(id, user, expireDef)
+		c.users.Set(id, user, expireDef)
 	}
 	return nil
 }
 
 func (c *Internal) GetUserByJWT(rawJWT string) (*objects.User, bool) {
-	val, ok := c.m.GetValue(rawJWT).(*objects.User)
+	val, ok := c.users.GetValue(rawJWT).(*objects.User)
 	return val, ok && val != nil
 }
 
 func (c *Internal) SetUserByJWT(rawJWT string, user *objects.User) error {
 	if user == nil {
-		c.m.Remove(rawJWT)
+		c.users.Remove(rawJWT)
 	} else {
-		c.m.Set(rawJWT, user, expireDef)
+		c.users.Set(rawJWT, user, expireDef)
+	}
+	return nil
+}
+
+func (c *Internal) GetPageByID(id snowflake.ID) (*objects.Page, error) {
+	var err error
+	page, ok := c.pages.GetValue(id).(*objects.Page)
+	if !ok || page == nil {
+		page, err = c.db.GetPage(id)
+		if err != nil {
+			return nil, err
+		}
+		c.SetPageByID(id, page)
+	}
+
+	return page, nil
+}
+
+func (c *Internal) SetPageByID(id snowflake.ID, page *objects.Page) error {
+	if page == nil {
+		c.pages.Remove(id)
+	} else {
+		c.pages.Set(id, page, expireDef)
 	}
 	return nil
 }
