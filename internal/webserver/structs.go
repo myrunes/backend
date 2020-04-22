@@ -46,8 +46,9 @@ type pageOrderRequest struct {
 }
 
 type setMailRequest struct {
-	MailAddress string `json:"mailaddress"`
-	Reset       bool   `json:"reset"`
+	MailAddress     string `json:"mailaddress"`
+	Reset           bool   `json:"reset"`
+	CurrentPassword string `json:"currpassword"`
 }
 
 type confirmMail struct {

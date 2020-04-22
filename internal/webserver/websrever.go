@@ -7,8 +7,10 @@ import (
 	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/ratelimit"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -28,6 +30,7 @@ type Config struct {
 	TLS        *TLSConfig `json:"tls"`
 	PublicAddr string     `json:"publicaddress"`
 	EnableCors bool       `json:"enablecors"`
+	JWTKey     string     `json:"jwtkey"`
 }
 
 type TLSConfig struct {
@@ -40,10 +43,11 @@ type WebServer struct {
 	server *fasthttp.Server
 	router *routing.Router
 
-	db   database.Middleware
-	ms   *mailserver.MailServer
-	auth *Authorization
-	rlm  *RateLimitManager
+	db    database.Middleware
+	cache caching.Middleware
+	ms    *mailserver.MailServer
+	auth  *Authorization
+	rlm   *ratelimit.RateLimitManager
 
 	mailConfirmation *timedmap.TimedMap
 	pwReset          *timedmap.TimedMap
@@ -56,17 +60,21 @@ type mailConfirmationData struct {
 	MailAddress string
 }
 
-func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer) {
+func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
 	ws.config = config
 	ws.db = db
+	ws.cache = cache
 	ws.ms = ms
-	ws.rlm = NewRateLimitManager()
-	ws.auth = NewAuthorization(db, ws.rlm)
+	ws.rlm = ratelimit.New()
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
+	}
+
+	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, cache, ws.rlm); err != nil {
+		return
 	}
 
 	ws.mailConfirmation = timedmap.New(1 * time.Hour)
@@ -90,7 +98,7 @@ func (ws *WebServer) registerHandlers() {
 	api.
 		Post("/login", ws.handlerLogin)
 	api.
-		Post("/logout", ws.auth.LogOut)
+		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.LogOut)
 
 	api.Get("/version", ws.handlerGetVersion)
 

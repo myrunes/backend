@@ -6,15 +6,14 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
-	"time"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/config"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/ddragon"
 	"github.com/myrunes/backend/internal/logger"
 	"github.com/myrunes/backend/internal/mailserver"
 	"github.com/myrunes/backend/internal/webserver"
-	"github.com/myrunes/backend/pkg/lifecycletimer"
 )
 
 var (
@@ -87,8 +86,19 @@ func main() {
 	}
 	logger.Info("MAILSERVER :: started")
 
+	var cache caching.Middleware
+	if cfg.Redis != nil && cfg.Redis.Enabled {
+		cache = caching.NewRedis(cfg.Redis)
+	} else {
+		cache = caching.NewInternal()
+	}
+	cache.SetDatabase(db)
+
 	logger.Info("WEBSERVER :: initialization")
-	ws := webserver.NewWebServer(db, ms, cfg.WebServer)
+	ws, err := webserver.NewWebServer(db, cache, ms, cfg.WebServer)
+	if err != nil {
+		logger.Fatal("WEBSERVER :: failed creating web server: %s", err.Error())
+	}
 	go func() {
 		if err := ws.ListenAndServeBlocking(); err != nil {
 			logger.Fatal("WEBSERVER :: failed starting web server: %s", err.Error())
@@ -96,15 +106,17 @@ func main() {
 	}()
 	logger.Info("WEBSERVER :: started")
 
-	lct := lifecycletimer.New(5 * time.Minute).
-		Handle(func() {
-			if err := db.CleanupExpiredSessions(); err != nil {
-				logger.Error("DATABASE :: failed cleaning up sessions: %s", err.Error())
-			}
-		}).
-		Start()
-	defer lct.Stop()
-	logger.Info("LIFECYCLETIMER :: started")
+	// Lifecycle Timer was used to clean up expierd
+	// sessions which is no more necessary after
+	// implementation of JWT tokens.
+	// Just keeping this here in case of this may
+	// be needed some time later.
+	// lct := lifecycletimer.New(5 * time.Minute).
+	// 	Handle(func() {
+	// 	}).
+	// 	Start()
+	// defer lct.Stop()
+	// logger.Info("LIFECYCLETIMER :: started")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

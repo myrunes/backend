@@ -1,9 +1,10 @@
-package webserver
+package ratelimit
 
 import (
 	"fmt"
 	"time"
 
+	"github.com/myrunes/backend/internal/shared"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/zekroTJA/ratelimit"
 	"github.com/zekroTJA/timedmap"
@@ -26,9 +27,9 @@ type rateLimitHandler struct {
 	handler routing.Handler
 }
 
-// NewRateLimitManager creates a new instance
+// New creates a new instance
 // of RateLimitManager.
-func NewRateLimitManager() *RateLimitManager {
+func New() *RateLimitManager {
 	return &RateLimitManager{
 		limits:  timedmap.New(cleanupInterval),
 		handler: make([]*rateLimitHandler, 0),
@@ -52,7 +53,7 @@ func (rlm *RateLimitManager) GetHandler(limit time.Duration, burst int) routing.
 
 	rlh.handler = func(ctx *routing.Context) error {
 		limiterID := fmt.Sprintf("%d#%s",
-			rlh.id, getIPAddr(ctx))
+			rlh.id, shared.GetIPAddr(ctx))
 		ok, res := rlm.GetLimiter(limiterID, limit, burst).Reserve()
 
 		ctx.Response.Header.Set("X-RateLimit-Limit", fmt.Sprintf("%d", res.Burst))

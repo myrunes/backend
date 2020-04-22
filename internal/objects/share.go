@@ -48,7 +48,8 @@ func NewSharePage(ownerID, pageID snowflake.ID, maxAccesses int, expires time.Ti
 		AccessIPs:   make([]string, 0),
 	}
 
-	share.Ident, err = random.Base64(5)
+	const identSubset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	share.Ident, err = random.String(5, identSubset)
 
 	return share, err
 }
