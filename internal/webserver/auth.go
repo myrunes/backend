@@ -164,7 +164,7 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 
 	secureCookie := ""
 	if static.Release == "TRUE" {
-		secureCookie = "; Secure"
+		secureCookie = "; Secure; SameSite=Strict"
 	}
 
 	cookie := fmt.Sprintf("%s=%s; Expires=%s; Path=/; HttpOnly%s",
