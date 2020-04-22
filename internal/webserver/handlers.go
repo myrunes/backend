@@ -687,6 +687,9 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 		}
 
+		user.MailAddress = ""
+		ws.cache.SetUserByID(user.UID, user)
+
 		return jsonResponse(ctx, nil, fasthttp.StatusOK)
 	}
 
@@ -736,6 +739,11 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 	}, false)
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user, err := ws.cache.GetUserByID(data.UserID); err == nil && user != nil {
+		user.MailAddress = data.MailAddress
+		ws.cache.SetUserByID(user.UID, user)
 	}
 
 	return jsonResponse(ctx, err, fasthttp.StatusOK)
