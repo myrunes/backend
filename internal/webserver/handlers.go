@@ -147,7 +147,7 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 		ws.cache.SetUserByToken(jwtToken, nil)
 	}
 
-	return ws.auth.LogOut(ctx)
+	return ws.auth.Logout(ctx)
 }
 
 func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {

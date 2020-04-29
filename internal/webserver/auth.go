@@ -19,7 +19,6 @@ import (
 	"github.com/myrunes/backend/internal/ratelimit"
 	"github.com/myrunes/backend/internal/shared"
 	"github.com/myrunes/backend/internal/static"
-	"github.com/myrunes/backend/pkg/random"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -98,10 +97,6 @@ func (auth *Authorization) CheckHash(hash, pass string) bool {
 	}
 
 	return false
-}
-
-func (auth *Authorization) CreateSessionKey() (string, error) {
-	return random.Base64(sessionKeyLength)
 }
 
 func (auth *Authorization) Login(ctx *routing.Context) bool {
@@ -241,7 +236,7 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	return nil
 }
 
-func (auth *Authorization) LogOut(ctx *routing.Context) error {
+func (auth *Authorization) Logout(ctx *routing.Context) error {
 	key := ctx.Request.Header.Cookie(jwtCookieName)
 	if key == nil || len(key) == 0 {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
