@@ -92,8 +92,8 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 	user := new(objects.User)
 
 	ok, err := m.get(m.collections.users, bson.M{"$or": bson.A{
-		bson.M{"username": isAndNotEmpty(username)},
-		bson.M{"mailaddress": isAndNotEmpty(username)},
+		bson.M{"username": equalsAndNotEmpty(username)},
+		bson.M{"mailaddress": equalsAndNotEmpty(username)},
 		bson.M{"uid": uid},
 	}}, user)
 
@@ -104,57 +104,9 @@ func (m *MongoDB) GetUser(uid snowflake.ID, username string) (*objects.User, err
 	return user, err
 }
 
-func (m *MongoDB) EditUser(user *objects.User, login bool) (bool, error) {
-	oldUser, err := m.GetUser(user.UID, "")
-	if err != nil {
-		return false, err
-	}
-
-	if oldUser == nil {
-		return false, nil
-	}
-
-	if login {
-		oldUser.LastLogin = time.Now()
-	}
-
-	if user.DisplayName != "" {
-		oldUser.DisplayName = user.DisplayName
-	}
-
-	if user.Favorites != nil {
-		oldUser.Favorites = user.Favorites
-	}
-
-	if user.Username != "" {
-		u, err := m.GetUser(snowflake.ID(-1), user.Username)
-		if err != nil {
-			return false, err
-		}
-		if u != nil && u.UID != oldUser.UID {
-			return false, ErrUsernameTaken
-		}
-		oldUser.Username = user.Username
-	}
-
-	if user.PassHash != nil && len(user.PassHash) > 0 {
-		oldUser.PassHash = user.PassHash
-	}
-
-	if user.PageOrder != nil {
-		oldUser.PageOrder = user.PageOrder
-	}
-
-	if user.MailAddress != "" {
-		if user.MailAddress == "__RESET__" {
-			oldUser.MailAddress = ""
-		} else {
-			oldUser.MailAddress = user.MailAddress
-		}
-	}
-
-	return true, m.insertOrUpdate(m.collections.users,
-		bson.M{"uid": oldUser.UID}, oldUser)
+func (m *MongoDB) EditUser(user *objects.User) error {
+	return m.insertOrUpdate(m.collections.users,
+		bson.M{"uid": user.UID}, user)
 }
 
 func (m *MongoDB) DeleteUser(uid snowflake.ID) error {
@@ -162,15 +114,6 @@ func (m *MongoDB) DeleteUser(uid snowflake.ID) error {
 	defer cancelDelOne()
 
 	_, err := m.collections.users.DeleteOne(ctxDelOne, bson.M{"uid": uid})
-	if err != nil {
-		return err
-	}
-
-	ctxDelMany, cancelDelMany := ctxTimeout(5 * time.Second)
-	defer cancelDelMany()
-
-	_, err = m.collections.pages.DeleteMany(ctxDelMany,
-		bson.M{"owner": uid})
 
 	return err
 }
@@ -253,25 +196,8 @@ func (m *MongoDB) GetPage(uid snowflake.ID) (*objects.Page, error) {
 	return page, nil
 }
 
-func (m *MongoDB) EditPage(page *objects.Page) (*objects.Page, error) {
-	oldPage, err := m.GetPage(page.UID)
-	if err != nil {
-		return nil, err
-	}
-	if oldPage == nil {
-		return nil, nil
-	}
-
-	page.Created = oldPage.Created
-	page.UID = oldPage.UID
-	page.Owner = oldPage.Owner
-	page.Edited = time.Now()
-	err = page.Validate()
-	if err != nil {
-		return nil, err
-	}
-
-	return page, m.insertOrUpdate(m.collections.pages, bson.M{"uid": page.UID}, page)
+func (m *MongoDB) EditPage(page *objects.Page) error {
+	return m.insertOrUpdate(m.collections.pages, bson.M{"uid": page.UID}, page)
 }
 
 func (m *MongoDB) DeletePage(uid snowflake.ID) error {
@@ -279,6 +205,16 @@ func (m *MongoDB) DeletePage(uid snowflake.ID) error {
 	defer cancel()
 
 	_, err := m.collections.pages.DeleteOne(ctx, bson.M{"uid": uid})
+	return err
+}
+
+func (m *MongoDB) DeleteUserPages(uid snowflake.ID) error {
+	ctxDelMany, cancelDelMany := ctxTimeout(5 * time.Second)
+	defer cancelDelMany()
+
+	_, err := m.collections.pages.DeleteMany(ctxDelMany,
+		bson.M{"owner": uid})
+
 	return err
 }
 
@@ -327,7 +263,7 @@ func (m *MongoDB) GetShare(ident string, uid, pageID snowflake.ID) (*objects.Sha
 
 	ok, err := m.get(m.collections.shares, bson.M{
 		"$or": bson.A{
-			bson.M{"ident": isAndNotEmpty(ident)},
+			bson.M{"ident": equalsAndNotEmpty(ident)},
 			bson.M{"uid": uid},
 			bson.M{"pageid": pageID},
 		},
@@ -350,7 +286,7 @@ func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
 
 	_, err := m.collections.shares.DeleteOne(ctx, bson.M{
 		"$or": bson.A{
-			bson.M{"ident": isAndNotEmpty(ident)},
+			bson.M{"ident": equalsAndNotEmpty(ident)},
 			bson.M{"uid": uid},
 			bson.M{"pageid": pageID},
 		},
@@ -361,6 +297,7 @@ func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
 
 // --- HELPERS ------------------------------------------------------------------
 
+// insert adds the given vaalue v to the passed collection.
 func (m *MongoDB) insert(collection *mongo.Collection, v interface{}) error {
 	ctx, cancel := ctxTimeout(5 * time.Second)
 	defer cancel()
@@ -369,14 +306,18 @@ func (m *MongoDB) insert(collection *mongo.Collection, v interface{}) error {
 	return err
 }
 
-func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, obj interface{}) error {
+// insertOrUpdate checks if the given value v is existent
+// in the passed collection by using the passed filter BSON
+// command.
+// If the value does not exist, the value winn be inserted.
+func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, v interface{}) error {
 	ctx, cancel := ctxTimeout(5 * time.Second)
 	defer cancel()
 
 	res, err := collection.UpdateOne(
 		ctx,
 		filter, bson.M{
-			"$set": obj,
+			"$set": v,
 		})
 
 	if err != nil {
@@ -384,12 +325,19 @@ func (m *MongoDB) insertOrUpdate(collection *mongo.Collection, filter, obj inter
 	}
 
 	if res.MatchedCount == 0 {
-		return m.insert(collection, obj)
+		return m.insert(collection, v)
 	}
 
 	return err
 }
 
+// get tries to find a value in the passed collection by
+// using the passed filter BSON command.
+// If successful, the value will be scanned into v and
+// the function returns true.
+// If the value could not be found, false will be returned.
+// An error is only returned if the database access failed,
+// not if the value was not found.
 func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interface{}) (bool, error) {
 	ctx, cancel := ctxTimeout(5 * time.Second)
 	defer cancel()
@@ -411,18 +359,26 @@ func (m *MongoDB) get(collection *mongo.Collection, filter interface{}, v interf
 	return true, nil
 }
 
+// count returns the number of values in the passed
+// collection matching the passed filter BSON command.
 func (M *MongoDB) count(collection *mongo.Collection, filter interface{}) (int64, error) {
 	ctx, cancel := ctxTimeout(5 * time.Second)
 	defer cancel()
 	return collection.CountDocuments(ctx, filter)
 }
 
+// ctxTimeout creates a timeout context with the
+// passed timeout duration and returns the context
+// object and a cancelation function.
 func ctxTimeout(d time.Duration) (context.Context, context.CancelFunc) {
 	ctx, cancel := context.WithTimeout(context.Background(), d)
 	return ctx, cancel
 }
 
-func isAndNotEmpty(v string) bson.M {
+// equalsAndNotEmpty creates a BSON filter to
+// find an object where the given string key
+// equals v and is not empty ("").
+func equalsAndNotEmpty(v string) bson.M {
 	return bson.M{
 		"$eq": v,
 		"$ne": "",

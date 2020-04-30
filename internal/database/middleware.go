@@ -1,18 +1,23 @@
 package database
 
 import (
-	"errors"
-
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/backend/internal/objects"
 )
 
-var (
-	ErrUsernameTaken = errors.New("username taken")
-)
-
 // Middleware describes the structure of a
 // database provider module.
+//
+// On fetching values from the database
+// which dont exist, an error returning
+// is not expected. Errors should only be
+// returned if something went wrong
+// accessing the database and will be
+// returned as 500 Internal Error from
+// the REST API. If an non-existing
+// object was fetched, only return nil
+// (or the default value for the type)
+// for both the value and the error.
 type Middleware interface {
 	// Connect  to the database using the
 	// defined parameters.
@@ -30,15 +35,10 @@ type Middleware interface {
 	// Therefore, the priority of matching is:
 	// 1. UID, 2. username, 3. e-mail
 	GetUser(uid snowflake.ID, username string) (*objects.User, error)
-	// EditUser updates mutable user data values
-	// of the given user in the database.
-	// The passed user object may be incomplete
-	// and only given and changed values must be
-	// updated in the database user object.
-	// If login is passed as true, the LastLogin
-	// value of the user must be set to the current
-	// datetime.
-	EditUser(user *objects.User, login bool) (bool, error)
+	// EditUser updates a user object in the
+	// database to the object passed by its
+	// UID.
+	EditUser(user *objects.User) error
 	// DeleteUser removes a user from the database
 	// or marks it as removed so that the object
 	// can not be fetched anymore.
@@ -61,19 +61,56 @@ type Middleware interface {
 	// If sortLess is not null, the result
 	// collection must be lesss-sorted by
 	// the given sortLess function.
-	GetPages(uid snowflake.ID, champion, filter string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
+	GetPages(
+		uid snowflake.ID,
+		champion,
+		filter string,
+		sortLess func(i, j *objects.Page) bool,
+	) ([]*objects.Page, error)
 	// GetPage returns a page object by the
 	// given pages uid.
 	GetPage(uid snowflake.ID) (*objects.Page, error)
-	EditPage(page *objects.Page) (*objects.Page, error)
+	// EditPage replaces the page object in
+	// the database by the passed page
+	// object by its UID.
+	EditPage(page *objects.Page) error
+	// DeletePage removes a page object from
+	// the database or marks it as removed
+	// so it's not accessable anymore.
 	DeletePage(uid snowflake.ID) error
+	// DeleteUserPages deletes all pages
+	// of the users UID passed.
+	DeleteUserPages(uid snowflake.ID) error
 
+	// SetAPIToken sets the passed API token
+	// to the user defined in the APIToken
+	// object.
 	SetAPIToken(token *objects.APIToken) error
-	GetAPIToken(uID snowflake.ID) (*objects.APIToken, error)
-	ResetAPIToken(uID snowflake.ID) error
+	// GetAPIToken returns the APIToken object,
+	// if available, of the passed users uid.
+	GetAPIToken(uid snowflake.ID) (*objects.APIToken, error)
+	// ResetAPIToken deletes the APIToken
+	// object of the passed users uid so
+	// that it is no more accessable.
+	ResetAPIToken(uid snowflake.ID) error
+	// VerifyAPIToken returns a User object
+	// which the passed API token string
+	// belongs to.
 	VerifyAPIToken(tokenStr string) (*objects.User, error)
 
+	// SetShare creates a nnew share entry
+	// in the database from the passed SharePage
+	// object.
 	SetShare(share *objects.SharePage) error
+	// GetShare returns the SharePage object by
+	// the shares ident, uid or pageID of the
+	// RunePage the share is assigned to.
+	// (Priority in this order)
 	GetShare(ident string, uid, pageID snowflake.ID) (*objects.SharePage, error)
+	// DeleteShare removes a SharePage object
+	// from the database or makes it inaccessable
+	// by the shares ident, uid oder the pageID
+	// of the RunePage the share is belonging to.
+	// (Priority in this order)
 	DeleteShare(ident string, uid, pageID snowflake.ID) error
 }

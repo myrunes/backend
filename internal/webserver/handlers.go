@@ -13,7 +13,6 @@ import (
 	"github.com/myrunes/backend/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
-	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/objects"
 	"github.com/myrunes/backend/internal/static"
 	routing "github.com/qiangxue/fasthttp-routing"
@@ -89,7 +88,6 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	newUser := &objects.User{
-		UID:         user.UID,
 		Username:    reqUser.Username,
 		DisplayName: reqUser.DisplayName,
 	}
@@ -110,16 +108,15 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 		newUser.PassHash = []byte(passStr)
 	}
 
-	if _, err = ws.db.EditUser(newUser, false); err != nil {
-		if err == database.ErrUsernameTaken {
-			return jsonError(ctx, err, fasthttp.StatusBadRequest)
-		}
+	user.Update(newUser, false)
+
+	if err = ws.db.EditUser(user); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	ws.cache.SetUserByID(newUser.UID, newUser)
+	ws.cache.SetUserByID(newUser.UID, user)
 	if jwtToken, ok := ctx.Get("jwt").(string); ok {
-		ws.cache.SetUserByToken(jwtToken, newUser)
+		ws.cache.SetUserByToken(jwtToken, user)
 	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
@@ -139,6 +136,10 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	}
 
 	if err = ws.db.DeleteUser(user.UID); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if err = ws.db.DeleteUserPages(user.UID); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -276,15 +277,20 @@ func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
 		return jsonError(ctx, errNotFound, fasthttp.StatusNotFound)
 	}
 
-	if err = parseJSONBody(ctx, page); err != nil {
+	newPage := new(objects.Page)
+	if err = parseJSONBody(ctx, newPage); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	newPage, err := ws.db.EditPage(page)
-	if err != nil {
+	page.Update(newPage)
+	if err = page.Validate(); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if err = ws.db.EditPage(page); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
-	ws.cache.SetPageByID(newPage.UID, newPage)
+	ws.cache.SetPageByID(page.UID, page)
 
 	return jsonResponse(ctx, newPage, fasthttp.StatusOK)
 }
@@ -379,7 +385,7 @@ func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 
 	user.Favorites = favReq.Favorites
 
-	if _, err = ws.db.EditUser(user, false); err != nil {
+	if err = ws.db.EditUser(user); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -659,7 +665,7 @@ func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
 	}
 
 	user.PageOrder[champion] = pageOrder.PageOrder
-	if _, err := ws.db.EditUser(user, false); err != nil {
+	if err := ws.db.EditUser(user); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
@@ -679,15 +685,11 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 	}
 
 	if mail.Reset {
-		_, err := ws.db.EditUser(&objects.User{
-			UID:         user.UID,
-			MailAddress: "__RESET__",
-		}, false)
-		if err != nil {
+		user.MailAddress = ""
+		if err := ws.db.EditUser(user); err != nil {
 			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 		}
 
-		user.MailAddress = ""
 		ws.cache.SetUserByID(user.UID, user)
 
 		return jsonResponse(ctx, nil, fasthttp.StatusOK)
@@ -733,20 +735,15 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 
 	ws.mailConfirmation.Remove(token.Token)
 
-	_, err := ws.db.EditUser(&objects.User{
-		UID:         data.UserID,
-		MailAddress: data.MailAddress,
-	}, false)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
 	if user, err := ws.cache.GetUserByID(data.UserID); err == nil && user != nil {
 		user.MailAddress = data.MailAddress
+		if err := ws.db.EditUser(user); err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
 		ws.cache.SetUserByID(user.UID, user)
 	}
 
-	return jsonResponse(ctx, err, fasthttp.StatusOK)
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
 func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
@@ -841,10 +838,6 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
 	}
 
-	newUser := &objects.User{
-		UID: user.UID,
-	}
-
 	ws.pwReset.Remove(data.Token)
 
 	var passStr string
@@ -852,10 +845,9 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
-	newUser.PassHash = []byte(passStr)
+	user.PassHash = []byte(passStr)
 
-	_, err = ws.db.EditUser(newUser, false)
-	if err != nil {
+	if err = ws.db.EditUser(user); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
