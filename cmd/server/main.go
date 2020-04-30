@@ -64,7 +64,7 @@ func main() {
 	}
 
 	logger.Info("DDRAGON :: initialization")
-	if ddragon.DDragonInstance, err = ddragon.Poll("latest"); err != nil {
+	if ddragon.DDragonInstance, err = ddragon.Fetch("latest"); err != nil {
 		logger.Fatal("DDRAGON :: failed polling data from ddragon: %s", err.Error())
 	}
 	logger.Info("DDRAGON :: initialized")

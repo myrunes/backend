@@ -6,57 +6,49 @@ import (
 	"net/http"
 )
 
+// endpoint definitions
 const (
 	epVersions  = "https://ddragon.leagueoflegends.com/api/versions.json"
 	epChampions = "https://ddragon.leagueoflegends.com/cdn/%s/data/en_US/champion.json"
 	epRunes     = "https://ddragon.leagueoflegends.com/cdn/%s/data/en_US/runesReforged.json"
 )
 
-type DDragon struct {
-	Version   string      `json:"version"`
-	Champions []*Champion `json:"champions"`
-	Runes     []*RuneTree `json:"runes"`
-}
-
-func Poll(version string) (d *DDragon, err error) {
+// Fetch collects version, champion and rune
+// information from the Datadragon API and
+// wraps them into a DDragon object returned.
+func Fetch(version string) (d *DDragon, err error) {
 	d = new(DDragon)
 
-	if d.Version, err = getVersion(version); err != nil {
+	if d.Version, err = GetVersion(version); err != nil {
 		return
 	}
 
-	if d.Champions, err = getChampions(d.Version); err != nil {
+	if d.Champions, err = GetChampions(d.Version); err != nil {
 		return
 	}
 
-	if d.Runes, err = getRunes(d.Version); err != nil {
+	if d.Runes, err = GetRunes(d.Version); err != nil {
 		return
 	}
 
 	return
 }
 
-func getJSON(url string, d interface{}) error {
-	res, err := http.Get(url)
-	if err != nil {
-		return err
-	}
-
-	if res.StatusCode >= 400 {
-		return fmt.Errorf("status code was %d", res.StatusCode)
-	}
-
-	dec := json.NewDecoder(res.Body)
-	return dec.Decode(d)
-}
-
-func getVersions() (res []string, err error) {
+// GetVersions returns an array of valid LoL patch
+// version strings.
+func GetVersions() (res []string, err error) {
 	err = getJSON(epVersions, &res)
 	return
 }
 
-func getVersion(v string) (string, error) {
-	versions, err := getVersions()
+// GetVersion validates the given version v
+// against the array of valid versions collected
+// from the API. If v is empty or equals "latest",
+// the most recent version string will be returned.
+// If the given version string is invalid, an
+// error will be returned.
+func GetVersion(v string) (string, error) {
+	versions, err := GetVersions()
 	if err != nil {
 		return "", err
 	}
@@ -74,7 +66,9 @@ func getVersion(v string) (string, error) {
 	return "", fmt.Errorf("invalid version")
 }
 
-func getChampions(v string) ([]*Champion, error) {
+// GetChampions returns an array of Champion objects
+// collected from the datadragon API.
+func GetChampions(v string) ([]*Champion, error) {
 	res := new(championsWrapper)
 	err := getJSON(fmt.Sprintf(epChampions, v), res)
 	if err != nil {
@@ -93,7 +87,9 @@ func getChampions(v string) ([]*Champion, error) {
 	return fChamps, nil
 }
 
-func getRunes(v string) (res []*RuneTree, err error) {
+// GetRunes returns an array of RuneTree objects
+// collected from the datadragon API.
+func GetRunes(v string) (res []*RuneTree, err error) {
 	err = getJSON(fmt.Sprintf(epRunes, v), &res)
 
 	for _, tree := range res {
@@ -106,4 +102,21 @@ func getRunes(v string) (res []*RuneTree, err error) {
 	}
 
 	return
+}
+
+// getJSON executes a GET request on the given URL
+// and tries to decode the JSON response body
+// into the given object reference v.
+func getJSON(url string, v interface{}) error {
+	res, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+
+	if res.StatusCode >= 400 {
+		return fmt.Errorf("status code was %d", res.StatusCode)
+	}
+
+	dec := json.NewDecoder(res.Body)
+	return dec.Decode(v)
 }
