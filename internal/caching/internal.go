@@ -14,6 +14,9 @@ const (
 	secPages
 )
 
+// Internal provides a caching module which uses
+// a timedmap.TimedMap instance to store and
+// manage cache values.
 type Internal struct {
 	db database.Middleware
 
@@ -22,6 +25,8 @@ type Internal struct {
 	pages timedmap.Section
 }
 
+// NewInternal creates a new instance of
+// Internal.
 func NewInternal() *Internal {
 	tm := timedmap.New(15 * time.Minute)
 	return &Internal{

@@ -17,6 +17,9 @@ const (
 	keyPageByID    = "PAGE:ID"
 )
 
+// RedisConfig contains configuration
+// values for the Redis Database
+// connection.
 type RedisConfig struct {
 	Enabled bool `json:"enabled"`
 
@@ -25,12 +28,18 @@ type RedisConfig struct {
 	DB       int    `json:"db"`
 }
 
+// Redis provides a caching module which
+// uses Redis to store and manage cache
+// values.
 type Redis struct {
 	db database.Middleware
 
 	client *redis.Client
 }
 
+// NewRedis creates a new instance of
+// Redis with the given RedisConfig
+// instance cfg.
 func NewRedis(cfg *RedisConfig) *Redis {
 	return &Redis{
 		client: redis.NewClient(&redis.Options{
@@ -113,6 +122,10 @@ func (c *Redis) SetPageByID(id snowflake.ID, page *objects.Page) error {
 	return c.set(key, page, expireDef)
 }
 
+// set sets a value in the database to the given key with the
+// defined expiration duration.
+// The value v must be a reference to a JSON serializable
+// object instance.
 func (c *Redis) set(key string, v interface{}, expiration time.Duration) error {
 	if v == nil {
 		return c.client.Del(key).Err()
@@ -126,6 +139,10 @@ func (c *Redis) set(key string, v interface{}, expiration time.Duration) error {
 	return c.client.Set(key, d, expiration).Err()
 }
 
+// get fetches a value from the database by key and writes
+// the result to v.
+// The value v must be a reference to a JSON serializable
+// object instance.
 func (c *Redis) get(key string, v interface{}) error {
 	b, err := c.client.Get(key).Bytes()
 	if err != nil {
