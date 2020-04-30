@@ -1,14 +1,8 @@
 package database
 
 import (
-	"errors"
-
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/backend/internal/objects"
-)
-
-var (
-	ErrUsernameTaken = errors.New("username taken")
 )
 
 // Middleware describes the structure of a
@@ -22,14 +16,15 @@ type Middleware interface {
 
 	CreateUser(user *objects.User) error
 	GetUser(uid snowflake.ID, username string) (*objects.User, error)
-	EditUser(user *objects.User, login bool) (bool, error)
+	EditUser(user *objects.User) error
 	DeleteUser(uid snowflake.ID) error
 
 	CreatePage(page *objects.Page) error
 	GetPages(uid snowflake.ID, champion, filter string, sortLess func(i, j *objects.Page) bool) ([]*objects.Page, error)
 	GetPage(uid snowflake.ID) (*objects.Page, error)
-	EditPage(page *objects.Page) (*objects.Page, error)
+	EditPage(page *objects.Page) error
 	DeletePage(uid snowflake.ID) error
+	DeleteUserPages(uid snowflake.ID) error
 
 	SetAPIToken(token *objects.APIToken) error
 	GetAPIToken(uID snowflake.ID) (*objects.APIToken, error)

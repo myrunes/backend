@@ -53,6 +53,44 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 	return user, nil
 }
 
+func (u *User) Update(newUser *User, login bool) {
+	if login {
+		u.LastLogin = time.Now()
+	}
+
+	if newUser == nil {
+		return
+	}
+
+	if newUser.DisplayName != "" {
+		u.DisplayName = newUser.DisplayName
+	}
+
+	if newUser.Favorites != nil {
+		u.Favorites = newUser.Favorites
+	}
+
+	if newUser.Username != "" {
+		u.Username = newUser.Username
+	}
+
+	if newUser.PassHash != nil && len(newUser.PassHash) > 0 {
+		u.PassHash = newUser.PassHash
+	}
+
+	if newUser.PageOrder != nil {
+		u.PageOrder = newUser.PageOrder
+	}
+
+	if newUser.MailAddress != "" {
+		if newUser.MailAddress == "__RESET__" {
+			u.MailAddress = ""
+		} else {
+			u.MailAddress = newUser.MailAddress
+		}
+	}
+}
+
 func (u *User) Validate(acceptEmptyUsername bool) error {
 	if (!acceptEmptyUsername && len(u.Username) < 3) ||
 		len(allowedUNameChars.FindAllString(u.Username, -1)) > 1 {

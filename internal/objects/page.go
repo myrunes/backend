@@ -188,3 +188,12 @@ func (p *Page) FinalizeCreate(owner snowflake.ID) {
 	p.Created = now
 	p.Edited = now
 }
+
+func (p *Page) Update(newPage *Page) {
+	p.Edited = time.Now()
+	p.Title = newPage.Title
+	p.Champions = newPage.Champions
+	p.Perks = newPage.Perks
+	p.Primary = newPage.Primary
+	p.Secondary = newPage.Secondary
+}

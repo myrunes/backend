@@ -158,7 +158,17 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	if _, err = auth.db.EditUser(&objects.User{UID: uid}, true); err != nil {
+	user, err := auth.cache.GetUserByID(uid)
+	if err != nil {
+		return "", err
+	}
+
+	user.Update(nil, true)
+	if err = user.Validate(true); err != nil {
+		return "", jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if err = auth.db.EditUser(user); err != nil {
 		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
