@@ -19,6 +19,22 @@ import (
 	"github.com/valyala/fasthttp"
 )
 
+// -----------------------------------------------------
+// --- AUTHORIZATION ---
+
+// POST /login
+func (ws *WebServer) handlerLogin(ctx *routing.Context) error {
+	if !ws.auth.Login(ctx) {
+		return nil
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// -----------------------------------------------------
+// --- USERS ---
+
+// POST /users
 func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 	data := new(loginRequest)
 	if err := parseJSONBody(ctx, data); err != nil {
@@ -58,14 +74,7 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 	return jsonResponse(ctx, outUser, fasthttp.StatusCreated)
 }
 
-func (ws *WebServer) handlerLogin(ctx *routing.Context) error {
-	if !ws.auth.Login(ctx) {
-		return nil
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
+// GET /users/me
 func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	userOut := *user
@@ -74,6 +83,7 @@ func (ws *WebServer) handlerGetMe(ctx *routing.Context) error {
 	return jsonResponse(ctx, userOut, fasthttp.StatusOK)
 }
 
+// POST /users/me
 func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	reqUser := new(userRequest)
@@ -122,6 +132,7 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
+// DELETE /users/me
 func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	reqUser := new(userRequest)
@@ -151,6 +162,241 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	return ws.auth.Logout(ctx)
 }
 
+// GET /users/:username
+func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
+	uname := ctx.Param("uname")
+
+	user, err := ws.db.GetUser(snowflake.ID(-1), strings.ToLower(uname))
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	status := fasthttp.StatusOK
+	if user == nil {
+		status = fasthttp.StatusNotFound
+	}
+
+	return jsonResponse(ctx, nil, status)
+}
+
+// POST /users/me/pageorder
+func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	queryArgs := ctx.QueryArgs()
+	champion := string(queryArgs.Peek("champion"))
+
+	if champion == "" {
+		champion = "general"
+	}
+
+	pageOrder := new(pageOrderRequest)
+	if err := parseJSONBody(ctx, pageOrder); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if user.PageOrder == nil {
+		user.PageOrder = make(map[string][]snowflake.ID)
+	}
+
+	user.PageOrder[champion] = pageOrder.PageOrder
+	if err := ws.db.EditUser(user); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// POST /users/me/mail
+func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	mail := new(setMailRequest)
+	if err := parseJSONBody(ctx, mail); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.auth.CheckHash(string(user.PassHash), mail.CurrentPassword) {
+		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	if mail.Reset {
+		user.MailAddress = ""
+		if err := ws.db.EditUser(user); err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+
+		ws.cache.SetUserByID(user.UID, user)
+
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token, err := random.String(16, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	mailText := fmt.Sprintf(
+		"Please open the following link to confirm your E-Mail address:\n"+
+			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
+
+	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	ws.mailConfirmation.Set(token, &mailConfirmationData{
+		MailAddress: mail.MailAddress,
+		UserID:      user.UID,
+	}, 12*time.Hour)
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// POST /users/me/mail/confirm
+func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
+	token := new(confirmMail)
+	if err := parseJSONBody(ctx, token); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if !ws.mailConfirmation.Contains(token.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	data, ok := ws.mailConfirmation.GetValue(token.Token).(*mailConfirmationData)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	ws.mailConfirmation.Remove(token.Token)
+
+	if user, err := ws.cache.GetUserByID(data.UserID); err == nil && user != nil {
+		user.MailAddress = data.MailAddress
+		if err := ws.db.EditUser(user); err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+		ws.cache.SetUserByID(user.UID, user)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// POST /users/me/passwordreset
+func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
+	reset := new(passwordReset)
+	if err := parseJSONBody(ctx, reset); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	user, err := ws.db.GetUser(-1, reset.MailAddress)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user == nil || user.MailAddress == "" {
+		return jsonResponse(ctx, nil, fasthttp.StatusOK)
+	}
+
+	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+	token, err := random.String(24, charset)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	mailText := fmt.Sprintf("Please follow the link below to reset your accounts password:\n"+
+		"%s/passwordReset?token=%s", ws.config.PublicAddr, token)
+	err = ws.ms.SendMailFromDef(user.MailAddress, "Password reset | myrunes", mailText, "text/plain")
+	if err == nil {
+		ws.pwReset.Set(token, user.UID, 10*time.Minute)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// POST /users/me/passwordreset/confirm
+func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
+	data := new(confirmPasswordReset)
+	if err := parseJSONBody(ctx, data); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if data.NewPassword == "" || len(data.NewPassword) < 8 {
+		return jsonError(ctx, fmt.Errorf("invalid password length"), fasthttp.StatusBadRequest)
+	}
+
+	if !ws.pwReset.Contains(data.Token) {
+		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
+	}
+
+	uID, ok := ws.pwReset.GetValue(data.Token).(snowflake.ID)
+	if !ok {
+		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
+	}
+
+	user, err := ws.db.GetUser(uID, "")
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	if user == nil {
+		return jsonError(ctx, fmt.Errorf("unknown user"), fasthttp.StatusBadRequest)
+	}
+
+	errCheckFailed := fmt.Errorf("security check failed")
+	if len(data.PageNames) < 3 || data.PageNames[0] == "" || data.PageNames[1] == "" || data.PageNames[2] == "" {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	pages, err := ws.db.GetPages(uID, "", "", nil)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	checkMap := make(map[string]interface{})
+	for _, guess := range data.PageNames {
+		if _, ok := checkMap[guess]; ok {
+			return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+		}
+		checkMap[guess] = nil
+	}
+
+	var guessed int
+
+	for _, page := range pages {
+		for i, guess := range data.PageNames {
+			if checkPageName(page.Title, guess, 0.2) {
+				guessed++
+				data.PageNames[i] = ""
+			}
+		}
+	}
+
+	if guessed < 3 {
+		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
+	}
+
+	ws.pwReset.Remove(data.Token)
+
+	var passStr string
+	passStr, err = ws.auth.CreateHash(data.NewPassword)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	user.PassHash = []byte(passStr)
+
+	if err = ws.db.EditUser(user); err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
+// -----------------------------------------------------
+// --- PAGES ---
+
+// POST /pages
 func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
 	var err error
 	page := objects.NewEmptyPage()
@@ -174,6 +420,7 @@ func (ws *WebServer) handlerCreatePage(ctx *routing.Context) error {
 	return jsonResponse(ctx, page, fasthttp.StatusCreated)
 }
 
+// GET /pages
 func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	queryArgs := ctx.QueryArgs()
@@ -240,6 +487,7 @@ func (ws *WebServer) handlerGetPages(ctx *routing.Context) error {
 	return jsonResponse(ctx, &listResponse{N: len(pages), Data: pages}, fasthttp.StatusOK)
 }
 
+// GET /pages/:id
 func (ws *WebServer) handlerGetPage(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	_uid := ctx.Param("uid")
@@ -260,6 +508,7 @@ func (ws *WebServer) handlerGetPage(ctx *routing.Context) error {
 	return jsonResponse(ctx, page, fasthttp.StatusOK)
 }
 
+// POST /pages/:id
 func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	_uid := ctx.Param("uid")
@@ -295,6 +544,7 @@ func (ws *WebServer) handlerEditPage(ctx *routing.Context) error {
 	return jsonResponse(ctx, newPage, fasthttp.StatusOK)
 }
 
+// DELETE /pages/:id
 func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	_uid := ctx.Param("uid")
@@ -320,10 +570,15 @@ func (ws *WebServer) handlerDeletePage(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
+// -----------------------------------------------------
+// --- RESOURCES & STATICS ---
+
+// GET /resources/champions
 func (ws *WebServer) handlerGetChamps(ctx *routing.Context) error {
 	return jsonCachableResponse(ctx, &listResponse{N: len(ddragon.DDragonInstance.Champions), Data: ddragon.DDragonInstance.Champions}, fasthttp.StatusOK)
 }
 
+// GET /resources/runes
 func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 	data := map[string]interface{}{
 		"trees": ddragon.DDragonInstance.Runes,
@@ -332,32 +587,34 @@ func (ws *WebServer) handlerGetRunes(ctx *routing.Context) error {
 	return jsonCachableResponse(ctx, data, fasthttp.StatusOK)
 }
 
-func (ws *WebServer) handlerCheckUsername(ctx *routing.Context) error {
-	uname := ctx.Param("uname")
-
-	user, err := ws.db.GetUser(snowflake.ID(-1), strings.ToLower(uname))
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	status := fasthttp.StatusOK
-	if user == nil {
-		status = fasthttp.StatusNotFound
-	}
-
-	return jsonResponse(ctx, nil, status)
+// GET /version
+func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
+	return jsonCachableResponse(ctx, map[string]string{
+		"version":    static.AppVersion,
+		"apiversion": static.APIVersion,
+		"release":    static.Release,
+	}, fasthttp.StatusOK)
 }
 
+// -----------------------------------------------------
+// --- RSESSIONS (DEPRECATED) ---
+
+// GET /sessions
 // TODO: DEPRECATED -- REMOVE
 func (ws *WebServer) handlerGetSessions(ctx *routing.Context) error {
 	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
 }
 
+// DELETE /sessions/:id
 // TODO: DEPRECATED -- REMOVE
 func (ws *WebServer) handlerDeleteSession(ctx *routing.Context) error {
 	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
 }
 
+// -----------------------------------------------------
+// --- FAVORITES ---
+
+// POST /favorites
 func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	var err error
@@ -394,6 +651,7 @@ func (ws *WebServer) handlerPostFavorite(ctx *routing.Context) error {
 		fasthttp.StatusOK)
 }
 
+// GET /favorites
 func (ws *WebServer) handlerGetFavorites(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
@@ -406,6 +664,10 @@ func (ws *WebServer) handlerGetFavorites(ctx *routing.Context) error {
 		fasthttp.StatusOK)
 }
 
+// -----------------------------------------------------
+// --- SHARES ---
+
+// POST /shares
 func (ws *WebServer) handlerCreateShare(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	var err error
@@ -438,6 +700,7 @@ func (ws *WebServer) handlerCreateShare(ctx *routing.Context) error {
 	return jsonResponse(ctx, share, fasthttp.StatusCreated)
 }
 
+// POST /shares/:id
 func (ws *WebServer) handlerPostShare(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
@@ -479,6 +742,7 @@ func (ws *WebServer) handlerPostShare(ctx *routing.Context) error {
 	return jsonResponse(ctx, share, fasthttp.StatusCreated)
 }
 
+// GET /shares/:id
 func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 	ident := ctx.Param("ident")
 	byIdent := true
@@ -559,6 +823,7 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 	}, fasthttp.StatusAccepted)
 }
 
+// DELETE /shares/:id
 func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
@@ -583,14 +848,10 @@ func (ws *WebServer) handlerDeleteShare(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
-func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
-	return jsonCachableResponse(ctx, map[string]string{
-		"version":    static.AppVersion,
-		"apiversion": static.APIVersion,
-		"release":    static.Release,
-	}, fasthttp.StatusOK)
-}
+// -----------------------------------------------------
+// --- API TOKEN ---
 
+// POST /apitoken
 func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 	var err error
@@ -611,6 +872,7 @@ func (ws *WebServer) handlerPostAPIToken(ctx *routing.Context) error {
 	return jsonResponse(ctx, token, fasthttp.StatusOK)
 }
 
+// GET /apitoken
 func (ws *WebServer) handlerGetAPIToken(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
@@ -626,6 +888,7 @@ func (ws *WebServer) handlerGetAPIToken(ctx *routing.Context) error {
 	return jsonResponse(ctx, token, fasthttp.StatusOK)
 }
 
+// DELETE /apitoken
 func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
 	user := ctx.Get("user").(*objects.User)
 
@@ -639,215 +902,6 @@ func (ws *WebServer) handlerDeleteAPIToken(ctx *routing.Context) error {
 	}
 
 	if err := ws.db.ResetAPIToken(user.UID); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
-	user := ctx.Get("user").(*objects.User)
-
-	queryArgs := ctx.QueryArgs()
-	champion := string(queryArgs.Peek("champion"))
-
-	if champion == "" {
-		champion = "general"
-	}
-
-	pageOrder := new(pageOrderRequest)
-	if err := parseJSONBody(ctx, pageOrder); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	if user.PageOrder == nil {
-		user.PageOrder = make(map[string][]snowflake.ID)
-	}
-
-	user.PageOrder[champion] = pageOrder.PageOrder
-	if err := ws.db.EditUser(user); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
-	user := ctx.Get("user").(*objects.User)
-
-	mail := new(setMailRequest)
-	if err := parseJSONBody(ctx, mail); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	if !ws.auth.CheckHash(string(user.PassHash), mail.CurrentPassword) {
-		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
-	}
-
-	if mail.Reset {
-		user.MailAddress = ""
-		if err := ws.db.EditUser(user); err != nil {
-			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-		}
-
-		ws.cache.SetUserByID(user.UID, user)
-
-		return jsonResponse(ctx, nil, fasthttp.StatusOK)
-	}
-
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token, err := random.String(16, charset)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	mailText := fmt.Sprintf(
-		"Please open the following link to confirm your E-Mail address:\n"+
-			"%s/mailConfirmation?token=%s", ws.config.PublicAddr, token)
-
-	err = ws.ms.SendMailFromDef(mail.MailAddress, "E-Mail confirmation | myrunes", mailText, "text/plain")
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	ws.mailConfirmation.Set(token, &mailConfirmationData{
-		MailAddress: mail.MailAddress,
-		UserID:      user.UID,
-	}, 12*time.Hour)
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
-	token := new(confirmMail)
-	if err := parseJSONBody(ctx, token); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	if !ws.mailConfirmation.Contains(token.Token) {
-		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
-	}
-
-	data, ok := ws.mailConfirmation.GetValue(token.Token).(*mailConfirmationData)
-	if !ok {
-		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
-	}
-
-	ws.mailConfirmation.Remove(token.Token)
-
-	if user, err := ws.cache.GetUserByID(data.UserID); err == nil && user != nil {
-		user.MailAddress = data.MailAddress
-		if err := ws.db.EditUser(user); err != nil {
-			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-		}
-		ws.cache.SetUserByID(user.UID, user)
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
-	reset := new(passwordReset)
-	if err := parseJSONBody(ctx, reset); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	user, err := ws.db.GetUser(-1, reset.MailAddress)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	if user == nil || user.MailAddress == "" {
-		return jsonResponse(ctx, nil, fasthttp.StatusOK)
-	}
-
-	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
-	token, err := random.String(24, charset)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	mailText := fmt.Sprintf("Please follow the link below to reset your accounts password:\n"+
-		"%s/passwordReset?token=%s", ws.config.PublicAddr, token)
-	err = ws.ms.SendMailFromDef(user.MailAddress, "Password reset | myrunes", mailText, "text/plain")
-	if err == nil {
-		ws.pwReset.Set(token, user.UID, 10*time.Minute)
-	}
-
-	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
-	data := new(confirmPasswordReset)
-	if err := parseJSONBody(ctx, data); err != nil {
-		return jsonError(ctx, err, fasthttp.StatusBadRequest)
-	}
-
-	if data.NewPassword == "" || len(data.NewPassword) < 8 {
-		return jsonError(ctx, fmt.Errorf("invalid password length"), fasthttp.StatusBadRequest)
-	}
-
-	if !ws.pwReset.Contains(data.Token) {
-		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
-	}
-
-	uID, ok := ws.pwReset.GetValue(data.Token).(snowflake.ID)
-	if !ok {
-		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
-	}
-
-	user, err := ws.db.GetUser(uID, "")
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	if user == nil {
-		return jsonError(ctx, fmt.Errorf("unknown user"), fasthttp.StatusBadRequest)
-	}
-
-	errCheckFailed := fmt.Errorf("security check failed")
-	if len(data.PageNames) < 3 || data.PageNames[0] == "" || data.PageNames[1] == "" || data.PageNames[2] == "" {
-		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
-	}
-
-	pages, err := ws.db.GetPages(uID, "", "", nil)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	checkMap := make(map[string]interface{})
-	for _, guess := range data.PageNames {
-		if _, ok := checkMap[guess]; ok {
-			return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
-		}
-		checkMap[guess] = nil
-	}
-
-	var guessed int
-
-	for _, page := range pages {
-		for i, guess := range data.PageNames {
-			if checkPageName(page.Title, guess, 0.2) {
-				guessed++
-				data.PageNames[i] = ""
-			}
-		}
-	}
-
-	if guessed < 3 {
-		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
-	}
-
-	ws.pwReset.Remove(data.Token)
-
-	var passStr string
-	passStr, err = ws.auth.CreateHash(data.NewPassword)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-	user.PassHash = []byte(passStr)
-
-	if err = ws.db.EditUser(user); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 

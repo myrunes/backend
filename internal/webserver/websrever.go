@@ -146,11 +146,13 @@ func (ws *WebServer) registerHandlers() {
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
 
+	// ----- TODO: DEPCRECATED -- REMOVE
 	sessions := api.Group("/sessions", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	sessions.
 		Get("", ws.handlerGetSessions)
 	sessions.
 		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
+	// ---------------------------------
 
 	favorites := api.Group("/favorites", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	favorites.
