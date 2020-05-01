@@ -4,7 +4,6 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
 	"github.com/myrunes/backend/internal/caching"
@@ -24,6 +23,8 @@ var (
 	errNoAccess         = errors.New("access denied")
 )
 
+// Config wraps properties for the
+// HTTP REST API server.
 type Config struct {
 	Addr       string     `json:"addr"`
 	PathPrefix string     `json:"pathprefix"`
@@ -33,12 +34,16 @@ type Config struct {
 	JWTKey     string     `json:"jwtkey"`
 }
 
+// TLSCOnfig wraps properties for
+// TLS encryption.
 type TLSConfig struct {
 	Enabled bool   `json:"enabled"`
 	Cert    string `json:"certfile"`
 	Key     string `json:"keyfile"`
 }
 
+// WebServer provices a HTTP REST
+// API router.
 type WebServer struct {
 	server *fasthttp.Server
 	router *routing.Router
@@ -55,11 +60,9 @@ type WebServer struct {
 	config *Config
 }
 
-type mailConfirmationData struct {
-	UserID      snowflake.ID
-	MailAddress string
-}
-
+// NewWebServer initializes a WebServer instance using
+// the specified database driver, cache driver, mail
+// server instance and configuration instance.
 func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
@@ -85,6 +88,8 @@ func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserv
 	return
 }
 
+// registerHandlers creates all rate limiter buckets and
+// registers all routes and request handlers.
 func (ws *WebServer) registerHandlers() {
 	rlGlobal := ws.rlm.GetHandler(500*time.Millisecond, 50)
 	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
@@ -171,6 +176,9 @@ func (ws *WebServer) registerHandlers() {
 
 }
 
+// ListenAndServeBLocing starts the web servers
+// listen and serving lifecycle which blocks
+// the current goroutine.
 func (ws *WebServer) ListenAndServeBlocking() error {
 	tls := ws.config.TLS
 

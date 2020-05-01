@@ -24,14 +24,21 @@ import (
 )
 
 const (
-	attemptLimit          = 5 * time.Minute
-	attemptBurst          = 5
-	defCost               = 12
-	apiTokenLength        = 64
-	sessionKeyLength      = 128
-	sessionExpireDefault  = 2 * time.Hour
+	// time until a new rate limiter ticket is
+	// generated for login tries
+	attemptLimit = 5 * time.Minute
+	// ammount of tickets which can be stashed
+	// for login attempts
+	attemptBurst = 5
+	// character length of generated API tokens
+	apiTokenLength = 64
+	// defaul time until a default login
+	// session expires
+	sessionExpireDefault = 2 * time.Hour
+	// default time until a "remembered"
+	// login session expires
 	sessionExpireRemember = 30 * 24 * time.Hour
-
+	// cookie key name of the session JWT
 	jwtCookieName = "jwt_token"
 )
 
@@ -48,12 +55,17 @@ var (
 	argon2Params = getArgon2Params()
 )
 
+// loginRequests describes the request
+// model of the login endpoint
 type loginRequest struct {
 	UserName string `json:"username"`
 	Password string `json:"password"`
 	Remember bool   `json:"remember"`
 }
 
+// Authorization provides functionalities
+// for HTTP session authorization and
+// session lifecycle maintainance.
 type Authorization struct {
 	jwtKey []byte
 
@@ -62,6 +74,14 @@ type Authorization struct {
 	rlm   *ratelimit.RateLimitManager
 }
 
+// NewAuthorization initializes a new
+// Authorization instance using the passed
+// jwtKey, which will be used to sign JWTs,
+// the database driver, cache driver and
+// rate limit manager.
+// If the passed jwtKey is nil or empty,
+// a random key will be generated on
+// initialization.
 func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.Middleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
 	auth = new(Authorization)
 	auth.db = db
@@ -82,10 +102,23 @@ func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.Middl
 	return
 }
 
+// CreateHash creates a hash string from the passed
+// pass string containing information about the used
+// algorithm and parameters used to generate the hash
+// together with the actual hash data.
+//
+// This implementation uses Argon2id hash generation.
 func (auth *Authorization) CreateHash(pass string) (string, error) {
 	return argon2id.CreateHash(pass, argon2Params)
 }
 
+// CheckHash tries to compare the passed hash string
+// with the passed pass string by using the method and
+// parameters specified in the hash string.
+//
+// This imlementation supports both the old hash
+// algorithm used in myrunes before batch 1.7.x
+// (bcrypt) and the current implementation argon2id.
 func (auth *Authorization) CheckHash(hash, pass string) bool {
 	if strings.HasPrefix(hash, "$2a") {
 		return bcrypt.CompareHashAndPassword([]byte(hash), []byte(pass)) == nil
@@ -99,6 +132,9 @@ func (auth *Authorization) CheckHash(hash, pass string) bool {
 	return false
 }
 
+// Login provides a handler accepting login credentials
+// as JSON POST body. This is used to authenticate a user
+// and create a login session on successful authentication.
 func (auth *Authorization) Login(ctx *routing.Context) bool {
 	login := new(loginRequest)
 	if err := parseJSONBody(ctx, login); err != nil {
@@ -135,6 +171,9 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 	return true
 }
 
+// CreateSession creates a login session for the specified
+// user. This generates a JWT which is signed with the internal
+// jwtKey and then stored as cookie on response.
 func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error) {
 	expires := time.Now()
 	if remember {
@@ -179,6 +218,10 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 	return token, nil
 }
 
+// CheckRequestAuth provides a handler which
+// cancels the current handler stack if no valid
+// session authentication or API token could be
+// identified in the request.
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	var user *objects.User
 	var err error
@@ -246,6 +289,9 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	return nil
 }
 
+// Logout provides a handler which removes the
+// session JWT cookie by setting an invalid,
+// expired session cookie.
 func (auth *Authorization) Logout(ctx *routing.Context) error {
 	key := ctx.Request.Header.Cookie(jwtCookieName)
 	if key == nil || len(key) == 0 {
@@ -262,12 +308,18 @@ func (auth *Authorization) Logout(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
+// generateJWTKey generates a cryptographically
+// random JWT key which can be used to sign
+// JWTs.
 func generateJWTKey() (key []byte, err error) {
 	key = make([]byte, 32)
 	_, err = rand.Read(key)
 	return
 }
 
+// getArgon2Params returns an instance of default
+// parameters which are used for generating
+// Argon2id password hashes.
 func getArgon2Params() *argon2id.Params {
 	cpus := runtime.NumCPU()
 

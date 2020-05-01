@@ -82,6 +82,12 @@ func jsonResponse(ctx *routing.Context, v interface{}, status int) error {
 	return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 }
 
+// jsonCachableResponse implements the same functionality
+// as jsonReponse and adds cache control headers so that
+// brwosers will hold the response data in cacne.
+//
+// This should only be used on responses which are
+// static.
 func jsonCachableResponse(ctx *routing.Context, v interface{}, status int) error {
 	var err error
 	data := emptyResponseBody
@@ -137,6 +143,13 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 	return nil
 }
 
+// checkPageName takes an actual pageName, a guess and
+// a float value for tollerance between 0 and 1.
+// Both, the pageName and guess will be lowercased and
+// spaces will be removed. Then, the guess will be matched
+// on the pageName. If the proportion of characters which
+// do not match the pageName is larger than the value of
+// tollerance, this function returns false.
 func checkPageName(pageName, guess string, tollerance float64) bool {
 	if pageName == "" || guess == "" {
 		return false
@@ -161,6 +174,10 @@ func checkPageName(pageName, guess string, tollerance float64) bool {
 		float64(matchedChars)/lenGuesses >= (1-tollerance)
 }
 
+// getETag generates an ETag by the passed
+// body data. The generated ETag can either be
+// weak or strong, depending on the passed
+// value for weak.
 func getETag(body []byte, weak bool) string {
 	hash := sha1.Sum(body)
 
@@ -174,6 +191,9 @@ func getETag(body []byte, weak bool) string {
 	return tag
 }
 
+// isOldPasswordHash returns true if the
+// passed hash starts with the identifier
+// for bcrypt ('$2a').
 func isOldPasswordHash(hash []byte) bool {
 	return bytes.HasPrefix(hash, bcryptPrefix)
 }
