@@ -12,14 +12,18 @@ import (
 	"github.com/bwmarrin/snowflake"
 )
 
-var userIDCLuster, _ = snowflake.NewNode(static.ClusterIDUsers)
+// userIDNode is the node to generate user snowflake IDs.
+var userIDNode, _ = snowflake.NewNode(static.NodeIDUsers)
 
+// allowedUNameChars is a regular expression which matches
+// on user name strings which are valid.
 var allowedUNameChars = regexp.MustCompile(`[\w_\-]+`)
 
 var (
 	ErrInvalidUsername = errors.New("invalid username")
 )
 
+// User wraps a general user object.
 type User struct {
 	UID            snowflake.ID              `json:"uid"`
 	Username       string                    `json:"username"`
@@ -33,6 +37,10 @@ type User struct {
 	HasOldPassword bool                      `json:"hasoldpw,omitempty"`
 }
 
+// NewUser creates a new User object with the given
+// username and password which will be hashed using
+// the passed authModdleware and then saved to the
+// user object.
 func NewUser(username, password string, authMiddleware auth.Middleware) (*User, error) {
 	now := time.Now()
 	passHash, err := authMiddleware.CreateHash(password)
@@ -44,7 +52,7 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 		Created:     now,
 		LastLogin:   now,
 		PassHash:    []byte(passHash),
-		UID:         userIDCLuster.Generate(),
+		UID:         userIDNode.Generate(),
 		Username:    strings.ToLower(username),
 		DisplayName: username,
 		Favorites:   []string{},
@@ -53,6 +61,11 @@ func NewUser(username, password string, authMiddleware auth.Middleware) (*User, 
 	return user, nil
 }
 
+// Update sets mutable user data to the
+// current user object from the given
+// newUser object properties.
+// If login is set to true, lastLogin
+// will be set to the current time.
 func (u *User) Update(newUser *User, login bool) {
 	if login {
 		u.LastLogin = time.Now()
@@ -91,6 +104,10 @@ func (u *User) Update(newUser *User, login bool) {
 	}
 }
 
+// Validate checks if the user object
+// is built by specification.
+// If the validation fails, the failure
+// will be returned as error object.
 func (u *User) Validate(acceptEmptyUsername bool) error {
 	if (!acceptEmptyUsername && len(u.Username) < 3) ||
 		len(allowedUNameChars.FindAllString(u.Username, -1)) > 1 {

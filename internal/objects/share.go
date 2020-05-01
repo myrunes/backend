@@ -9,8 +9,10 @@ import (
 	"github.com/myrunes/backend/internal/static"
 )
 
-var shareIDCLuster, _ = snowflake.NewNode(static.ClusterIDShares)
+// shareIDNode is the node to generate share snowflake IDs.
+var shareIDNode, _ = snowflake.NewNode(static.NodeIDShares)
 
+// SharePage wraps a RunePage public share.
 type SharePage struct {
 	UID         snowflake.ID `json:"uid"`
 	Ident       string       `json:"ident"`
@@ -24,6 +26,16 @@ type SharePage struct {
 	AccessIPs   []string     `json:"accessips,omitempty"`
 }
 
+// NEwSharePage creates a new SharePage instance with
+// the passed ownerID, pageID, maxAccess count and
+// expiration time.
+// If maxAccesses is 0, maxAccesses is set to -1 which
+// indicates that the share is not access limited by
+// access count.
+// If expire time is the default TIme object Time{},
+// the expiration will be set to 100 years, which
+// should be enough to count as unlimited access
+// by time.
 func NewSharePage(ownerID, pageID snowflake.ID, maxAccesses int, expires time.Time) (*SharePage, error) {
 	now := time.Now()
 	var err error
@@ -44,7 +56,7 @@ func NewSharePage(ownerID, pageID snowflake.ID, maxAccesses int, expires time.Ti
 		MaxAccesses: maxAccesses,
 		OwnerID:     ownerID,
 		PageID:      pageID,
-		UID:         shareIDCLuster.Generate(),
+		UID:         shareIDNode.Generate(),
 		AccessIPs:   make([]string, 0),
 	}
 

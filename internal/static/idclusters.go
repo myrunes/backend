@@ -1,8 +1,8 @@
 package static
 
 const (
-	ClusterIDUsers    = 100
-	ClusterIDPages    = 200
-	ClusterIDSessions = 300
-	ClusterIDShares   = 400
+	NodeIDUsers    = 100
+	NodeIDPages    = 200
+	NodeIDSessions = 300
+	NodeIDShares   = 400
 )
