@@ -10,7 +10,8 @@ import (
 	"github.com/myrunes/backend/internal/static"
 )
 
-var pageIDCluster, _ = snowflake.NewNode(static.ClusterIDPages)
+// pageIDNode is the node to generate page snowflake IDs.
+var pageIDNode, _ = snowflake.NewNode(static.NodeIDPages)
 
 var (
 	ErrInvalidChamp = errors.New("invalid champion")
@@ -22,73 +23,17 @@ var (
 	errInvalidTitle   = errors.New("invalid title")
 )
 
-// var RunesPrimary = map[string][][]string{
-// 	"precision": [][]string{
-// 		[]string{"press-the-attack", "lethal-tempo", "fleet-footwork", "conqueror"},
-// 		[]string{"overheal", "triumph", "presence-of-mind"},
-// 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
-// 		[]string{"coup-de-grace", "cut-down", "last-stand"},
-// 	},
-// 	"domination": [][]string{
-// 		[]string{"electrocute", "predator", "dark-harvest", "hail-of-blades"},
-// 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
-// 		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
-// 		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
-// 	},
-// 	"sorcery": [][]string{
-// 		[]string{"summon-aery", "arcane-comet", "phase-rush"},
-// 		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
-// 		[]string{"transcendence", "celerity", "absolute-focus"},
-// 		[]string{"scorch", "waterwalking", "gathering-storm"},
-// 	},
-// 	"resolve": [][]string{
-// 		[]string{"grasp-of-the-undying", "aftershock", "guardian"},
-// 		[]string{"demolish", "font-of-life", "shield-bash"},
-// 		[]string{"conditioning", "second-wind", "bone-plating"},
-// 		[]string{"overgrowth", "revitalize", "unflinching"},
-// 	},
-// 	"inspiration": [][]string{
-// 		[]string{"unsealed-spellbook", "glacial-augment", "prototype-omnistone"},
-// 		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-// 		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-// 		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-// 	},
-// }
-
-// var RunesSecondary = map[string][][]string{
-// 	"precision": [][]string{
-// 		[]string{"overheal", "triumph", "presence-of-mind"},
-// 		[]string{"legend-alacrity", "legend-tenacity", "legend-bloodline"},
-// 		[]string{"coup-de-grace", "cut-down", "last-stand"},
-// 	},
-// 	"domination": [][]string{
-// 		[]string{"cheap-shot", "taste-of-blood", "sudden-impact"},
-// 		[]string{"zombie-ward", "ghost-poro", "eyeball-collection"},
-// 		[]string{"ravenous-hunter", "ingenious-hunter", "relentless-hunter", "ultimate-hunter"},
-// 	},
-// 	"sorcery": [][]string{
-// 		[]string{"nullifying-orb", "manaflow-band", "nimbus-cloak"},
-// 		[]string{"transcendence", "celerity", "absolute-focus"},
-// 		[]string{"scorch", "waterwalking", "gathering-storm"},
-// 	},
-// 	"resolve": [][]string{
-// 		[]string{"demolish", "font-of-life", "shield-bash"},
-// 		[]string{"conditioning", "second-wind", "bone-plating"},
-// 		[]string{"overgrowth", "revitalize", "unflinching"},
-// 	},
-// 	"inspiration": [][]string{
-// 		[]string{"hextech-flashtraption", "magical-footwear", "perfect-timing"},
-// 		[]string{"futures-market", "minion-dematerializer", "biscuit-delivery"},
-// 		[]string{"cosmic-insight", "approach-velocity", "time-warp-tonic"},
-// 	},
-// }
-
+// PerksPool describes the matrix of
+// avalibale rune perks
 var PerksPool = [][]string{
-	[]string{"diamond", "axe", "time"},
-	[]string{"diamond", "shield", "circle"},
-	[]string{"heart", "shield", "circle"},
+	{"diamond", "axe", "time"},
+	{"diamond", "shield", "circle"},
+	{"heart", "shield", "circle"},
 }
 
+// Page describes a rune page object
+// and the selection of runes and
+// perks for this page.
 type Page struct {
 	UID       snowflake.ID   `json:"uid"`
 	Owner     snowflake.ID   `json:"owner"`
@@ -101,20 +46,32 @@ type Page struct {
 	Perks     *Perks         `json:"perks"`
 }
 
+// PrimaryTree holds the tree type
+// and the selected runes in the
+// primary rune tree.
 type PrimaryTree struct {
 	Tree string    `json:"tree"`
 	Rows [4]string `json:"rows"`
 }
 
+// PrimaryTree holds the tree type
+// and the selected runes in the
+// secondary rune tree.
 type SecondaryTree struct {
 	Tree string    `json:"tree"`
 	Rows [2]string `json:"rows"`
 }
 
+// Perks holds the three selected
+// perks of the rune page.
 type Perks struct {
 	Rows [3]string `json:"rows"`
 }
 
+// NewEmptyPage creates a new Page
+// object and initializes the
+// underlying tree and perk
+// structure.
 func NewEmptyPage() *Page {
 	return &Page{
 		Champions: make([]string, 0),
@@ -130,6 +87,11 @@ func NewEmptyPage() *Page {
 	}
 }
 
+// Validate checks if the page is
+// built by specification.
+// If the page is invalid, the
+// returned error holds the validation
+// failure reason.
 func (p *Page) Validate() error {
 	// Check for Title
 	if p.Title == "" || len(p.Title) > 1024 {
@@ -242,10 +204,28 @@ func (p *Page) Validate() error {
 	return nil
 }
 
+// FinalizeCreate sets final values of
+// the page like the UID, the owner ID,
+// creation date and last edit date.
 func (p *Page) FinalizeCreate(owner snowflake.ID) {
 	now := time.Now()
-	p.UID = pageIDCluster.Generate()
+	p.UID = pageIDNode.Generate()
 	p.Owner = owner
 	p.Created = now
 	p.Edited = now
+}
+
+// Update sets mutable data to the
+// current page from the passed newPage.
+// Non-Mutable data like UID, ownerID,
+// and creation date will not be updated.
+// Edited time will be set to the
+// current time.
+func (p *Page) Update(newPage *Page) {
+	p.Edited = time.Now()
+	p.Title = newPage.Title
+	p.Champions = newPage.Champions
+	p.Perks = newPage.Perks
+	p.Primary = newPage.Primary
+	p.Secondary = newPage.Secondary
 }

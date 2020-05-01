@@ -4,11 +4,12 @@ import (
 	"errors"
 	"time"
 
-	"github.com/bwmarrin/snowflake"
 	"github.com/zekroTJA/timedmap"
 
+	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/ratelimit"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -22,28 +23,36 @@ var (
 	errNoAccess         = errors.New("access denied")
 )
 
+// Config wraps properties for the
+// HTTP REST API server.
 type Config struct {
 	Addr       string     `json:"addr"`
 	PathPrefix string     `json:"pathprefix"`
 	TLS        *TLSConfig `json:"tls"`
 	PublicAddr string     `json:"publicaddress"`
 	EnableCors bool       `json:"enablecors"`
+	JWTKey     string     `json:"jwtkey"`
 }
 
+// TLSCOnfig wraps properties for
+// TLS encryption.
 type TLSConfig struct {
 	Enabled bool   `json:"enabled"`
 	Cert    string `json:"certfile"`
 	Key     string `json:"keyfile"`
 }
 
+// WebServer provices a HTTP REST
+// API router.
 type WebServer struct {
 	server *fasthttp.Server
 	router *routing.Router
 
-	db   database.Middleware
-	ms   *mailserver.MailServer
-	auth *Authorization
-	rlm  *RateLimitManager
+	db    database.Middleware
+	cache caching.Middleware
+	ms    *mailserver.MailServer
+	auth  *Authorization
+	rlm   *ratelimit.RateLimitManager
 
 	mailConfirmation *timedmap.TimedMap
 	pwReset          *timedmap.TimedMap
@@ -51,22 +60,24 @@ type WebServer struct {
 	config *Config
 }
 
-type mailConfirmationData struct {
-	UserID      snowflake.ID
-	MailAddress string
-}
-
-func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer) {
+// NewWebServer initializes a WebServer instance using
+// the specified database driver, cache driver, mail
+// server instance and configuration instance.
+func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
 	ws.config = config
 	ws.db = db
+	ws.cache = cache
 	ws.ms = ms
-	ws.rlm = NewRateLimitManager()
-	ws.auth = NewAuthorization(db, ws.rlm)
+	ws.rlm = ratelimit.New()
 	ws.router = routing.New()
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
+	}
+
+	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, cache, ws.rlm); err != nil {
+		return
 	}
 
 	ws.mailConfirmation = timedmap.New(1 * time.Hour)
@@ -77,6 +88,8 @@ func NewWebServer(db database.Middleware, ms *mailserver.MailServer, config *Con
 	return
 }
 
+// registerHandlers creates all rate limiter buckets and
+// registers all routes and request handlers.
 func (ws *WebServer) registerHandlers() {
 	rlGlobal := ws.rlm.GetHandler(500*time.Millisecond, 50)
 	rlUsersCreate := ws.rlm.GetHandler(15*time.Second, 1)
@@ -90,7 +103,7 @@ func (ws *WebServer) registerHandlers() {
 	api.
 		Post("/login", ws.handlerLogin)
 	api.
-		Post("/logout", ws.auth.LogOut)
+		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.Logout)
 
 	api.Get("/version", ws.handlerGetVersion)
 
@@ -133,11 +146,13 @@ func (ws *WebServer) registerHandlers() {
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
 
+	// ----- TODO: DEPCRECATED -- REMOVE
 	sessions := api.Group("/sessions", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	sessions.
 		Get("", ws.handlerGetSessions)
 	sessions.
 		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
+	// ---------------------------------
 
 	favorites := api.Group("/favorites", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	favorites.
@@ -163,6 +178,9 @@ func (ws *WebServer) registerHandlers() {
 
 }
 
+// ListenAndServeBLocing starts the web servers
+// listen and serving lifecycle which blocks
+// the current goroutine.
 func (ws *WebServer) ListenAndServeBlocking() error {
 	tls := ws.config.TLS
 

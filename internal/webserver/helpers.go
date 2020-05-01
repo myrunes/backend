@@ -1,6 +1,8 @@
 package webserver
 
 import (
+	"bytes"
+	"crypto/sha1"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -15,8 +17,13 @@ import (
 var emptyResponseBody = []byte("{}")
 
 var (
-	headerXForwardedFor = []byte("X-Forwarded-For")
-	headerUserAgent     = []byte("User-Agent")
+	headerUserAgent    = []byte("User-Agent")
+	headerCacheControl = []byte("Cache-Control")
+	headerETag         = []byte("ETag")
+
+	headerCacheControlValue = []byte("max-age=2592000; must-revalidate; proxy-revalidate;  public")
+
+	bcryptPrefix = []byte("$2a")
 )
 
 var defStatusBoddies = map[int][]byte{
@@ -75,6 +82,40 @@ func jsonResponse(ctx *routing.Context, v interface{}, status int) error {
 	return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 }
 
+// jsonCachableResponse implements the same functionality
+// as jsonReponse and adds cache control headers so that
+// brwosers will hold the response data in cacne.
+//
+// This should only be used on responses which are
+// static.
+func jsonCachableResponse(ctx *routing.Context, v interface{}, status int) error {
+	var err error
+	data := emptyResponseBody
+
+	if v == nil {
+		if d, ok := defStatusBoddies[status]; ok {
+			data = d
+		}
+	} else {
+		if static.Release != "TRUE" {
+			data, err = json.MarshalIndent(v, "", "  ")
+		} else {
+			data, err = json.Marshal(v)
+		}
+		if err != nil {
+			return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		}
+	}
+
+	ctx.Response.Header.SetContentType("application/json")
+	ctx.Response.Header.SetBytesKV(headerCacheControl, headerCacheControlValue)
+	ctx.Response.Header.SetBytesK(headerETag, getETag(data, true))
+	ctx.SetStatusCode(status)
+	_, err = ctx.Write(data)
+
+	return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+}
+
 // parseJSONBody tries to parse a requests JSON
 // body to the passed object pointer. If the
 // parsing fails, this will result in a jsonError
@@ -102,15 +143,13 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 	return nil
 }
 
-func getIPAddr(ctx *routing.Context) string {
-	forwardedfor := ctx.Request.Header.PeekBytes(headerXForwardedFor)
-	if forwardedfor != nil && len(forwardedfor) > 0 {
-		return string(forwardedfor)
-	}
-
-	return ctx.RemoteIP().String()
-}
-
+// checkPageName takes an actual pageName, a guess and
+// a float value for tollerance between 0 and 1.
+// Both, the pageName and guess will be lowercased and
+// spaces will be removed. Then, the guess will be matched
+// on the pageName. If the proportion of characters which
+// do not match the pageName is larger than the value of
+// tollerance, this function returns false.
 func checkPageName(pageName, guess string, tollerance float64) bool {
 	if pageName == "" || guess == "" {
 		return false
@@ -133,4 +172,28 @@ func checkPageName(pageName, guess string, tollerance float64) bool {
 
 	return float64(matchedChars)/lenPageName >= (1-tollerance) &&
 		float64(matchedChars)/lenGuesses >= (1-tollerance)
+}
+
+// getETag generates an ETag by the passed
+// body data. The generated ETag can either be
+// weak or strong, depending on the passed
+// value for weak.
+func getETag(body []byte, weak bool) string {
+	hash := sha1.Sum(body)
+
+	weakTag := ""
+	if weak {
+		weakTag = "W/"
+	}
+
+	tag := fmt.Sprintf("%s\"%x\"", weakTag, hash)
+
+	return tag
+}
+
+// isOldPasswordHash returns true if the
+// passed hash starts with the identifier
+// for bcrypt ('$2a').
+func isOldPasswordHash(hash []byte) bool {
+	return bytes.HasPrefix(hash, bcryptPrefix)
 }
