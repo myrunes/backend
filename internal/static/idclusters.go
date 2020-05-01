@@ -1,5 +1,6 @@
 package static
 
+// Snowflake node IDs
 const (
 	NodeIDUsers    = 100
 	NodeIDPages    = 200
