@@ -41,7 +41,7 @@ type User struct {
 // username and password which will be hashed using
 // the passed authModdleware and then saved to the
 // user object.
-func NewUser(username, password string, authMiddleware auth.Middleware) (*User, error) {
+func NewUser(username, password string, authMiddleware auth.AuthMiddleware) (*User, error) {
 	now := time.Now()
 	passHash, err := authMiddleware.CreateHash(password)
 	if err != nil {

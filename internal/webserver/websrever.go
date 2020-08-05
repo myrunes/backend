@@ -49,7 +49,7 @@ type WebServer struct {
 	router *routing.Router
 
 	db    database.Middleware
-	cache caching.Middleware
+	cache caching.CacheMiddleware
 	ms    *mailserver.MailServer
 	auth  *Authorization
 	rlm   *ratelimit.RateLimitManager
@@ -63,7 +63,7 @@ type WebServer struct {
 // NewWebServer initializes a WebServer instance using
 // the specified database driver, cache driver, mail
 // server instance and configuration instance.
-func NewWebServer(db database.Middleware, cache caching.Middleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
+func NewWebServer(db database.Middleware, cache caching.CacheMiddleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
 	ws = new(WebServer)
 
 	ws.config = config

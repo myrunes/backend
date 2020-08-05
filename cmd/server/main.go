@@ -86,7 +86,7 @@ func main() {
 	}
 	logger.Info("MAILSERVER :: started")
 
-	var cache caching.Middleware
+	var cache caching.CacheMiddleware
 	if cfg.Redis != nil && cfg.Redis.Enabled {
 		cache = caching.NewRedis(cfg.Redis)
 	} else {

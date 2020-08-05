@@ -14,14 +14,15 @@ var (
 	expireDef = 1 * time.Hour
 )
 
-// Middleware describes a caching module providing
+// CacheMiddleware describes a caching module providing
 // functionality to store and fetch data to/from
 // a cache storage.
 // This module will be initialized with SetDatabase.
 // The set database must be used to fetch data from
 // when a value is not found in cache. This value
 // must then be saved in the cache storage.
-type Middleware interface {
+type CacheMiddleware interface {
+
 	// SetDatabase sets the passed database module
 	// as cache storage fallback.
 	SetDatabase(db database.Middleware)
