@@ -21,7 +21,8 @@ import (
 )
 
 var (
-	flagConfig = flag.String("c", "config.yml", "config file location")
+	flagConfig    = flag.String("c", "config.yml", "config file location")
+	flagSkipFetch = flag.Bool("skipFetch", false, "skip avatar asset fetching")
 )
 
 func initStorage(c *config.Main) (st storage.Middleware, err error) {
@@ -47,8 +48,12 @@ func initStorage(c *config.Main) (st storage.Middleware, err error) {
 	return
 }
 
-func initAssetHandlers(st storage.Middleware) error {
+func initAssetHandlers(st storage.Middleware) (*assets.AvatarHandler, error) {
 	a := assets.NewAvatarHandler(st)
+
+	if *flagSkipFetch {
+		return a, nil
+	}
 
 	cChamps := make(chan string)
 	cError := make(chan error)
@@ -64,11 +69,11 @@ func initAssetHandlers(st storage.Middleware) error {
 
 	for err := range cError {
 		if err != nil {
-			return err
+			return nil, err
 		}
 	}
 
-	return nil
+	return a, nil
 }
 
 func main() {
@@ -137,7 +142,8 @@ func main() {
 	}
 
 	logger.Info("ASSETHANDLER :: initialization")
-	if err = initAssetHandlers(st); err != nil {
+	avatarAssetsHandler, err := initAssetHandlers(st)
+	if err != nil {
 		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
 	}
 
@@ -157,7 +163,7 @@ func main() {
 	cache.SetDatabase(db)
 
 	logger.Info("WEBSERVER :: initialization")
-	ws, err := webserver.NewWebServer(db, cache, ms, cfg.WebServer)
+	ws, err := webserver.NewWebServer(db, cache, ms, avatarAssetsHandler, cfg.WebServer)
 	if err != nil {
 		logger.Fatal("WEBSERVER :: failed creating web server: %s", err.Error())
 	}

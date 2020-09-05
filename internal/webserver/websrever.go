@@ -6,6 +6,7 @@ import (
 
 	"github.com/zekroTJA/timedmap"
 
+	"github.com/myrunes/backend/internal/assets"
 	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
@@ -54,6 +55,8 @@ type WebServer struct {
 	auth  *Authorization
 	rlm   *ratelimit.RateLimitManager
 
+	avatarAssetsHandler *assets.AvatarHandler
+
 	mailConfirmation *timedmap.TimedMap
 	pwReset          *timedmap.TimedMap
 
@@ -63,7 +66,10 @@ type WebServer struct {
 // NewWebServer initializes a WebServer instance using
 // the specified database driver, cache driver, mail
 // server instance and configuration instance.
-func NewWebServer(db database.Middleware, cache caching.CacheMiddleware, ms *mailserver.MailServer, config *Config) (ws *WebServer, err error) {
+func NewWebServer(db database.Middleware, cache caching.CacheMiddleware,
+	ms *mailserver.MailServer, avatarAssetsHandler *assets.AvatarHandler,
+	config *Config) (ws *WebServer, err error) {
+
 	ws = new(WebServer)
 
 	ws.config = config
@@ -75,6 +81,8 @@ func NewWebServer(db database.Middleware, cache caching.CacheMiddleware, ms *mai
 	ws.server = &fasthttp.Server{
 		Handler: ws.router.HandleRequest,
 	}
+
+	ws.avatarAssetsHandler = avatarAssetsHandler
 
 	if ws.auth, err = NewAuthorization([]byte(config.JWTKey), db, cache, ws.rlm); err != nil {
 		return
@@ -106,6 +114,10 @@ func (ws *WebServer) registerHandlers() {
 		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.Logout)
 
 	api.Get("/version", ws.handlerGetVersion)
+
+	assets := api.Group("/assets")
+	assets.
+		Get("/champions/avatars/<id>", ws.handlerGetAssetsChampionAvatars)
 
 	resources := api.Group("/resources")
 	resources.
@@ -145,14 +157,6 @@ func (ws *WebServer) registerHandlers() {
 		Get(`/<uid:\d+>`, ws.handlerGetPage).
 		Post(ws.handlerEditPage).
 		Delete(ws.handlerDeletePage)
-
-	// ----- TODO: DEPCRECATED -- REMOVE
-	sessions := api.Group("/sessions", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
-	sessions.
-		Get("", ws.handlerGetSessions)
-	sessions.
-		Delete(`/<uid:\d+>`, ws.handlerDeleteSession)
-	// ---------------------------------
 
 	favorites := api.Group("/favorites", ws.addHeaders, rlGlobal, ws.auth.CheckRequestAuth)
 	favorites.

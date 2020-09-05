@@ -1,13 +1,14 @@
 package webserver
 
 import (
-	"errors"
 	"fmt"
+	"io"
 	"strings"
 	"time"
 
 	"github.com/myrunes/backend/internal/shared"
 	"github.com/myrunes/backend/pkg/ddragon"
+	"github.com/zekroTJA/shinpuru/pkg/etag"
 
 	"github.com/myrunes/backend/pkg/comparison"
 	"github.com/myrunes/backend/pkg/random"
@@ -18,6 +19,40 @@ import (
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
 )
+
+// -----------------------------------------------------
+// --- ASSETS ---
+
+// GET /assets/champions/avatars/:id
+func (ws *WebServer) handlerGetAssetsChampionAvatars(ctx *routing.Context) error {
+	id := ctx.Param("id")
+
+	i := strings.LastIndex(id, ".")
+	if i >= 0 {
+		id = id[:i]
+	}
+
+	reader, size, err := ws.avatarAssetsHandler.Get(id)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+	defer reader.Close()
+
+	imgData := make([]byte, size)
+	_, err = reader.Read(imgData)
+	if err != nil && err != io.EOF {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	eTag := etag.Generate(imgData, false)
+
+	ctx.Response.Header.SetContentType("image/png")
+	// 24h browser caching
+	ctx.Response.Header.Set("Cache-Control", "public, max-age=86400, immutable")
+	ctx.Response.Header.Set("ETag", eTag)
+	ctx.SetBody(imgData)
+	return nil
+}
 
 // -----------------------------------------------------
 // --- AUTHORIZATION ---
@@ -594,21 +629,6 @@ func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
 		"apiversion": static.APIVersion,
 		"release":    static.Release,
 	}, fasthttp.StatusOK)
-}
-
-// -----------------------------------------------------
-// --- RSESSIONS (DEPRECATED) ---
-
-// GET /sessions
-// TODO: DEPRECATED -- REMOVE
-func (ws *WebServer) handlerGetSessions(ctx *routing.Context) error {
-	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
-}
-
-// DELETE /sessions/:id
-// TODO: DEPRECATED -- REMOVE
-func (ws *WebServer) handlerDeleteSession(ctx *routing.Context) error {
-	return jsonError(ctx, errors.New("deprecated"), fasthttp.StatusGone)
 }
 
 // -----------------------------------------------------

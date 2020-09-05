@@ -12,7 +12,7 @@ import (
 
 const (
 	avatarCDNURL     = "https://www.mobafire.com/images/avatars/%s-classic.png"
-	avatarBucketName = "championavatars"
+	avatarBucketName = "myrunes-assets-championavatars"
 	avatarMimeType   = "image/png"
 )
 
