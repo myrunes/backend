@@ -1,24 +1,75 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 
+	"github.com/myrunes/backend/pkg/ddragon"
+
+	"github.com/myrunes/backend/internal/assets"
 	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/config"
 	"github.com/myrunes/backend/internal/database"
-	"github.com/myrunes/backend/internal/ddragon"
 	"github.com/myrunes/backend/internal/logger"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/storage"
 	"github.com/myrunes/backend/internal/webserver"
 )
 
 var (
 	flagConfig = flag.String("c", "config.yml", "config file location")
 )
+
+func initStorage(c *config.Main) (st storage.Middleware, err error) {
+	var cfg interface{}
+
+	switch c.Storage.Typ {
+	case "file", "fs":
+		st = new(storage.File)
+		cfg = *c.Storage.File
+	case "minio", "s3":
+		st = new(storage.Minio)
+		cfg = *c.Storage.Minio
+	default:
+		return nil, errors.New("invalid storage type")
+	}
+
+	if cfg == nil {
+		return nil, errors.New("invalid storage config")
+	}
+
+	err = st.Init(cfg)
+
+	return
+}
+
+func initAssetHandlers(st storage.Middleware) error {
+	a := assets.NewAvatarHandler(st)
+
+	cChamps := make(chan string)
+	cError := make(chan error)
+
+	go a.FetchAll(cChamps, cError)
+
+	go func() {
+		for _, c := range ddragon.DDragonInstance.Champions {
+			cChamps <- c.UID
+		}
+		close(cChamps)
+	}()
+
+	for err := range cError {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
 
 func main() {
 	flag.Parse()
@@ -78,6 +129,17 @@ func main() {
 		logger.Info("DATABASE :: teardown")
 		db.Close()
 	}()
+
+	logger.Info("STORAGE :: initialization")
+	st, err := initStorage(cfg)
+	if err != nil {
+		logger.Fatal("STORAGE :: failed initializing storage: %s", err.Error())
+	}
+
+	logger.Info("ASSETHANDLER :: initialization")
+	if err = initAssetHandlers(st); err != nil {
+		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
+	}
 
 	logger.Info("MAILSERVER :: initialization")
 	ms, err := mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")

@@ -6,8 +6,8 @@ import (
 	"strings"
 	"time"
 
-	"github.com/myrunes/backend/internal/ddragon"
 	"github.com/myrunes/backend/internal/shared"
+	"github.com/myrunes/backend/pkg/ddragon"
 
 	"github.com/myrunes/backend/pkg/comparison"
 	"github.com/myrunes/backend/pkg/random"

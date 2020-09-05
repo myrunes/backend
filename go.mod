@@ -7,9 +7,12 @@ require (
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ghodss/yaml v1.0.0
+	github.com/go-ini/ini v1.60.2 // indirect
 	github.com/go-ozzo/ozzo-routing v2.1.4+incompatible // indirect
 	github.com/go-redis/redis v6.15.7+incompatible
 	github.com/golang/gddo v0.0.0-20200519224240-a4ebd2f7e574 // indirect
+	github.com/minio/minio-go v6.0.14+incompatible
+	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/onsi/ginkgo v1.12.1 // indirect
 	github.com/onsi/gomega v1.10.0 // indirect
 	github.com/op/go-logging v0.0.0-20160315200505-970db520ece7

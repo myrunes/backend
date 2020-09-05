@@ -1,3 +1,5 @@
+// Package ddragon provides bindings to the
+// Riots data dragon CDN.
 package ddragon
 
 import (
