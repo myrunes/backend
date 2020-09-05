@@ -7,8 +7,10 @@ import (
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
 	"github.com/myrunes/backend/pkg/ddragon"
+	"github.com/myrunes/backend/pkg/lifecycletimer"
 
 	"github.com/myrunes/backend/internal/assets"
 	"github.com/myrunes/backend/internal/caching"
@@ -48,11 +50,9 @@ func initStorage(c *config.Main) (st storage.Middleware, err error) {
 	return
 }
 
-func initAssetHandlers(st storage.Middleware) (*assets.AvatarHandler, error) {
-	a := assets.NewAvatarHandler(st)
-
+func fetchAssets(a *assets.AvatarHandler) error {
 	if *flagSkipFetch {
-		return a, nil
+		return nil
 	}
 
 	cChamps := make(chan string)
@@ -69,11 +69,25 @@ func initAssetHandlers(st storage.Middleware) (*assets.AvatarHandler, error) {
 
 	for err := range cError {
 		if err != nil {
-			return nil, err
+			return err
 		}
 	}
 
-	return a, nil
+	return nil
+}
+
+func refetch(a *assets.AvatarHandler) {
+	var err error
+
+	logger.Info("DDRAGON :: refetch")
+	if ddragon.DDragonInstance, err = ddragon.Fetch("latest"); err != nil {
+		logger.Error("DDRAGON :: failed polling data from ddragon: %s", err.Error())
+	}
+
+	logger.Info("ASSETHANDLER :: refetch")
+	if err = fetchAssets(a); err != nil {
+		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
+	}
 }
 
 func main() {
@@ -142,8 +156,8 @@ func main() {
 	}
 
 	logger.Info("ASSETHANDLER :: initialization")
-	avatarAssetsHandler, err := initAssetHandlers(st)
-	if err != nil {
+	avatarAssetsHandler := assets.NewAvatarHandler(st)
+	if err = fetchAssets(avatarAssetsHandler); err != nil {
 		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
 	}
 
@@ -174,17 +188,11 @@ func main() {
 	}()
 	logger.Info("WEBSERVER :: started")
 
-	// Lifecycle Timer was used to clean up expierd
-	// sessions which is no more necessary after
-	// implementation of JWT tokens.
-	// Just keeping this here in case of this may
-	// be needed some time later.
-	// lct := lifecycletimer.New(5 * time.Minute).
-	// 	Handle(func() {
-	// 	}).
-	// 	Start()
-	// defer lct.Stop()
-	// logger.Info("LIFECYCLETIMER :: started")
+	lct := lifecycletimer.New(24 * time.Hour).
+		Handle(func() { refetch(avatarAssetsHandler) }).
+		Start()
+	defer lct.Stop()
+	logger.Info("LIFECYCLETIMER :: started")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)
