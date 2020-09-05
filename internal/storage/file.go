@@ -76,7 +76,7 @@ func (f *File) PutObject(bucketName string, objectName string, reader io.Reader,
 	} else if stat.IsDir() {
 		return errors.New("given file dir is a location")
 	} else {
-		fh, err = os.Open(fd)
+		fh, err = os.Create(fd)
 	}
 
 	if err != nil {
