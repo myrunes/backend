@@ -5,7 +5,9 @@ import (
 	"io"
 	"net/http"
 
+	"github.com/myrunes/backend/internal/logger"
 	"github.com/myrunes/backend/internal/storage"
+	"github.com/myrunes/backend/pkg/workerpool"
 )
 
 const (
@@ -27,27 +29,41 @@ func (ah *AvatarHandler) Get(champ string) (io.ReadCloser, int64, error) {
 }
 
 func (ah *AvatarHandler) FetchAll(cChampNames chan string, cError chan error) {
+	wp := workerpool.New(5)
+
+	go func() {
+		for res := range wp.Results() {
+			if err, _ := res.(error); err != nil {
+				cError <- err
+			}
+		}
+	}()
+
 	for champ := range cChampNames {
-		url := fmt.Sprintf(avatarCDNURL, champ)
-		resp, err := http.Get(url)
-		if err != nil {
-			cError <- err
-			continue
-		}
+		wp.Push(ah.jobFetchSingle, champ)
+	}
+	wp.Close()
 
-		if resp.StatusCode >= 400 {
-			cError <- fmt.Errorf("resuest failed with code %d", resp.StatusCode)
-			continue
-		}
+	wp.WaitBlocking()
+	close(cError)
+}
 
-		err = ah.put(champ, resp.Body, resp.ContentLength)
-		if err != nil {
-			cError <- err
-			continue
-		}
+func (ah *AvatarHandler) jobFetchSingle(workerId int, params ...interface{}) interface{} {
+	champ := params[0].(string)
+
+	logger.Info("ASSETSHANDLER :: [%d] fetch champion avatar asset of '%s'...", workerId, champ)
+
+	url := fmt.Sprintf(avatarCDNURL, champ)
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
 	}
 
-	close(cError)
+	if resp.StatusCode >= 400 {
+		return fmt.Errorf("resuest failed with code %d", resp.StatusCode)
+	}
+
+	return ah.put(champ, resp.Body, resp.ContentLength)
 }
 
 func (ah *AvatarHandler) put(champ string, reader io.Reader, size int64) error {
