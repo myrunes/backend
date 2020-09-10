@@ -161,12 +161,17 @@ func main() {
 		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
 	}
 
-	logger.Info("MAILSERVER :: initialization")
-	ms, err := mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")
-	if err != nil {
-		logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+	var ms *mailserver.MailServer
+	if cfg.MailServer != nil {
+		logger.Info("MAILSERVER :: initialization")
+		ms, err = mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")
+		if err != nil {
+			logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+		}
+		logger.Info("MAILSERVER :: started")
+	} else {
+		logger.Warning("MAILSERVER :: mail server is disabled due to missing configuration")
 	}
-	logger.Info("MAILSERVER :: started")
 
 	var cache caching.CacheMiddleware
 	if cfg.Redis != nil && cfg.Redis.Enabled {

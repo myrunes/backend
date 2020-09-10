@@ -1,6 +1,7 @@
 package webserver
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"strings"
@@ -244,6 +245,10 @@ func (ws *WebServer) handlerPostPageOrder(ctx *routing.Context) error {
 
 // POST /users/me/mail
 func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
+	if ws.ms == nil {
+		return jsonError(ctx, errors.New("mail server disabled by config"), fasthttp.StatusServiceUnavailable)
+	}
+
 	user := ctx.Get("user").(*objects.User)
 
 	mail := new(setMailRequest)
@@ -320,6 +325,10 @@ func (ws *WebServer) handlerPostConfirmMail(ctx *routing.Context) error {
 
 // POST /users/me/passwordreset
 func (ws *WebServer) handlerPostPwReset(ctx *routing.Context) error {
+	if ws.ms == nil {
+		return jsonError(ctx, errors.New("mail server disabled by config"), fasthttp.StatusServiceUnavailable)
+	}
+
 	reset := new(passwordReset)
 	if err := parseJSONBody(ctx, reset); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)

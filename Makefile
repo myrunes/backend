@@ -72,7 +72,7 @@ lint:
 PHONY += run
 run:
 	$(GO) run -v \
-		$(CURDIR)/cmd/server/*.go -c $(CONFIG)
+		$(CURDIR)/cmd/server/*.go -c $(CONFIG) -skipFetch
 
 PHONY += cleanup
 cleanup:
