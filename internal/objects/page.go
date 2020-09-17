@@ -4,7 +4,7 @@ import (
 	"errors"
 	"time"
 
-	"github.com/myrunes/backend/internal/ddragon"
+	"github.com/myrunes/backend/pkg/ddragon"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/backend/internal/static"

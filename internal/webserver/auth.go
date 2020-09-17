@@ -70,7 +70,7 @@ type Authorization struct {
 	jwtKey []byte
 
 	db    database.Middleware
-	cache caching.Middleware
+	cache caching.CacheMiddleware
 	rlm   *ratelimit.RateLimitManager
 }
 
@@ -82,7 +82,7 @@ type Authorization struct {
 // If the passed jwtKey is nil or empty,
 // a random key will be generated on
 // initialization.
-func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.Middleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
+func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.CacheMiddleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
 	auth = new(Authorization)
 	auth.db = db
 	auth.cache = cache

@@ -1,24 +1,94 @@
 package main
 
 import (
+	"errors"
 	"flag"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
+	"time"
 
+	"github.com/myrunes/backend/pkg/ddragon"
+	"github.com/myrunes/backend/pkg/lifecycletimer"
+
+	"github.com/myrunes/backend/internal/assets"
 	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/config"
 	"github.com/myrunes/backend/internal/database"
-	"github.com/myrunes/backend/internal/ddragon"
 	"github.com/myrunes/backend/internal/logger"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/storage"
 	"github.com/myrunes/backend/internal/webserver"
 )
 
 var (
-	flagConfig = flag.String("c", "config.yml", "config file location")
+	flagConfig    = flag.String("c", "config.yml", "config file location")
+	flagSkipFetch = flag.Bool("skipFetch", false, "skip avatar asset fetching")
 )
+
+func initStorage(c *config.Main) (st storage.Middleware, err error) {
+	var cfg interface{}
+
+	switch c.Storage.Typ {
+	case "file", "fs":
+		st = new(storage.File)
+		cfg = *c.Storage.File
+	case "minio", "s3":
+		st = new(storage.Minio)
+		cfg = *c.Storage.Minio
+	default:
+		return nil, errors.New("invalid storage type")
+	}
+
+	if cfg == nil {
+		return nil, errors.New("invalid storage config")
+	}
+
+	err = st.Init(cfg)
+
+	return
+}
+
+func fetchAssets(a *assets.AvatarHandler) error {
+	if *flagSkipFetch {
+		return nil
+	}
+
+	cChamps := make(chan string)
+	cError := make(chan error)
+
+	go a.FetchAll(cChamps, cError)
+
+	go func() {
+		for _, c := range ddragon.DDragonInstance.Champions {
+			cChamps <- c.UID
+		}
+		close(cChamps)
+	}()
+
+	for err := range cError {
+		if err != nil {
+			return err
+		}
+	}
+
+	return nil
+}
+
+func refetch(a *assets.AvatarHandler) {
+	var err error
+
+	logger.Info("DDRAGON :: refetch")
+	if ddragon.DDragonInstance, err = ddragon.Fetch("latest"); err != nil {
+		logger.Error("DDRAGON :: failed polling data from ddragon: %s", err.Error())
+	}
+
+	logger.Info("ASSETHANDLER :: refetch")
+	if err = fetchAssets(a); err != nil {
+		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
+	}
+}
 
 func main() {
 	flag.Parse()
@@ -79,14 +149,31 @@ func main() {
 		db.Close()
 	}()
 
-	logger.Info("MAILSERVER :: initialization")
-	ms, err := mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")
+	logger.Info("STORAGE :: initialization")
+	st, err := initStorage(cfg)
 	if err != nil {
-		logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+		logger.Fatal("STORAGE :: failed initializing storage: %s", err.Error())
 	}
-	logger.Info("MAILSERVER :: started")
 
-	var cache caching.Middleware
+	logger.Info("ASSETHANDLER :: initialization")
+	avatarAssetsHandler := assets.NewAvatarHandler(st)
+	if err = fetchAssets(avatarAssetsHandler); err != nil {
+		logger.Fatal("ASSETHANDLER :: failed fetching assets: %s", err.Error())
+	}
+
+	var ms *mailserver.MailServer
+	if cfg.MailServer != nil {
+		logger.Info("MAILSERVER :: initialization")
+		ms, err = mailserver.NewMailServer(cfg.MailServer, "noreply@myrunes.com", "myrunes")
+		if err != nil {
+			logger.Fatal("MAILSERVER :: failed connecting to mail account: %s", err.Error())
+		}
+		logger.Info("MAILSERVER :: started")
+	} else {
+		logger.Warning("MAILSERVER :: mail server is disabled due to missing configuration")
+	}
+
+	var cache caching.CacheMiddleware
 	if cfg.Redis != nil && cfg.Redis.Enabled {
 		cache = caching.NewRedis(cfg.Redis)
 	} else {
@@ -95,7 +182,7 @@ func main() {
 	cache.SetDatabase(db)
 
 	logger.Info("WEBSERVER :: initialization")
-	ws, err := webserver.NewWebServer(db, cache, ms, cfg.WebServer)
+	ws, err := webserver.NewWebServer(db, cache, ms, avatarAssetsHandler, cfg.WebServer)
 	if err != nil {
 		logger.Fatal("WEBSERVER :: failed creating web server: %s", err.Error())
 	}
@@ -106,17 +193,11 @@ func main() {
 	}()
 	logger.Info("WEBSERVER :: started")
 
-	// Lifecycle Timer was used to clean up expierd
-	// sessions which is no more necessary after
-	// implementation of JWT tokens.
-	// Just keeping this here in case of this may
-	// be needed some time later.
-	// lct := lifecycletimer.New(5 * time.Minute).
-	// 	Handle(func() {
-	// 	}).
-	// 	Start()
-	// defer lct.Stop()
-	// logger.Info("LIFECYCLETIMER :: started")
+	lct := lifecycletimer.New(24 * time.Hour).
+		Handle(func() { refetch(avatarAssetsHandler) }).
+		Start()
+	defer lct.Stop()
+	logger.Info("LIFECYCLETIMER :: started")
 
 	sc := make(chan os.Signal, 1)
 	signal.Notify(sc, syscall.SIGINT, syscall.SIGTERM, os.Interrupt, os.Kill)

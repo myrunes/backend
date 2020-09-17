@@ -9,6 +9,7 @@ import (
 	"github.com/myrunes/backend/internal/caching"
 	"github.com/myrunes/backend/internal/database"
 	"github.com/myrunes/backend/internal/mailserver"
+	"github.com/myrunes/backend/internal/storage"
 	"github.com/myrunes/backend/internal/webserver"
 )
 
@@ -18,6 +19,12 @@ type Main struct {
 	Redis      *caching.RedisConfig  `json:"redis"`
 	WebServer  *webserver.Config     `json:"webserver"`
 	MailServer *mailserver.Config    `json:"mailserver"`
+
+	Storage struct {
+		Typ   string               `json:"type"`
+		File  *storage.FileConfig  `json:"file"`
+		Minio *storage.MinioConfig `json:"minio"`
+	} `json:"storage"`
 }
 
 // Open checks for the passed config
