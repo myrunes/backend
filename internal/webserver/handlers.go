@@ -13,6 +13,7 @@ import (
 
 	"github.com/myrunes/backend/pkg/comparison"
 	"github.com/myrunes/backend/pkg/random"
+	"github.com/myrunes/backend/pkg/recapatcha"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/backend/internal/objects"
@@ -75,6 +76,20 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 	data := new(loginRequest)
 	if err := parseJSONBody(ctx, data); err != nil {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
+	}
+
+	if data.ReCaptchaResponse == "" {
+		return jsonError(ctx, errMissingReCaptchaResponse, fasthttp.StatusBadRequest)
+	}
+
+	rcRes, err := recapatcha.Validate(ws.config.ReCaptcha.SecretKey, data.ReCaptchaResponse)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if !rcRes.Success {
+		return jsonError(ctx,
+			fmt.Errorf("recaptcha challenge failed: %+v", rcRes.ErrorCodes),
+			fasthttp.StatusBadRequest)
 	}
 
 	if data.UserName == "" || data.Password == "" || len(data.Password) < 8 {
@@ -637,6 +652,17 @@ func (ws *WebServer) handlerGetVersion(ctx *routing.Context) error {
 		"version":    static.AppVersion,
 		"apiversion": static.APIVersion,
 		"release":    static.Release,
+	}, fasthttp.StatusOK)
+}
+
+// GET /recaptchainfo
+func (ws *WebServer) handlerGetReCaptchaInfo(ctx *routing.Context) error {
+	if ws.config.ReCaptcha == nil || ws.config.ReCaptcha.SiteKey == "" {
+		return jsonError(ctx, errors.New("not configured"), fasthttp.StatusBadRequest)
+	}
+
+	return jsonCachableResponse(ctx, map[string]string{
+		"sitekey": ws.config.ReCaptcha.SiteKey,
 	}, fasthttp.StatusOK)
 }
 
