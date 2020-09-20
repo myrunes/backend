@@ -58,10 +58,11 @@ var (
 // loginRequests describes the request
 // model of the login endpoint
 type loginRequest struct {
-	UserName          string `json:"username"`
-	Password          string `json:"password"`
-	Remember          bool   `json:"remember"`
-	ReCaptchaResponse string `json:"recaptcharesponse"`
+	reCaptchaResponse
+
+	UserName string `json:"username"`
+	Password string `json:"password"`
+	Remember bool   `json:"remember"`
 }
 
 // Authorization provides functionalities

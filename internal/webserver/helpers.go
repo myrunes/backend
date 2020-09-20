@@ -9,6 +9,7 @@ import (
 	"strings"
 
 	"github.com/myrunes/backend/internal/static"
+	"github.com/myrunes/backend/pkg/recapatcha"
 
 	routing "github.com/qiangxue/fasthttp-routing"
 	"github.com/valyala/fasthttp"
@@ -141,6 +142,24 @@ func (ws *WebServer) addHeaders(ctx *routing.Context) error {
 	}
 
 	return nil
+}
+
+func (ws *WebServer) validateReCaptcha(ctx *routing.Context, rcr *reCaptchaResponse) (bool, error) {
+	if rcr.ReCaptchaResponse == "" {
+		return false, jsonError(ctx, errMissingReCaptchaResponse, fasthttp.StatusBadRequest)
+	}
+
+	rcRes, err := recapatcha.Validate(ws.config.ReCaptcha.SecretKey, rcr.ReCaptchaResponse)
+	if err != nil {
+		return false, jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if !rcRes.Success {
+		return false, jsonError(ctx,
+			fmt.Errorf("recaptcha challenge failed: %+v", rcRes.ErrorCodes),
+			fasthttp.StatusBadRequest)
+	}
+
+	return true, nil
 }
 
 // checkPageName takes an actual pageName, a guess and

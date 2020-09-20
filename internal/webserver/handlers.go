@@ -13,7 +13,6 @@ import (
 
 	"github.com/myrunes/backend/pkg/comparison"
 	"github.com/myrunes/backend/pkg/random"
-	"github.com/myrunes/backend/pkg/recapatcha"
 
 	"github.com/bwmarrin/snowflake"
 	"github.com/myrunes/backend/internal/objects"
@@ -78,18 +77,8 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusBadRequest)
 	}
 
-	if data.ReCaptchaResponse == "" {
-		return jsonError(ctx, errMissingReCaptchaResponse, fasthttp.StatusBadRequest)
-	}
-
-	rcRes, err := recapatcha.Validate(ws.config.ReCaptcha.SecretKey, data.ReCaptchaResponse)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-	if !rcRes.Success {
-		return jsonError(ctx,
-			fmt.Errorf("recaptcha challenge failed: %+v", rcRes.ErrorCodes),
-			fasthttp.StatusBadRequest)
+	if ok, err := ws.validateReCaptcha(ctx, &data.reCaptchaResponse); !ok {
+		return err
 	}
 
 	if data.UserName == "" || data.Password == "" || len(data.Password) < 8 {
@@ -389,6 +378,10 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 		return jsonError(ctx, fmt.Errorf("invalid token"), fasthttp.StatusBadRequest)
 	}
 
+	if ok, err := ws.validateReCaptcha(ctx, &data.reCaptchaResponse); !ok {
+		return err
+	}
+
 	uID, ok := ws.pwReset.GetValue(data.Token).(snowflake.ID)
 	if !ok {
 		return jsonError(ctx, fmt.Errorf("wrong data struct in timedmap"), fasthttp.StatusInternalServerError)
@@ -401,39 +394,6 @@ func (ws *WebServer) handlerPostPwResetConfirm(ctx *routing.Context) error {
 
 	if user == nil {
 		return jsonError(ctx, fmt.Errorf("unknown user"), fasthttp.StatusBadRequest)
-	}
-
-	errCheckFailed := fmt.Errorf("security check failed")
-	if len(data.PageNames) < 3 || data.PageNames[0] == "" || data.PageNames[1] == "" || data.PageNames[2] == "" {
-		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
-	}
-
-	pages, err := ws.db.GetPages(uID, "", "", nil)
-	if err != nil {
-		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
-	}
-
-	checkMap := make(map[string]interface{})
-	for _, guess := range data.PageNames {
-		if _, ok := checkMap[guess]; ok {
-			return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
-		}
-		checkMap[guess] = nil
-	}
-
-	var guessed int
-
-	for _, page := range pages {
-		for i, guess := range data.PageNames {
-			if checkPageName(page.Title, guess, 0.2) {
-				guessed++
-				data.PageNames[i] = ""
-			}
-		}
-	}
-
-	if guessed < 3 {
-		return jsonError(ctx, errCheckFailed, fasthttp.StatusBadRequest)
 	}
 
 	ws.pwReset.Remove(data.Token)

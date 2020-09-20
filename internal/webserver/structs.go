@@ -85,9 +85,10 @@ type passwordReset struct {
 // verification, the new password string and
 // the page name guesses.
 type confirmPasswordReset struct {
-	Token       string   `json:"token"`
-	NewPassword string   `json:"new_password"`
-	PageNames   []string `json:"page_names"`
+	reCaptchaResponse
+
+	Token       string `json:"token"`
+	NewPassword string `json:"new_password"`
 }
 
 // mailConfirmtationData wraps the mail address
@@ -97,4 +98,10 @@ type confirmPasswordReset struct {
 type mailConfirmationData struct {
 	UserID      snowflake.ID
 	MailAddress string
+}
+
+// reCaptchaResponse wraps a ReCAPTCHA response
+// token for ReCAPTCHA validation.
+type reCaptchaResponse struct {
+	ReCaptchaResponse string `json:"recaptcharesponse"`
 }
