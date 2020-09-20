@@ -275,6 +275,14 @@ func (ws *WebServer) handlerPostMail(ctx *routing.Context) error {
 		return jsonResponse(ctx, nil, fasthttp.StatusOK)
 	}
 
+	recUser, err := ws.db.GetUser(-1, mail.MailAddress)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if recUser != nil && recUser.UID != user.UID {
+		return jsonError(ctx, errEmailAlreadyTaken, fasthttp.StatusBadRequest)
+	}
+
 	const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
 	token, err := random.String(16, charset)
 	if err != nil {

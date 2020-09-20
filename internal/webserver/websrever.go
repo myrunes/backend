@@ -23,6 +23,7 @@ var (
 	errUNameInUse               = errors.New("user name already in use")
 	errNoAccess                 = errors.New("access denied")
 	errMissingReCaptchaResponse = errors.New("missing recaptcha challenge response")
+	errEmailAlreadyTaken        = errors.New("e-mail address is already taken by another account")
 )
 
 // Config wraps properties for the
