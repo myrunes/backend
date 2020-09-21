@@ -7,5 +7,5 @@ const (
 	DiscordUserAgentPingHeaderVal = "Mozilla/5.0 (compatible; Discordbot/2.0; +https://discordapp.com)"
 
 	// Current API specification version.
-	APIVersion = "1.7.0"
+	APIVersion = "1.8.0"
 )

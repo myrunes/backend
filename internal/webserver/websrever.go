@@ -18,29 +18,39 @@ import (
 
 // Error Objects
 var (
-	errNotFound         = errors.New("not found")
-	errInvalidArguments = errors.New("invalid arguments")
-	errUNameInUse       = errors.New("user name already in use")
-	errNoAccess         = errors.New("access denied")
+	errNotFound                 = errors.New("not found")
+	errInvalidArguments         = errors.New("invalid arguments")
+	errUNameInUse               = errors.New("user name already in use")
+	errNoAccess                 = errors.New("access denied")
+	errMissingReCaptchaResponse = errors.New("missing recaptcha challenge response")
+	errEmailAlreadyTaken        = errors.New("e-mail address is already taken by another account")
 )
 
 // Config wraps properties for the
 // HTTP REST API server.
 type Config struct {
-	Addr       string     `json:"addr"`
-	PathPrefix string     `json:"pathprefix"`
-	TLS        *TLSConfig `json:"tls"`
-	PublicAddr string     `json:"publicaddress"`
-	EnableCors bool       `json:"enablecors"`
-	JWTKey     string     `json:"jwtkey"`
+	Addr       string           `json:"addr"`
+	PathPrefix string           `json:"pathprefix"`
+	TLS        *TLSConfig       `json:"tls"`
+	ReCaptcha  *ReCaptchaConfig `json:"recaptcha"`
+	PublicAddr string           `json:"publicaddress"`
+	EnableCors bool             `json:"enablecors"`
+	JWTKey     string           `json:"jwtkey"`
 }
 
-// TLSCOnfig wraps properties for
+// TLSConfig wraps properties for
 // TLS encryption.
 type TLSConfig struct {
 	Enabled bool   `json:"enabled"`
 	Cert    string `json:"certfile"`
 	Key     string `json:"keyfile"`
+}
+
+// ReCaptchaConfig wraps key and secret
+// for ReCAPTCHA v2.
+type ReCaptchaConfig struct {
+	SiteKey   string `json:"sitekey"`
+	SecretKey string `json:"secretkey"`
 }
 
 // WebServer provices a HTTP REST
@@ -114,6 +124,7 @@ func (ws *WebServer) registerHandlers() {
 		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.Logout)
 
 	api.Get("/version", ws.handlerGetVersion)
+	api.Get("/recaptchainfo", ws.handlerGetReCaptchaInfo)
 
 	assets := api.Group("/assets")
 	assets.

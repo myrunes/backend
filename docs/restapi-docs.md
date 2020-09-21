@@ -18,6 +18,9 @@ The MYRUNES backend provides a RESTful HTTP JSON API providing 100% of the funct
 - [**Resources**](#resources)
   - [Champions](#champions)
   - [Runes and Perks](#runes-and-perks)
+- [**Information**](#information)
+  - [Version](#version)
+  - [ReCAPTCHA](#recaptcha)
 - [**Endpoints**](#endpoints)
   - [Users](#users)
     - [Get Self User](#get-self-user)
@@ -343,6 +346,60 @@ The response will contain nested multidimensional arrays of runes available for 
 
 ---
 
+## Information
+
+### Version
+
+> `GET /api/version`
+
+**Response**
+
+```
+HTTP/1.1 200 OK
+Cache-Control: max-age=2592000; must-revalidate; proxy-revalidate;  public
+Content-Type: application/json
+Date: Sun, 20 Sep 2020 08:02:45 GMT
+Etag: W/"3d17185be51edc954586c4feff03cf31c5d278e6"
+Server: MYRUNES v.1.7.1+26
+X-Ratelimit-limit: 50
+X-Ratelimit-remaining: 49
+X-Ratelimit-reset: 0
+Content-Length: 60
+```
+```json
+{
+  "apiversion":"1.8.0",
+  "release":"TRUE",
+  "version":"1.7.1+26"
+}
+```
+
+### Recaptcha
+
+> `GET /api/recaptchainfo`
+
+**Response**
+
+```
+HTTP/1.1 200 OK
+Cache-Control: max-age=2592000; must-revalidate; proxy-revalidate;  public
+Content-Type: application/json
+Date: Sun, 20 Sep 2020 08:02:45 GMT
+Etag: W/"0f3279816a04027124c7d6eaca3b967e15c2d166"
+Server: MYRUNES v.1.7.1+26
+X-Ratelimit-limit: 50
+X-Ratelimit-remaining: 49
+X-Ratelimit-reset: 0
+Content-Length: 54
+```
+```json
+{
+  "sitekey":"6Le6IM4ZAAAAAL8iQ0akcye5Sw4I5JbBqRMyD0J8"
+}
+```
+
+---
+
 ## Endpoints
 
 ### Authentication
@@ -473,6 +530,7 @@ X-Ratelimit-Reset: 0
 |------|------|-----|---------|-------------|
 | `username` | string | Body | | The username of the account |
 | `password` | string | Body | | The password of the given user |
+| `recaptcharesponse` | string | Body | | ReCAPTCHA verification response token. |
 | *`remember`* | boolean | Body | `false` | Sessions defaultly expire after 2 hours. Setting this to true, this duration will be expanded to 30 days. |
 
 **Response**
