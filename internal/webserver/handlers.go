@@ -842,7 +842,7 @@ func (ws *WebServer) handlerGetShare(ctx *routing.Context) error {
 	return jsonResponse(ctx, &shareResponse{
 		Page:  page,
 		Share: share,
-		User:  owner,
+		User:  owner.Sanitize(),
 	}, fasthttp.StatusAccepted)
 }
 
