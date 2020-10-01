@@ -27,14 +27,15 @@ var (
 type User struct {
 	UID            snowflake.ID              `json:"uid"`
 	Username       string                    `json:"username"`
-	MailAddress    string                    `json:"mailaddress"`
+	MailAddress    string                    `json:"mailaddress,omitempty"`
 	DisplayName    string                    `json:"displayname"`
-	PassHash       []byte                    `json:"passhash,omitempty"`
-	LastLogin      time.Time                 `json:"lastlogin"`
+	LastLogin      time.Time                 `json:"lastlogin,omitempty"`
 	Created        time.Time                 `json:"created"`
-	Favorites      []string                  `json:"favorites"`
-	PageOrder      map[string][]snowflake.ID `json:"pageorder"`
+	Favorites      []string                  `json:"favorites,omitempty"`
+	PageOrder      map[string][]snowflake.ID `json:"pageorder,omitempty"`
 	HasOldPassword bool                      `json:"hasoldpw,omitempty"`
+
+	PassHash []byte `json:"-"`
 }
 
 // NewUser creates a new User object with the given
@@ -116,4 +117,16 @@ func (u *User) Validate(acceptEmptyUsername bool) error {
 	}
 
 	return nil
+}
+
+// Sanitize creates a new User object from
+// the current User object which only contains
+// information which shall be publicly visible.
+func (u *User) Sanitize() *User {
+	return &User{
+		UID:         u.UID,
+		Created:     u.Created,
+		DisplayName: u.DisplayName,
+		Username:    u.Username,
+	}
 }
