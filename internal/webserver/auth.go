@@ -320,7 +320,6 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 
 	ctx.Set("user", user)
 	ctx.Set("apitoken", authValue)
-	// ctx.Set("jwt", jwtTokenStr)
 
 	return nil
 }
@@ -336,10 +335,6 @@ func (auth *Authorization) Logout(ctx *routing.Context) error {
 
 	cookie := fmt.Sprintf("%s=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly", refreshTokenCookieName)
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
-
-	// if jwt, ok := ctx.Get("jwt").(string); ok {
-	// 	auth.cache.SetUserByToken(jwt, nil)
-	// }
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }

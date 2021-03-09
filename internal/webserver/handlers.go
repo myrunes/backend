@@ -177,9 +177,6 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	ws.cache.SetUserByID(newUser.UID, user)
-	// if jwtToken, ok := ctx.Get("jwt").(string); ok {
-	// 	ws.cache.SetUserByToken(jwtToken, user)
-	// }
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
@@ -207,9 +204,6 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	}
 
 	ws.cache.SetUserByID(user.UID, nil)
-	// if jwtToken, ok := ctx.Get("jwt").(string); ok {
-	// 	ws.cache.SetUserByToken(jwtToken, nil)
-	// }
 
 	return ws.auth.Logout(ctx)
 }
