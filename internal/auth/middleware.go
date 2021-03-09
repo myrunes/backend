@@ -24,12 +24,14 @@ type AuthMiddleware interface {
 	// the reutrned  result will be 'false'.
 	CheckHash(hash, pass string) bool
 
-	// CreateSession creates a new web session for the
+	// CreateAndSetRefreshToken creates a new web session for the
 	// passed uid with a defined life span which is
 	// expanded when remember is true. The session is
 	// then set as request cookie to identify and
 	// authorize following requests from this user.
-	CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error)
+	CreateAndSetRefreshToken(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error)
+
+	ObtainAccessToken(ctx *routing.Context) (string, error)
 
 	// Login collects login credentials from the
 	// request payload. After successful authorization,

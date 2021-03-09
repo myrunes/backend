@@ -36,6 +36,7 @@ type collections struct {
 	users,
 	pages,
 	apitokens,
+	refreshtokens,
 	shares *mongo.Collection
 }
 
@@ -68,10 +69,11 @@ func (m *MongoDB) Connect(params interface{}) (err error) {
 	m.db = m.client.Database(cfg.DataDB)
 
 	m.collections = &collections{
-		users:     m.db.Collection("users"),
-		pages:     m.db.Collection("pages"),
-		shares:    m.db.Collection("shares"),
-		apitokens: m.db.Collection("apitokens"),
+		users:         m.db.Collection("users"),
+		pages:         m.db.Collection("pages"),
+		shares:        m.db.Collection("shares"),
+		apitokens:     m.db.Collection("apitokens"),
+		refreshtokens: m.db.Collection("refreshtokens"),
 	}
 
 	return err
@@ -291,6 +293,31 @@ func (m *MongoDB) DeleteShare(ident string, uid, pageID snowflake.ID) error {
 			bson.M{"pageid": pageID},
 		},
 	})
+
+	return err
+}
+
+func (m *MongoDB) GetRefreshToken(token string) (t *objects.RefreshToken, err error) {
+	t = new(objects.RefreshToken)
+	ok, err := m.get(m.collections.refreshtokens, bson.M{"token": token}, t)
+	if !ok {
+		t = nil
+	}
+	return
+}
+
+func (m *MongoDB) SetRefreshToken(t *objects.RefreshToken) error {
+	return m.insertOrUpdate(m.collections.refreshtokens, bson.M{"token": t.Token}, t)
+}
+
+func (m *MongoDB) RemoveRefreshToken(token string) error {
+	ctx, cancel := ctxTimeout(5 * time.Second)
+	defer cancel()
+
+	_, err := m.collections.refreshtokens.DeleteOne(ctx, bson.M{"token": token})
+	if err == mongo.ErrNoDocuments {
+		err = nil
+	}
 
 	return err
 }

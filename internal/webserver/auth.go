@@ -1,7 +1,6 @@
 package webserver
 
 import (
-	"crypto/rand"
 	"errors"
 	"fmt"
 	"runtime"
@@ -19,6 +18,7 @@ import (
 	"github.com/myrunes/backend/internal/ratelimit"
 	"github.com/myrunes/backend/internal/shared"
 	"github.com/myrunes/backend/internal/static"
+	"github.com/myrunes/backend/pkg/random"
 	routing "github.com/qiangxue/fasthttp-routing"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -32,20 +32,29 @@ const (
 	attemptBurst = 5
 	// character length of generated API tokens
 	apiTokenLength = 64
+	// The byte length of the signing key of
+	// accessTokens
+	signingKeyLength = 128
+	// The character length of refreshTokens
+	refreshTokenLength = 64
 	// defaul time until a default login
 	// session expires
 	sessionExpireDefault = 2 * time.Hour
 	// default time until a "remembered"
 	// login session expires
 	sessionExpireRemember = 30 * 24 * time.Hour
-	// cookie key name of the session JWT
-	jwtCookieName = "jwt_token"
+	// time until an access token must be
+	// reacquired
+	accessTokenLifetime = 1 * time.Hour
+	// cookie key name of the refreshToken
+	refreshTokenCookieName = "refreshToken"
 )
 
 var (
-	errBadRequest   = errors.New("bad request")
-	errUnauthorized = errors.New("unauthorized")
-	errRateLimited  = errors.New("rate limited")
+	errBadRequest    = errors.New("bad request")
+	errUnauthorized  = errors.New("unauthorized")
+	errInvalidAccess = errors.New("invalid access key")
+	errRateLimited   = errors.New("rate limited")
 
 	setCookieHeader     = []byte("Set-Cookie")
 	authorizationHeader = []byte("Authorization")
@@ -69,7 +78,7 @@ type loginRequest struct {
 // for HTTP session authorization and
 // session lifecycle maintainance.
 type Authorization struct {
-	jwtKey []byte
+	signingKey []byte
 
 	db    database.Middleware
 	cache caching.CacheMiddleware
@@ -84,21 +93,21 @@ type Authorization struct {
 // If the passed jwtKey is nil or empty,
 // a random key will be generated on
 // initialization.
-func NewAuthorization(jwtKey []byte, db database.Middleware, cache caching.CacheMiddleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
+func NewAuthorization(signingKey []byte, db database.Middleware, cache caching.CacheMiddleware, rlm *ratelimit.RateLimitManager) (auth *Authorization, err error) {
 	auth = new(Authorization)
 	auth.db = db
 	auth.cache = cache
 	auth.rlm = rlm
 
-	if jwtKey == nil || len(jwtKey) == 0 {
-		if auth.jwtKey, err = generateJWTKey(); err != nil {
+	if signingKey == nil || len(signingKey) == 0 {
+		if auth.signingKey, err = random.ByteArray(signingKeyLength); err != nil {
 			return
 		}
-	} else if len(jwtKey) < 32 {
+	} else if len(signingKey) < 32 {
 		err = errors.New("JWT key must have at least 128 bit")
 		return
 	} else {
-		auth.jwtKey = jwtKey
+		auth.signingKey = signingKey
 	}
 
 	return
@@ -166,7 +175,7 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized) != nil
 	}
 
-	if token, err := auth.CreateSession(ctx, user.UID, login.Remember); err != nil {
+	if token, err := auth.CreateAndSetRefreshToken(ctx, user.UID, login.Remember); err != nil {
 		auth.cache.SetUserByToken(token, user)
 	}
 
@@ -176,7 +185,7 @@ func (auth *Authorization) Login(ctx *routing.Context) bool {
 // CreateSession creates a login session for the specified
 // user. This generates a JWT which is signed with the internal
 // jwtKey and then stored as cookie on response.
-func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID, remember bool) (string, error) {
+func (auth *Authorization) CreateAndSetRefreshToken(ctx *routing.Context, uid snowflake.ID, remember bool) (token string, err error) {
 	expires := time.Now()
 	if remember {
 		expires = expires.Add(sessionExpireRemember)
@@ -184,40 +193,79 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 		expires = expires.Add(sessionExpireDefault)
 	}
 
-	token, err := jwt.NewWithClaims(jwtGenerationMethod, jwt.StandardClaims{
-		Subject:   uid.String(),
-		ExpiresAt: expires.Unix(),
-		IssuedAt:  time.Now().Unix(),
-	}).SignedString(auth.jwtKey)
+	if token, err = random.Base64(refreshTokenLength); err != nil {
+		err = jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		return
+	}
 
+	err = auth.db.SetRefreshToken(&objects.RefreshToken{
+		Token:    token,
+		UserID:   uid,
+		Deadline: expires,
+	})
 	if err != nil {
-		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		err = jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		return
 	}
 
 	user, err := auth.cache.GetUserByID(uid)
 	if err != nil {
-		return "", err
+		return
 	}
 
 	user.Update(nil, true)
 	if err = user.Validate(true); err != nil {
-		return "", jsonError(ctx, err, fasthttp.StatusBadRequest)
+		err = jsonError(ctx, err, fasthttp.StatusBadRequest)
+		return
 	}
-
 	if err = auth.db.EditUser(user); err != nil {
-		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		err = jsonError(ctx, err, fasthttp.StatusInternalServerError)
+		return
 	}
 
-	secureCookie := ""
+	cookieSecurity := ""
 	if static.Release == "TRUE" {
-		secureCookie = "; Secure; SameSite=Strict"
+		cookieSecurity = "; Secure; SameSite=Strict"
 	}
 
 	cookie := fmt.Sprintf("%s=%s; Expires=%s; Path=/; HttpOnly%s",
-		jwtCookieName, token, expires.Format(time.RFC1123), secureCookie)
+		refreshTokenCookieName, token, expires.Format(time.RFC1123), cookieSecurity)
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
 
-	return token, nil
+	return
+}
+
+func (auth *Authorization) ObtainAccessToken(ctx *routing.Context) (string, error) {
+	key := ctx.Request.Header.Cookie(refreshTokenCookieName)
+	if key == nil || len(key) == 0 {
+		return "", jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	refreshToken := string(key)
+	token, err := auth.db.GetRefreshToken(refreshToken)
+	if err != nil {
+		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+	if token == nil {
+		return "", jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	now := time.Now()
+	if now.After(token.Deadline) {
+		auth.db.RemoveRefreshToken(token.Token)
+		return "", jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	}
+
+	accessToken, err := jwt.NewWithClaims(jwtGenerationMethod, jwt.StandardClaims{
+		Subject:   token.UserID.String(),
+		ExpiresAt: now.Add(accessTokenLifetime).Unix(),
+		IssuedAt:  now.Unix(),
+	}).SignedString(auth.signingKey)
+	if err != nil {
+		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return accessToken, nil
 }
 
 // CheckRequestAuth provides a handler which
@@ -227,66 +275,52 @@ func (auth *Authorization) CreateSession(ctx *routing.Context, uid snowflake.ID,
 func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 	var user *objects.User
 	var err error
-	var jwtTokenStr string
-	var apiToken string
+	var authValue string
 
-	apiTokenB := ctx.Request.Header.PeekBytes(authorizationHeader)
-	if apiTokenB != nil && len(apiTokenB) > 0 {
-		apiToken := string(apiTokenB)
-		if !strings.HasPrefix(strings.ToLower(apiToken), "basic ") {
-			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
-		}
-
-		apiToken = apiToken[6:]
+	authValueB := ctx.Request.Header.PeekBytes(authorizationHeader)
+	if authValueB != nil && len(authValueB) > 0 {
+		authValue = string(authValueB)
+	}
+	if strings.HasPrefix(strings.ToLower(authValue), "basic") {
+		authValue = authValue[6:]
 		var ok bool
-		if user, ok = auth.cache.GetUserByToken(apiToken); !ok {
-			if user, err = auth.db.VerifyAPIToken(apiToken); err == nil {
-				auth.cache.SetUserByToken(apiToken, user)
+		if user, ok = auth.cache.GetUserByToken(authValue); !ok {
+			if user, err = auth.db.VerifyAPIToken(authValue); err == nil {
+				auth.cache.SetUserByToken(authValue, user)
 			}
 		}
-	} else {
-		key := ctx.Request.Header.Cookie(jwtCookieName)
-		if key == nil || len(key) == 0 {
-			return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+	} else if strings.HasPrefix(strings.ToLower(authValue), "accesstoken ") {
+		authValue = authValue[12:]
+
+		jwtToken, err := jwt.Parse(authValue, func(t *jwt.Token) (interface{}, error) {
+			return auth.signingKey, nil
+		})
+		if err != nil || !jwtToken.Valid {
+			return jsonError(ctx, errInvalidAccess, fasthttp.StatusUnauthorized)
 		}
 
-		jwtTokenStr = string(key)
-
-		var ok bool
-		if user, ok = auth.cache.GetUserByToken(jwtTokenStr); !ok {
-			jwtToken, err := jwt.Parse(jwtTokenStr, func(t *jwt.Token) (interface{}, error) {
-				return auth.jwtKey, nil
-			})
-			if err != nil || !jwtToken.Valid {
-				return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
-			}
-
-			claimsMap, ok := jwtToken.Claims.(jwt.MapClaims)
-			if !ok {
-				return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
-			}
-
-			claims := jwt.StandardClaims{}
-			claims.Subject, _ = claimsMap["sub"].(string)
-
-			userID, _ := snowflake.ParseString(claims.Subject)
-			user, err = auth.cache.GetUserByID(userID)
-
-			auth.cache.SetUserByToken(jwtTokenStr, user)
+		claimsMap, ok := jwtToken.Claims.(jwt.MapClaims)
+		if !ok {
+			return jsonError(ctx, errInvalidAccess, fasthttp.StatusUnauthorized)
 		}
 
+		claims := jwt.StandardClaims{}
+		claims.Subject, _ = claimsMap["sub"].(string)
+
+		userID, _ := snowflake.ParseString(claims.Subject)
+		user, err = auth.cache.GetUserByID(userID)
 	}
 
 	if err != nil {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 	if user == nil {
-		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
+		return jsonError(ctx, errInvalidAccess, fasthttp.StatusUnauthorized)
 	}
 
 	ctx.Set("user", user)
-	ctx.Set("apitoken", apiToken)
-	ctx.Set("jwt", jwtTokenStr)
+	ctx.Set("apitoken", authValue)
+	// ctx.Set("jwt", jwtTokenStr)
 
 	return nil
 }
@@ -295,28 +329,19 @@ func (auth *Authorization) CheckRequestAuth(ctx *routing.Context) error {
 // session JWT cookie by setting an invalid,
 // expired session cookie.
 func (auth *Authorization) Logout(ctx *routing.Context) error {
-	key := ctx.Request.Header.Cookie(jwtCookieName)
+	key := ctx.Request.Header.Cookie(refreshTokenCookieName)
 	if key == nil || len(key) == 0 {
 		return jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
-	cookie := fmt.Sprintf("%s=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly", jwtCookieName)
+	cookie := fmt.Sprintf("%s=; Expires=Thu, 01 Jan 1970 00:00:00 GMT; Path=/; HttpOnly", refreshTokenCookieName)
 	ctx.Response.Header.AddBytesK(setCookieHeader, cookie)
 
-	if jwt, ok := ctx.Get("jwt").(string); ok {
-		auth.cache.SetUserByToken(jwt, nil)
-	}
+	// if jwt, ok := ctx.Get("jwt").(string); ok {
+	// 	auth.cache.SetUserByToken(jwt, nil)
+	// }
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
-}
-
-// generateJWTKey generates a cryptographically
-// random JWT key which can be used to sign
-// JWTs.
-func generateJWTKey() (key []byte, err error) {
-	key = make([]byte, 32)
-	_, err = rand.Read(key)
-	return
 }
 
 // getArgon2Params returns an instance of default

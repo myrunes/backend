@@ -121,6 +121,8 @@ func (ws *WebServer) registerHandlers() {
 	api.
 		Post("/login", ws.handlerLogin)
 	api.
+		Get("/accesstoken", ws.handlerGetAccessToken)
+	api.
 		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.Logout)
 
 	api.Get("/version", ws.handlerGetVersion)
