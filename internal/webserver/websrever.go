@@ -128,6 +128,12 @@ func (ws *WebServer) registerHandlers() {
 	api.Get("/version", ws.handlerGetVersion)
 	api.Get("/recaptchainfo", ws.handlerGetReCaptchaInfo)
 
+	refreshTokens := api.Group("/refreshtokens")
+	refreshTokens.
+		Get("", ws.auth.CheckRequestAuth, ws.handlerGetRefreshTokens)
+	refreshTokens.
+		Delete("/<id>", ws.auth.CheckRequestAuth, ws.handlerDeleteRefreshToken)
+
 	assets := api.Group("/assets")
 	assets.
 		Get("/champions/avatars/<id>", ws.handlerGetAssetsChampionAvatars)

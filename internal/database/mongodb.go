@@ -306,15 +306,42 @@ func (m *MongoDB) GetRefreshToken(token string) (t *objects.RefreshToken, err er
 	return
 }
 
-func (m *MongoDB) SetRefreshToken(t *objects.RefreshToken) error {
-	return m.insertOrUpdate(m.collections.refreshtokens, bson.M{"token": t.Token}, t)
+func (m *MongoDB) GetRefreshTokens(userID snowflake.ID) (res []*objects.RefreshToken, err error) {
+	ctx, cancel := ctxTimeout(10 * time.Second)
+	defer cancel()
+
+	res = make([]*objects.RefreshToken, 0)
+	cursor, err := m.collections.refreshtokens.Find(ctx, &bson.M{"userid": userID})
+	if err == mongo.ErrNoDocuments {
+		err = nil
+	}
+	if err != nil {
+		return
+	}
+
+	now := time.Now()
+	for cursor.Next(ctx) {
+		v := new(objects.RefreshToken)
+		if err = cursor.Decode(v); err != nil {
+			return
+		}
+		if now.Before(v.Deadline) {
+			res = append(res, v)
+		}
+	}
+
+	return
 }
 
-func (m *MongoDB) RemoveRefreshToken(token string) error {
+func (m *MongoDB) SetRefreshToken(t *objects.RefreshToken) error {
+	return m.insertOrUpdate(m.collections.refreshtokens, bson.M{"id": t.ID}, t)
+}
+
+func (m *MongoDB) RemoveRefreshToken(id snowflake.ID) error {
 	ctx, cancel := ctxTimeout(5 * time.Second)
 	defer cancel()
 
-	_, err := m.collections.refreshtokens.DeleteOne(ctx, bson.M{"token": token})
+	_, err := m.collections.refreshtokens.DeleteOne(ctx, bson.M{"id": id})
 	if err == mongo.ErrNoDocuments {
 		err = nil
 	}

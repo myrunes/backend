@@ -79,6 +79,39 @@ func (ws *WebServer) handlerGetAccessToken(ctx *routing.Context) error {
 	return jsonResponse(ctx, &objects.AccessToken{Token: accessToken}, fasthttp.StatusOK)
 }
 
+// GET /refreshtokens
+func (ws *WebServer) handlerGetRefreshTokens(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	tokens, err := ws.db.GetRefreshTokens(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	for _, t := range tokens {
+		t.Sanitize()
+	}
+
+	return jsonResponse(ctx, &listResponse{len(tokens), tokens}, fasthttp.StatusOK)
+}
+
+// DELETE /refreshtokens/:id
+func (ws *WebServer) handlerDeleteRefreshToken(ctx *routing.Context) error {
+	id := ctx.Param("id")
+
+	sfId, err := snowflake.ParseString(id)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	err = ws.db.RemoveRefreshToken(sfId)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
 // -----------------------------------------------------
 // --- USERS ---
 

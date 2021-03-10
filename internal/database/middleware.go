@@ -86,12 +86,15 @@ type Middleware interface {
 	// from the database matching the given refresh
 	// token string.
 	GetRefreshToken(token string) (*objects.RefreshToken, error)
+	// GetRefreshTokens returns a list of refresh tokens
+	// belonging to the given userID.
+	GetRefreshTokens(userID snowflake.ID) ([]*objects.RefreshToken, error)
 	// SetRefreshToken sets a given refresh token
 	// object to the database or updates one.
 	SetRefreshToken(t *objects.RefreshToken) error
 	// RemoveRefreshToken removes a refresh token from
 	// database if existent by the given token.
-	RemoveRefreshToken(token string) error
+	RemoveRefreshToken(id snowflake.ID) error
 
 	// SetAPIToken sets the passed API token
 	// to the user defined in the APIToken

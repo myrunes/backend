@@ -198,11 +198,11 @@ func (auth *Authorization) CreateAndSetRefreshToken(ctx *routing.Context, uid sn
 		return
 	}
 
-	err = auth.db.SetRefreshToken(&objects.RefreshToken{
+	err = auth.db.SetRefreshToken((&objects.RefreshToken{
 		Token:    token,
 		UserID:   uid,
 		Deadline: expires,
-	})
+	}).SetID())
 	if err != nil {
 		err = jsonError(ctx, err, fasthttp.StatusInternalServerError)
 		return
@@ -252,7 +252,7 @@ func (auth *Authorization) ObtainAccessToken(ctx *routing.Context) (string, erro
 
 	now := time.Now()
 	if now.After(token.Deadline) {
-		auth.db.RemoveRefreshToken(token.Token)
+		auth.db.RemoveRefreshToken(token.ID)
 		return "", jsonError(ctx, errUnauthorized, fasthttp.StatusUnauthorized)
 	}
 
@@ -262,6 +262,13 @@ func (auth *Authorization) ObtainAccessToken(ctx *routing.Context) (string, erro
 		IssuedAt:  now.Unix(),
 	}).SignedString(auth.signingKey)
 	if err != nil {
+		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	token.LastAccess = time.Now()
+	token.LastAccessClient = string(ctx.Request.Header.Peek("user-agent"))
+	token.LastAccessIP = shared.GetIPAddr(ctx)
+	if err = auth.db.SetRefreshToken(token); err != nil {
 		return "", jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
