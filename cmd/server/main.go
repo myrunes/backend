@@ -90,6 +90,12 @@ func refetch(a *assets.AvatarHandler) {
 	}
 }
 
+func cleanupExpiredRefreshTokens(db database.Middleware) {
+	if err := db.CleanupExpiredTokens(); err != nil {
+		logger.Error("DATABASE :: failed cleaning up expired refresh tokens: %s", err.Error())
+	}
+}
+
 func main() {
 	flag.Parse()
 
@@ -195,6 +201,7 @@ func main() {
 
 	lct := lifecycletimer.New(24 * time.Hour).
 		Handle(func() { refetch(avatarAssetsHandler) }).
+		Handle(func() { cleanupExpiredRefreshTokens(db) }).
 		Start()
 	defer lct.Stop()
 	logger.Info("LIFECYCLETIMER :: started")

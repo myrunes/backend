@@ -349,6 +349,20 @@ func (m *MongoDB) RemoveRefreshToken(id snowflake.ID) error {
 	return err
 }
 
+func (m *MongoDB) CleanupExpiredTokens() error {
+	ctx, cancel := ctxTimeout(10 * time.Second)
+	defer cancel()
+
+	now := time.Now()
+	_, err := m.collections.refreshtokens.DeleteMany(ctx, bson.M{
+		"deadline": bson.M{
+			"$lte": now,
+		},
+	})
+
+	return err
+}
+
 // --- HELPERS ------------------------------------------------------------------
 
 // insert adds the given vaalue v to the passed collection.

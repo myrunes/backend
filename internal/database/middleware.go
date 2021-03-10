@@ -95,6 +95,9 @@ type Middleware interface {
 	// RemoveRefreshToken removes a refresh token from
 	// database if existent by the given token.
 	RemoveRefreshToken(id snowflake.ID) error
+	// CleanupExpiredTokens removes all expired tokens
+	// from the database.
+	CleanupExpiredTokens() error
 
 	// SetAPIToken sets the passed API token
 	// to the user defined in the APIToken
