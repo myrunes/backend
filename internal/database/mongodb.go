@@ -349,18 +349,21 @@ func (m *MongoDB) RemoveRefreshToken(id snowflake.ID) error {
 	return err
 }
 
-func (m *MongoDB) CleanupExpiredTokens() error {
+func (m *MongoDB) CleanupExpiredTokens() (n int, err error) {
 	ctx, cancel := ctxTimeout(10 * time.Second)
 	defer cancel()
 
 	now := time.Now()
-	_, err := m.collections.refreshtokens.DeleteMany(ctx, bson.M{
+	res, err := m.collections.refreshtokens.DeleteMany(ctx, bson.M{
 		"deadline": bson.M{
 			"$lte": now,
 		},
 	})
+	if res != nil {
+		n = int(res.DeletedCount)
+	}
 
-	return err
+	return
 }
 
 // --- HELPERS ------------------------------------------------------------------
