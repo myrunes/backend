@@ -121,10 +121,18 @@ func (ws *WebServer) registerHandlers() {
 	api.
 		Post("/login", ws.handlerLogin)
 	api.
+		Get("/accesstoken", ws.handlerGetAccessToken)
+	api.
 		Post("/logout", ws.auth.CheckRequestAuth, ws.auth.Logout)
 
 	api.Get("/version", ws.handlerGetVersion)
 	api.Get("/recaptchainfo", ws.handlerGetReCaptchaInfo)
+
+	refreshTokens := api.Group("/refreshtokens")
+	refreshTokens.
+		Get("", ws.auth.CheckRequestAuth, ws.handlerGetRefreshTokens)
+	refreshTokens.
+		Delete("/<id>", ws.auth.CheckRequestAuth, ws.handlerDeleteRefreshToken)
 
 	assets := api.Group("/assets")
 	assets.

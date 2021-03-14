@@ -82,6 +82,23 @@ type Middleware interface {
 	// of the users UID passed.
 	DeleteUserPages(uid snowflake.ID) error
 
+	// GetRefreshToken returns a refresh token object
+	// from the database matching the given refresh
+	// token string.
+	GetRefreshToken(token string) (*objects.RefreshToken, error)
+	// GetRefreshTokens returns a list of refresh tokens
+	// belonging to the given userID.
+	GetRefreshTokens(userID snowflake.ID) ([]*objects.RefreshToken, error)
+	// SetRefreshToken sets a given refresh token
+	// object to the database or updates one.
+	SetRefreshToken(t *objects.RefreshToken) error
+	// RemoveRefreshToken removes a refresh token from
+	// database if existent by the given token.
+	RemoveRefreshToken(id snowflake.ID) error
+	// CleanupExpiredTokens removes all expired tokens
+	// from the database.
+	CleanupExpiredTokens() (int, error)
+
 	// SetAPIToken sets the passed API token
 	// to the user defined in the APIToken
 	// object.

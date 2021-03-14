@@ -8,7 +8,7 @@ import (
 )
 
 // sessionIDNode is the node to generate session snowflake IDs.
-var sessionIDNode, _ = snowflake.NewNode(static.NodeIDSessions)
+var sessionIDNode, _ = snowflake.NewNode(static.NodeIDRefreshTokens)
 
 // Session wraps a brwoser login session instance.
 type Session struct {

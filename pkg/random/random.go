@@ -8,16 +8,22 @@ import (
 	"math/big"
 )
 
+// ByteArray returns a cryptographically random byte
+// array of the given length.
+func ByteArray(lngth int) ([]byte, error) {
+	arr := make([]byte, lngth)
+	_, err := rand.Read(arr)
+	return arr, err
+}
+
 // Base64 creates a cryptographically randomly
 // generated set of bytes with the length of lngth which
 // is returned as base64 encoded string.
 func Base64(lngth int) (string, error) {
-	str := make([]byte, lngth)
-
-	if _, err := rand.Read(str); err != nil {
+	str, err := ByteArray(lngth)
+	if err != nil {
 		return "", err
 	}
-
 	return base64.StdEncoding.EncodeToString(str), nil
 }
 

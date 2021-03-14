@@ -8,10 +8,9 @@ import (
 	"time"
 
 	"github.com/myrunes/backend/internal/shared"
-	"github.com/myrunes/backend/pkg/ddragon"
-	"github.com/zekroTJA/shinpuru/pkg/etag"
-
 	"github.com/myrunes/backend/pkg/comparison"
+	"github.com/myrunes/backend/pkg/ddragon"
+	"github.com/myrunes/backend/pkg/etag"
 	"github.com/myrunes/backend/pkg/random"
 
 	"github.com/bwmarrin/snowflake"
@@ -67,6 +66,52 @@ func (ws *WebServer) handlerLogin(ctx *routing.Context) error {
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
 
+// GET /accesstoken
+func (ws *WebServer) handlerGetAccessToken(ctx *routing.Context) error {
+	accessToken, err := ws.auth.ObtainAccessToken(ctx)
+	if err != nil {
+		return err
+	}
+	if accessToken == "" {
+		return nil
+	}
+
+	return jsonResponse(ctx, &objects.AccessToken{Token: accessToken}, fasthttp.StatusOK)
+}
+
+// GET /refreshtokens
+func (ws *WebServer) handlerGetRefreshTokens(ctx *routing.Context) error {
+	user := ctx.Get("user").(*objects.User)
+
+	tokens, err := ws.db.GetRefreshTokens(user.UID)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	for _, t := range tokens {
+		t.Sanitize()
+	}
+
+	return jsonResponse(ctx, &listResponse{len(tokens), tokens}, fasthttp.StatusOK)
+}
+
+// DELETE /refreshtokens/:id
+func (ws *WebServer) handlerDeleteRefreshToken(ctx *routing.Context) error {
+	id := ctx.Param("id")
+
+	sfId, err := snowflake.ParseString(id)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	err = ws.db.RemoveRefreshToken(sfId)
+	if err != nil {
+		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
+	}
+
+	return jsonResponse(ctx, nil, fasthttp.StatusOK)
+}
+
 // -----------------------------------------------------
 // --- USERS ---
 
@@ -106,7 +151,7 @@ func (ws *WebServer) handlerCreateUser(ctx *routing.Context) error {
 		return jsonError(ctx, err, fasthttp.StatusInternalServerError)
 	}
 
-	ws.auth.CreateSession(ctx, newUser.UID, data.Remember)
+	ws.auth.CreateAndSetRefreshToken(ctx, newUser.UID, data.Remember)
 
 	outUser := *newUser
 	outUser.PassHash = nil
@@ -165,9 +210,6 @@ func (ws *WebServer) handlerPostMe(ctx *routing.Context) error {
 	}
 
 	ws.cache.SetUserByID(newUser.UID, user)
-	if jwtToken, ok := ctx.Get("jwt").(string); ok {
-		ws.cache.SetUserByToken(jwtToken, user)
-	}
 
 	return jsonResponse(ctx, nil, fasthttp.StatusOK)
 }
@@ -195,9 +237,6 @@ func (ws *WebServer) handlerDeleteMe(ctx *routing.Context) error {
 	}
 
 	ws.cache.SetUserByID(user.UID, nil)
-	if jwtToken, ok := ctx.Get("jwt").(string); ok {
-		ws.cache.SetUserByToken(jwtToken, nil)
-	}
 
 	return ws.auth.Logout(ctx)
 }
