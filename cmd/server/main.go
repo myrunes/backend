@@ -202,7 +202,7 @@ func main() {
 	}()
 	logger.Info("WEBSERVER :: started")
 
-	lct := lifecycletimer.New(24 * time.Second).
+	lct := lifecycletimer.New(24 * time.Hour).
 		Handle(func() { refetch(avatarAssetsHandler) }).
 		Handle(func() { cleanupExpiredRefreshTokens(db) }).
 		Start()
