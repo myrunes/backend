@@ -4,7 +4,6 @@ go 1.14
 
 require (
 	github.com/alexedwards/argon2id v0.0.0-20200802152012-2464efd3196b
-	github.com/aws/aws-sdk-go v1.34.27 // indirect
 	github.com/bwmarrin/snowflake v0.3.0
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/ghodss/yaml v1.0.0
@@ -12,7 +11,6 @@ require (
 	github.com/go-ozzo/ozzo-routing v2.1.4+incompatible // indirect
 	github.com/go-redis/redis v6.15.9+incompatible
 	github.com/golang/gddo v0.0.0-20210115222349-20d68f94ee1f // indirect
-	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.11.0 // indirect
 	github.com/minio/minio-go v6.0.14+incompatible
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
@@ -24,7 +22,7 @@ require (
 	github.com/valyala/fasthttp v1.16.0
 	github.com/zekroTJA/ratelimit v0.0.0-20190321090824-219ca33049a5
 	github.com/zekroTJA/timedmap v1.3.1
-	go.mongodb.org/mongo-driver v1.4.1
+	go.mongodb.org/mongo-driver v1.5.1
 	golang.org/x/crypto v0.0.0-20200820211705-5c72a883971a
 	gopkg.in/alexcesaro/quotedprintable.v3 v3.0.0-20150716171945-2caba252f4dc // indirect
 	gopkg.in/gomail.v2 v2.0.0-20160411212932-81ebce5c23df
