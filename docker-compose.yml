@@ -1,0 +1,19 @@
+# This docker-compose config is only for development!
+
+version: '3.7'
+
+volumes:
+  mongo:
+
+services:
+  mongodb:
+    image: 'mongo:latest'
+    ports:
+      - '27017:27017'
+    volumes:
+      - 'mongo:/data/db'
+    command: --auth
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: lol-runes
+      MONGO_INITDB_ROOT_PASSWORD: lol-runes
+    restart: always
